@@ -1,4 +1,65 @@
-import { Product, Seller, User, Order, Review } from '../types';
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  type: 'buyer' | 'seller' | 'admin';
+  phone?: string;
+  address?: string;
+}
+
+export interface Seller extends User {
+  type: 'seller';
+  storeName: string;
+  rating: number;
+  totalReviews: number;
+  joinedDate: string;
+}
+
+export interface Product {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  category: string;
+  image: string;
+  sellerId: string;
+  sellerName: string;
+  sellerRating: number;
+  stock: number;
+  reviews: Review[];
+  averageRating: number;
+}
+
+export interface Review {
+  id: string;
+  productId: string;
+  buyerId: string;
+  buyerName: string;
+  rating: number;
+  comment: string;
+  date: string;
+}
+
+export interface CartItem {
+  product: Product;
+  quantity: number;
+}
+
+export interface Order {
+  id: string;
+  buyerId: string;
+  products: {
+    productId: string;
+    productName: string;
+    quantity: number;
+    price: number;
+    image: string;
+  }[];
+  totalAmount: number;
+  status: 'pending' | 'shipped' | 'delivered' | 'cancelled';
+  orderDate: string;
+  shippingAddress: string;
+}
 
 export const mockSellers: Seller[] = [
   {

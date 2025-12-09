@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ShoppingCart, User, Store, Shield } from 'lucide-react';
-import { User as UserType } from '../types';
+import type { User as UserType } from '../types';
 
 interface LoginPageProps {
   onLogin: (user: UserType) => void;

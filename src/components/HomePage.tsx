@@ -1,6 +1,6 @@
 import { Filter, Search } from "lucide-react";
 import { useState } from "react";
-import { Product, User as UserType } from "../types";
+import type { Product, User as UserType } from "../types";
 import { ProductCard } from "./ProductCard";
 
 interface HomePageProps {

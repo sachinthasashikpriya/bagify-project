@@ -1,5 +1,5 @@
 import { ShoppingCart, User } from "lucide-react";
-import { CartItem, User as UserType } from "../types";
+import type { CartItem, User as UserType } from "../types";
 
 interface HeaderProps {
   currentUser: UserType | null;

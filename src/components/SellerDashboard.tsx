@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Plus, Edit, Trash2, Star, Package, TrendingUp } from 'lucide-react';
-import { Product, Seller } from '../types';
+import type { Product, Seller } from '../types';
 
 interface SellerDashboardProps {
   seller: Seller;

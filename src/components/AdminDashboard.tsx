@@ -7,7 +7,7 @@ import {
   Users,
 } from "lucide-react";
 import { useState } from "react";
-import { Order, Product, Seller, User } from "../types";
+import type { Order, Product, Seller, User } from "../types";
 
 interface AdminDashboardProps {
   sellers: Seller[];

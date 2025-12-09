@@ -1,6 +1,6 @@
 import { ArrowLeft, Package, ShoppingCart, Star, Store } from "lucide-react";
 import { useState } from "react";
-import { Product, User as UserType } from "../types";
+import type { Product, User as UserType } from "../types";
 
 interface ProductDetailPageProps {
   product: Product;

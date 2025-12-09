@@ -1,5 +1,5 @@
 import { MapPin, ShoppingBag, User } from "lucide-react";
-import { Order, User as UserType } from "../types";
+import type { Order, User as UserType } from "../types";
 
 interface BuyerDashboardProps {
   buyer: UserType;
