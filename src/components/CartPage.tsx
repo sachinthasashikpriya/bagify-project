@@ -1,5 +1,5 @@
-import { Minus, Plus, Trash2, ShoppingCart } from 'lucide-react';
-import { CartItem } from '../types';
+import { Minus, Plus, ShoppingCart, Trash2 } from "lucide-react";
+import { CartItem } from "../types";
 
 interface CartPageProps {
   cartItems: CartItem[];
@@ -9,14 +9,17 @@ interface CartPageProps {
   onContinueShopping: () => void;
 }
 
-export function CartPage({ 
-  cartItems, 
-  onUpdateQuantity, 
-  onRemoveItem, 
+export function CartPage({
+  cartItems,
+  onUpdateQuantity,
+  onRemoveItem,
   onCheckout,
-  onContinueShopping 
+  onContinueShopping,
 }: CartPageProps) {
-  const subtotal = cartItems.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
+  const subtotal = cartItems.reduce(
+    (sum, item) => sum + item.product.price * item.quantity,
+    0
+  );
   const shipping = subtotal > 0 ? 10 : 0;
   const total = subtotal + shipping;
 
@@ -42,18 +45,27 @@ export function CartPage({
             {/* Cart Items */}
             <div className="lg:col-span-2 space-y-4">
               {cartItems.map((item) => (
-                <div key={item.product.id} className="bg-white rounded-xl shadow-sm p-6">
+                <div
+                  key={item.product.id}
+                  className="bg-white rounded-xl shadow-sm p-6"
+                >
                   <div className="flex gap-4">
                     <img
                       src={item.product.image}
                       alt={item.product.name}
                       className="w-24 h-24 rounded object-cover"
                     />
-                    
+
                     <div className="flex-1">
-                      <h3 className="text-lg text-gray-900 mb-1">{item.product.name}</h3>
-                      <p className="text-sm text-gray-600 mb-2">{item.product.sellerName}</p>
-                      <p className="text-lg text-purple-600">${item.product.price}</p>
+                      <h3 className="text-lg text-gray-900 mb-1">
+                        {item.product.name}
+                      </h3>
+                      <p className="text-sm text-gray-600 mb-2">
+                        {item.product.sellerName}
+                      </p>
+                      <p className="text-lg text-purple-600">
+                        ${item.product.price}
+                      </p>
                     </div>
 
                     <div className="flex flex-col items-end justify-between">
@@ -66,15 +78,21 @@ export function CartPage({
 
                       <div className="flex items-center gap-2">
                         <button
-                          onClick={() => onUpdateQuantity(item.product.id, item.quantity - 1)}
+                          onClick={() =>
+                            onUpdateQuantity(item.product.id, item.quantity - 1)
+                          }
                           disabled={item.quantity <= 1}
                           className="p-1 bg-gray-100 rounded hover:bg-gray-200 disabled:opacity-50"
                         >
                           <Minus className="w-4 h-4" />
                         </button>
-                        <span className="w-8 text-center text-gray-900">{item.quantity}</span>
+                        <span className="w-8 text-center text-gray-900">
+                          {item.quantity}
+                        </span>
                         <button
-                          onClick={() => onUpdateQuantity(item.product.id, item.quantity + 1)}
+                          onClick={() =>
+                            onUpdateQuantity(item.product.id, item.quantity + 1)
+                          }
                           disabled={item.quantity >= item.product.stock}
                           className="p-1 bg-gray-100 rounded hover:bg-gray-200 disabled:opacity-50"
                         >
@@ -104,7 +122,9 @@ export function CartPage({
                   <div className="border-t border-gray-200 pt-3">
                     <div className="flex justify-between text-xl">
                       <span className="text-gray-900">Total</span>
-                      <span className="text-purple-600">${total.toFixed(2)}</span>
+                      <span className="text-purple-600">
+                        ${total.toFixed(2)}
+                      </span>
                     </div>
                   </div>
                 </div>
