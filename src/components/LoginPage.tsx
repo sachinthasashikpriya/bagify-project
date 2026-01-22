@@ -1,16 +1,19 @@
-import { useState } from 'react';
-import { ShoppingCart, User, Store, Shield } from 'lucide-react';
-import type { User as UserType } from '../types';
+import { Shield, ShoppingCart, Store, User } from "lucide-react";
+import { useState } from "react";
+import type { User as UserType } from "../types";
 
 interface LoginPageProps {
   onLogin: (user: UserType) => void;
   sellers: UserType[];
   buyers: UserType[];
   admin: UserType;
+  onNavigateToSignup?: () => void;
 }
 
-export function LoginPage({ onLogin, sellers, buyers, admin }: LoginPageProps) {
-  const [userType, setUserType] = useState<'seller' | 'buyer' | 'admin'>('buyer');
+export function LoginPage({ onLogin, sellers, buyers, admin, onNavigateToSignup }: LoginPageProps) {
+  const [userType, setUserType] = useState<"seller" | "buyer" | "admin">(
+    "buyer"
+  );
 
   const handleQuickLogin = (user: UserType) => {
     onLogin(user);
@@ -27,7 +30,9 @@ export function LoginPage({ onLogin, sellers, buyers, admin }: LoginPageProps) {
             </div>
             <span className="text-3xl text-gray-900">BagMarket</span>
           </div>
-          <p className="text-gray-600">Your trusted marketplace for quality bags</p>
+          <p className="text-gray-600">
+            Your trusted marketplace for quality bags
+          </p>
         </div>
 
         {/* Login Card */}
@@ -37,61 +42,79 @@ export function LoginPage({ onLogin, sellers, buyers, admin }: LoginPageProps) {
           {/* User Type Selection */}
           <div className="grid grid-cols-3 gap-4 mb-8">
             <button
-              onClick={() => setUserType('buyer')}
+              onClick={() => setUserType("buyer")}
               className={`p-4 rounded-xl border-2 transition-all ${
-                userType === 'buyer'
-                  ? 'border-purple-600 bg-purple-50'
-                  : 'border-gray-200 hover:border-gray-300'
+                userType === "buyer"
+                  ? "border-purple-600 bg-purple-50"
+                  : "border-gray-200 hover:border-gray-300"
               }`}
             >
-              <User className={`w-8 h-8 mx-auto mb-2 ${
-                userType === 'buyer' ? 'text-purple-600' : 'text-gray-400'
-              }`} />
-              <p className={`text-sm ${
-                userType === 'buyer' ? 'text-purple-600' : 'text-gray-600'
-              }`}>Buyer</p>
+              <User
+                className={`w-8 h-8 mx-auto mb-2 ${
+                  userType === "buyer" ? "text-purple-600" : "text-gray-400"
+                }`}
+              />
+              <p
+                className={`text-sm ${
+                  userType === "buyer" ? "text-purple-600" : "text-gray-600"
+                }`}
+              >
+                Buyer
+              </p>
             </button>
 
             <button
-              onClick={() => setUserType('seller')}
+              onClick={() => setUserType("seller")}
               className={`p-4 rounded-xl border-2 transition-all ${
-                userType === 'seller'
-                  ? 'border-purple-600 bg-purple-50'
-                  : 'border-gray-200 hover:border-gray-300'
+                userType === "seller"
+                  ? "border-purple-600 bg-purple-50"
+                  : "border-gray-200 hover:border-gray-300"
               }`}
             >
-              <Store className={`w-8 h-8 mx-auto mb-2 ${
-                userType === 'seller' ? 'text-purple-600' : 'text-gray-400'
-              }`} />
-              <p className={`text-sm ${
-                userType === 'seller' ? 'text-purple-600' : 'text-gray-600'
-              }`}>Seller</p>
+              <Store
+                className={`w-8 h-8 mx-auto mb-2 ${
+                  userType === "seller" ? "text-purple-600" : "text-gray-400"
+                }`}
+              />
+              <p
+                className={`text-sm ${
+                  userType === "seller" ? "text-purple-600" : "text-gray-600"
+                }`}
+              >
+                Seller
+              </p>
             </button>
 
             <button
-              onClick={() => setUserType('admin')}
+              onClick={() => setUserType("admin")}
               className={`p-4 rounded-xl border-2 transition-all ${
-                userType === 'admin'
-                  ? 'border-purple-600 bg-purple-50'
-                  : 'border-gray-200 hover:border-gray-300'
+                userType === "admin"
+                  ? "border-purple-600 bg-purple-50"
+                  : "border-gray-200 hover:border-gray-300"
               }`}
             >
-              <Shield className={`w-8 h-8 mx-auto mb-2 ${
-                userType === 'admin' ? 'text-purple-600' : 'text-gray-400'
-              }`} />
-              <p className={`text-sm ${
-                userType === 'admin' ? 'text-purple-600' : 'text-gray-600'
-              }`}>Admin</p>
+              <Shield
+                className={`w-8 h-8 mx-auto mb-2 ${
+                  userType === "admin" ? "text-purple-600" : "text-gray-400"
+                }`}
+              />
+              <p
+                className={`text-sm ${
+                  userType === "admin" ? "text-purple-600" : "text-gray-600"
+                }`}
+              >
+                Admin
+              </p>
             </button>
           </div>
 
           {/* Quick Login Options */}
           <div>
             <p className="text-sm text-gray-600 mb-4">
-              Quick login as {userType === 'admin' ? 'admin' : `a ${userType}`}:
+              Quick login as {userType === "admin" ? "admin" : `a ${userType}`}:
             </p>
 
-            {userType === 'admin' && (
+            {userType === "admin" && (
               <button
                 onClick={() => handleQuickLogin(admin)}
                 className="w-full bg-purple-600 text-white py-3 rounded-lg hover:bg-purple-700 mb-3"
@@ -100,7 +123,7 @@ export function LoginPage({ onLogin, sellers, buyers, admin }: LoginPageProps) {
               </button>
             )}
 
-            {userType === 'seller' && (
+            {userType === "seller" && (
               <div className="space-y-3">
                 {sellers.map((seller) => (
                   <button
@@ -115,7 +138,7 @@ export function LoginPage({ onLogin, sellers, buyers, admin }: LoginPageProps) {
               </div>
             )}
 
-            {userType === 'buyer' && (
+            {userType === "buyer" && (
               <div className="space-y-3">
                 {buyers.map((buyer) => (
                   <button
@@ -145,7 +168,9 @@ export function LoginPage({ onLogin, sellers, buyers, admin }: LoginPageProps) {
           <form onSubmit={(e) => e.preventDefault()}>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm text-gray-700 mb-2">Email</label>
+                <label className="block text-sm text-gray-700 mb-2">
+                  Email
+                </label>
                 <input
                   type="email"
                   placeholder="Enter your email"
@@ -154,7 +179,9 @@ export function LoginPage({ onLogin, sellers, buyers, admin }: LoginPageProps) {
               </div>
 
               <div>
-                <label className="block text-sm text-gray-700 mb-2">Password</label>
+                <label className="block text-sm text-gray-700 mb-2">
+                  Password
+                </label>
                 <input
                   type="password"
                   placeholder="Enter your password"
@@ -172,8 +199,11 @@ export function LoginPage({ onLogin, sellers, buyers, admin }: LoginPageProps) {
           </form>
 
           <p className="text-center text-sm text-gray-600 mt-6">
-            Don&apos;t have an account?{' '}
-            <button className="text-purple-600 hover:text-purple-700">
+            Don&apos;t have an account?{" "}
+            <button
+              onClick={onNavigateToSignup}
+              className="text-purple-600 hover:text-purple-700"
+            >
               Sign up
             </button>
           </p>
@@ -182,7 +212,8 @@ export function LoginPage({ onLogin, sellers, buyers, admin }: LoginPageProps) {
         {/* Demo Notice */}
         <div className="mt-6 text-center">
           <p className="text-sm text-gray-600">
-            This is a demo. Use the quick login buttons above to explore different user roles.
+            This is a demo. Use the quick login buttons above to explore
+            different user roles.
           </p>
         </div>
       </div>

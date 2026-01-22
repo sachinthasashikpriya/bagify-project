@@ -1,15 +1,14 @@
 import { ShoppingBag, UserPlus } from "lucide-react";
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { toast } from "sonner@2.0.3";
-import { User } from "../App";
+import { toast } from "sonner";
+import type { User } from "../types";
 
 interface SignupPageProps {
+  onNavigateToLogin: () => void;
   onSignup: (user: User) => void;
 }
 
-export function SignupPage({ onSignup }: SignupPageProps) {
-  const navigate = useNavigate();
+export function SignupPage({ onSignup, onNavigateToLogin }: SignupPageProps) {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -31,24 +30,23 @@ export function SignupPage({ onSignup }: SignupPageProps) {
 
     onSignup(newUser);
     toast.success("Account created successfully!");
-    navigate(formData.userType === "seller" ? "/seller" : "/");
   };
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center px-4 py-12">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 flex items-center justify-center px-4 py-12">
       <div className="max-w-md w-full">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-indigo-100 rounded-full mb-4">
-            <ShoppingBag className="w-8 h-8 text-indigo-600" />
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-purple-100 rounded-full mb-4">
+            <ShoppingBag className="w-8 h-8 text-purple-600" />
           </div>
-          <h1 className="text-gray-900 mb-2">Create Account</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Create Account</h1>
           <p className="text-gray-600">Join BagMarket today</p>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm p-8">
-          <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="bg-white rounded-xl shadow-lg p-8">
+          <div className="space-y-6">
             <div>
-              <label htmlFor="userType" className="block text-gray-700 mb-2">
+              <label htmlFor="userType" className="block text-sm font-medium text-gray-700 mb-2">
                 I want to
               </label>
               <select
@@ -60,7 +58,7 @@ export function SignupPage({ onSignup }: SignupPageProps) {
                     userType: e.target.value as "buyer" | "seller",
                   })
                 }
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent"
               >
                 <option value="buyer">Buy bags</option>
                 <option value="seller">Sell bags</option>
@@ -68,7 +66,7 @@ export function SignupPage({ onSignup }: SignupPageProps) {
             </div>
 
             <div>
-              <label htmlFor="name" className="block text-gray-700 mb-2">
+              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
                 Full Name
               </label>
               <input
@@ -78,14 +76,14 @@ export function SignupPage({ onSignup }: SignupPageProps) {
                 onChange={(e) =>
                   setFormData({ ...formData, name: e.target.value })
                 }
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent"
                 placeholder="John Doe"
                 required
               />
             </div>
 
             <div>
-              <label htmlFor="email" className="block text-gray-700 mb-2">
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
                 Email
               </label>
               <input
@@ -95,14 +93,14 @@ export function SignupPage({ onSignup }: SignupPageProps) {
                 onChange={(e) =>
                   setFormData({ ...formData, email: e.target.value })
                 }
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent"
                 placeholder="you@example.com"
                 required
               />
             </div>
 
             <div>
-              <label htmlFor="phone" className="block text-gray-700 mb-2">
+              <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
                 Phone Number
               </label>
               <input
@@ -112,14 +110,14 @@ export function SignupPage({ onSignup }: SignupPageProps) {
                 onChange={(e) =>
                   setFormData({ ...formData, phone: e.target.value })
                 }
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent"
                 placeholder="+1 234 567 8900"
                 required
               />
             </div>
 
             <div>
-              <label htmlFor="address" className="block text-gray-700 mb-2">
+              <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-2">
                 Address
               </label>
               <textarea
@@ -129,14 +127,14 @@ export function SignupPage({ onSignup }: SignupPageProps) {
                   setFormData({ ...formData, address: e.target.value })
                 }
                 rows={2}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent resize-none"
                 placeholder="123 Main St, City, State"
                 required
               />
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-gray-700 mb-2">
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
                 Password
               </label>
               <input
@@ -146,7 +144,7 @@ export function SignupPage({ onSignup }: SignupPageProps) {
                 onChange={(e) =>
                   setFormData({ ...formData, password: e.target.value })
                 }
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent"
                 placeholder="••••••••"
                 required
                 minLength={6}
@@ -154,23 +152,23 @@ export function SignupPage({ onSignup }: SignupPageProps) {
             </div>
 
             <button
-              type="submit"
-              className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+              onClick={handleSubmit}
+              className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium"
             >
               <UserPlus className="w-5 h-5" />
               Create Account
             </button>
-          </form>
+          </div>
 
           <div className="mt-6 pt-6 border-t border-gray-200">
-            <p className="text-center text-gray-600">
+            <p className="text-center text-sm text-gray-600">
               Already have an account?{" "}
-              <Link
-                to="/login"
-                className="text-indigo-600 hover:text-indigo-700"
+              <button
+                onClick={onNavigateToLogin}
+                className="text-purple-600 hover:text-purple-700 font-medium"
               >
                 Login
-              </Link>
+              </button>
             </p>
           </div>
         </div>

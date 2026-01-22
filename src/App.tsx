@@ -5,6 +5,7 @@ import { CartPage } from "./components/CartPage";
 import { Header } from "./components/Header";
 import { HomePage } from "./components/HomePage";
 import { LoginPage } from "./components/LoginPage";
+import { SignupPage } from "./components/SignupPage";
 import { ProductDetailPage } from "./components/ProductDetailPage";
 import { SellerDashboard } from "./components/SellerDashboard";
 import type { CartItem, Product, Review, Seller, User } from "./types";
@@ -17,7 +18,8 @@ type Page =
   | "buyer-dashboard"
   | "admin-dashboard"
   | "login"
-  | "cart";
+  | "cart"
+  | "signup";
 
 function App() {
   const [currentPage, setCurrentPage] = useState<Page>("home");
@@ -202,16 +204,22 @@ function App() {
           currentPage={currentPage}
         />
       )}
-
       {currentPage === "login" && (
         <LoginPage
           onLogin={handleLogin}
           sellers={mockSellers}
           buyers={mockBuyers}
           admin={adminUser}
+          onNavigateToSignup={() => setCurrentPage("signup")}
         />
       )}
-
+      // Add this new condition for the signup page:
+      {currentPage === "signup" && (
+        <SignupPage
+          onNavigateToLogin={() => setCurrentPage("login")}
+          onSignup={handleLogin} 
+        />
+      )}
       {currentPage === "home" && (
         <HomePage
           products={products}
@@ -220,7 +228,6 @@ function App() {
           currentUser={currentUser}
         />
       )}
-
       {currentPage === "product" && selectedProduct && (
         <ProductDetailPage
           product={selectedProduct}
@@ -230,7 +237,6 @@ function App() {
           currentUser={currentUser}
         />
       )}
-
       {currentPage === "seller-dashboard" && currentUser?.type === "seller" && (
         <SellerDashboard
           seller={mockSellers.find((s) => s.id === currentUser.id) as Seller}
@@ -239,11 +245,9 @@ function App() {
           onDeleteProduct={handleDeleteProduct}
         />
       )}
-
       {currentPage === "buyer-dashboard" && currentUser?.type === "buyer" && (
         <BuyerDashboard buyer={currentUser} orders={currentUserOrders} />
       )}
-
       {currentPage === "admin-dashboard" && currentUser?.type === "admin" && (
         <AdminDashboard
           sellers={mockSellers}
@@ -252,7 +256,6 @@ function App() {
           orders={orders}
         />
       )}
-
       {currentPage === "cart" && (
         <CartPage
           cartItems={cartItems}
