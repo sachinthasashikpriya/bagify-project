@@ -1,10 +1,46 @@
+export interface RegisterRequest {
+  name: string;
+  email: string;
+  phone: string;
+  address: string;
+  password: string;
+  confirmPassword: string;
+  userType: 'buyer' | 'seller' | 'admin';
+}
+
+
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+export interface LoginResponse {
+  token: string;
+}
+
+export interface AuthToken {
+  accessToken: string;
+  refreshToken: string;
+  expiresIn: number; // seconds
+  tokenType: 'Bearer';
+}
+
+export interface Result<T> {
+  ok: boolean;
+  data?: T;
+  error?: string;
+  status?: number;
+  details?: unknown;
+  message?: string;
+}
+
 export interface User {
   id: string;
   name: string;
   email: string;
-  type: 'buyer' | 'seller' | 'admin';
   phone?: string;
   address?: string;
+  type: 'buyer' | 'seller' | 'admin';
 }
 
 export interface Seller extends User {

@@ -1,0 +1,11 @@
+export const env = {
+  GATEWAY_BASE_URL: import.meta.env.VITE_GATEWAY_BASE_URL ?? '',
+  
+  // Service URLs
+  USER_SERVICE_BASE_URL: import.meta.env.VITE_USER_BASE_URL ?? 'http://localhost:8085',
+  ORDER_SERVICE_BASE_URL: import.meta.env.VITE_ORDER_BASE_URL ?? 'http://localhost:8086',
+  PRODUCT_SERVICE_BASE_URL: import.meta.env.VITE_PRODUCT_BASE_URL ?? 'http://localhost:8087',
+  
+  // API Configuration
+  API_TIMEOUT_MS: Number(import.meta.env.VITE_API_TIMEOUT_MS ?? 15000),
+};

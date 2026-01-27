@@ -1,6 +1,7 @@
 import { ShoppingCart, User } from "lucide-react";
 import type { CartItem, User as UserType } from "../types";
 
+
 interface HeaderProps {
   currentUser: UserType | null;
   onNavigate: (page: string) => void;
