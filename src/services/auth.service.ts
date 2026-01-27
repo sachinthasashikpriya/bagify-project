@@ -1,11 +1,12 @@
 // src/services/auth.service.ts
+import { httpClient } from '../api/httpClient';
 import { clearAuthToken, setAuthToken } from '../state/authToken';
+import { endpoints } from '../api/endpoints';
 import type {
-    LoginRequest,
-    RegisterRequest,
-    Result,
-    User,
-    
+  LoginRequest,
+  RegisterRequest,
+  Result,
+  User,
 } from '../types';
 import { mockBuyers, mockSellers } from '../types/index';
 
@@ -20,52 +21,21 @@ const mockAdmin: User = {
 };
 
 class AuthService {
-  /**
-   * Register a new user (mock implementation)
-   */
-  async register(payload: RegisterRequest): Promise<Result<User>> {
-    try {
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+  
+  
+async register(payload: RegisterRequest): Promise<Result<User>> {
+  // Choose the right service key based on your registry:
+  // - If register is under Auth service, use service: 'auth'
+  // - If it's under Users service, use service: 'users'
+  return httpClient.post<User>(endpoints.auth.register, payload, {
+    service: 'auth-service',       // <-- change to 'users' if needed
+    auth: false,           // registration is public
+    retry: { attempts: 0, backoffMs: 0 }, // usually no retry for register
+  });
+}
 
-      // Check if user already exists
-      const allUsers = [...mockBuyers, ...mockSellers, mockAdmin];
-      const existingUser = allUsers.find(user => 
-        user.email.toLowerCase() === payload.email.toLowerCase()
-      );
 
-      if (existingUser) {
-        return {
-          ok: false,
-          error: 'User already exists',
-          message: 'An account with this email already exists',
-        };
-      }
 
-      // Create new user
-      const newUser: User = {
-        id: `${payload.userType}_${Date.now()}`,
-        name: payload.name,
-        email: payload.email.toLowerCase(),
-        type: payload.userType,
-        phone: payload.phone,
-        address: payload.address,
-      };
-
-      return {
-        ok: true,
-        data: newUser,
-        message: 'Account created successfully',
-      };
-    } catch (error) {
-      console.error('Registration error:', error);
-      return {
-        ok: false,
-        error: 'Registration failed',
-        message: 'An unexpected error occurred',
-      };
-    }
-  }
 
   /**
    * Login user (mock implementation)
