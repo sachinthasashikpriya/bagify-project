@@ -12,7 +12,7 @@ interface SignupFormData {
   confirmPassword: string;
   phone: string;
   address: string;
-  userType: "buyer" | "seller";
+  userType: "BUYER" | "SELLER";
 }
 
 export function SignupPage() {
@@ -27,7 +27,7 @@ export function SignupPage() {
     confirmPassword: "",
     phone: "",
     address: "",
-    userType: "buyer",
+    userType: "BUYER",
   });
 
   const handleChange = (name: keyof SignupFormData, value: string) => {
@@ -53,7 +53,7 @@ export function SignupPage() {
         address: formData.address.trim(),
         password: formData.password,
         confirmPassword: formData.confirmPassword,
-        userType: formData.userType,
+        userrole: formData.userType,
       });
 
       if (!registerResponse.ok || !registerResponse.data) {
@@ -74,7 +74,7 @@ export function SignupPage() {
         confirmPassword: "",
         phone: "",
         address: "",
-        userType: "buyer",
+        userType: "BUYER",
       });
     } catch (error) {
       console.error("Registration error:", error);

@@ -4,23 +4,37 @@ import { useAuth } from "../hooks/useAuth";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  allowedTypes?: ("buyer" | "seller" | "admin")[];
+  allowedroles?: ("BUYER" | "SELLER" | "ADMIN")[];
 }
 
 export function ProtectedRoute({
   children,
-  allowedTypes,
+  allowedroles,
 }: ProtectedRouteProps) {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
+
+  
+
+  // if (isLoading) {
+  //   return (
+  //     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+  //       <div className="text-center">
+  //         <Loader className="w-8 h-8 animate-spin text-purple-600 mx-auto mb-4" />
+  //         <p className="text-gray-600">Loading...</p>
+  //       </div>
+  //     </div>
+  //   );
+  // }
+
 
   // Redirect to login if not authenticated
   if (!currentUser) {
     return <Navigate to="/login" replace />;
   }
 
-  // Check if user type is allowed
-  if (allowedTypes && !allowedTypes.includes(currentUser.type)) {
+  // Check if user role is allowed
+  if (allowedroles && !allowedroles.includes(currentUser.role)) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="bg-white rounded-xl p-8 shadow-sm text-center max-w-md mx-4">
@@ -29,8 +43,8 @@ export function ProtectedRoute({
             Access Denied
           </h2>
           <p className="text-gray-600 mb-6">
-            You don't have permission to access this page. Your account type (
-            {currentUser.type}) is not authorized for this resource.
+            You don't have permission to access this page. Your account role (
+            {currentUser.role}) is not authorized for this resource.
           </p>
           <div className="flex flex-col sm:flex-row gap-3">
             <button

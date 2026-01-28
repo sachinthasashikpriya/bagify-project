@@ -14,7 +14,7 @@ export function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'users'>('overview');
 
   // Check if user is an admin
-  if (!currentUser || currentUser.type !== 'admin') {
+  if (!currentUser || currentUser.role !== 'ADMIN') {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="bg-white rounded-xl p-8 shadow-sm text-center max-w-md">

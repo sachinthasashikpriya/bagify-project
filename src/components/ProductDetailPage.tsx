@@ -56,7 +56,7 @@ export function ProductDetailPage() {
       navigate("/login");
       return;
     }
-    if (currentUser.type !== "buyer") {
+    if (currentUser.role !== "BUYER") {
       toast.error("Only buyers can add items to cart");
       return;
     }
@@ -76,7 +76,7 @@ export function ProductDetailPage() {
       return;
     }
 
-    if (currentUser.type !== "buyer") {
+    if (currentUser.role !== "BUYER") {
       toast.error("Only buyers can submit reviews");
       return;
     }
@@ -205,7 +205,7 @@ export function ProductDetailPage() {
             <div className="space-y-3">
               <button
                 onClick={handleAddToCart}
-                disabled={product.stock <= 0 || !currentUser || currentUser.type !== "buyer"}
+                disabled={product.stock <= 0 || !currentUser || currentUser.role !== "BUYER"}
                 className="w-full bg-purple-600 text-white py-3 rounded-lg hover:bg-purple-700 transition-colors flex items-center justify-center gap-2 font-medium disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-purple-600"
               >
                 <ShoppingCart className="w-5 h-5" />
@@ -227,7 +227,7 @@ export function ProductDetailPage() {
                 </div>
               )}
 
-              {currentUser && currentUser.type !== "buyer" && (
+              {currentUser && currentUser.role !== "BUYER" && (
                 <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 p-4 rounded-lg text-center">
                   <p>Only buyers can purchase products</p>
                 </div>
@@ -240,7 +240,7 @@ export function ProductDetailPage() {
         <div className="bg-white rounded-xl p-8 shadow-sm">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold text-gray-900">Customer Reviews</h2>
-            {currentUser?.type === "buyer" && !showReviewForm && (
+            {currentUser?.role === "BUYER" && !showReviewForm && (
               <button
                 onClick={() => setShowReviewForm(true)}
                 className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
@@ -251,7 +251,7 @@ export function ProductDetailPage() {
           </div>
 
           {/* Add Review Form */}
-          {showReviewForm && currentUser?.type === "buyer" && (
+          {showReviewForm && currentUser?.role === "BUYER" && (
             <div className="bg-gray-50 rounded-lg p-6 mb-6 border border-gray-200">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Write Your Review</h3>
 
@@ -364,7 +364,7 @@ export function ProductDetailPage() {
           )}
 
           {/* Review Permission Messages */}
-          {currentUser?.type === "seller" && !showReviewForm && (
+          {currentUser?.role === "SELLER" && !showReviewForm && (
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-center mt-6">
               <p className="text-yellow-800">
                 Sellers cannot review products. Switch to a buyer account to leave reviews.
@@ -372,7 +372,7 @@ export function ProductDetailPage() {
             </div>
           )}
 
-          {currentUser?.type === "admin" && !showReviewForm && (
+          {currentUser?.role === "ADMIN" && !showReviewForm && (
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center mt-6">
               <p className="text-blue-800">
                 Admins cannot review products. This is for customer reviews only.

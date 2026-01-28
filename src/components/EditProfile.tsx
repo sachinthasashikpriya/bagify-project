@@ -6,7 +6,7 @@ import { useAuth } from '../hooks/useAuth';
 import type { User as UserType } from '../types';
 
 export function EditProfile() {
-  const { currentUser, login } = useAuth();
+  const { currentUser, setCurrentUser } = useAuth();
   const navigate = useNavigate();
   
   const [formData, setFormData] = useState({
@@ -76,13 +76,13 @@ export function EditProfile() {
         address: formData.address.trim(),
       };
       
-      login(updatedUser); // Update the user in context
+      setCurrentUser(updatedUser); // Update the user in context
       toast.success('Profile updated successfully!');
       
       // Navigate back to appropriate dashboard
-      if (currentUser.type === 'seller') {
+      if (currentUser.role === 'SELLER') {
         navigate('/seller-dashboard');
-      } else if (currentUser.type === 'admin') {
+      } else if (currentUser.role === 'ADMIN') {
         navigate('/admin-dashboard');
       } else {
         navigate('/buyer-dashboard');
@@ -97,9 +97,9 @@ export function EditProfile() {
 
   const handleCancel = () => {
     // Navigate back to appropriate dashboard without saving
-    if (currentUser.type === 'seller') {
+    if (currentUser.role === 'SELLER') {
       navigate('/seller-dashboard');
-    } else if (currentUser.type === 'admin') {
+    } else if (currentUser.role === 'ADMIN') {
       navigate('/admin-dashboard');
     } else {
       navigate('/buyer-dashboard');
@@ -107,10 +107,10 @@ export function EditProfile() {
   };
 
   const getDashboardPath = () => {
-    switch (currentUser.type) {
-      case 'seller':
+    switch (currentUser.role) {
+      case 'SELLER':
         return '/seller-dashboard';
-      case 'admin':
+      case 'ADMIN':
         return '/admin-dashboard';
       default:
         return '/buyer-dashboard';
@@ -150,7 +150,7 @@ export function EditProfile() {
                 Account Type
               </label>
               <div className="px-4 py-2 bg-gray-100 rounded-lg text-gray-700 capitalize">
-                {currentUser.type}
+                {currentUser.role}
               </div>
               <p className="text-xs text-gray-500 mt-1">
                 Account type cannot be changed

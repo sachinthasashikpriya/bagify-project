@@ -5,7 +5,7 @@ export interface RegisterRequest {
   address: string;
   password: string;
   confirmPassword: string;
-  userType: 'buyer' | 'seller' | 'admin';
+  userrole: 'BUYER' | 'SELLER' | 'ADMIN';
 }
 
 
@@ -35,16 +35,17 @@ export interface Result<T> {
 }
 
 export interface User {
+  
   id: string;
   name: string;
   email: string;
   phone?: string;
   address?: string;
-  type: 'buyer' | 'seller' | 'admin';
+  role: 'BUYER' | 'SELLER' | 'ADMIN';
 }
 
 export interface Seller extends User {
-  type: 'seller';
+  role: 'SELLER';
   storeName: string;
   rating: number;
   totalReviews: number;
@@ -102,7 +103,7 @@ export const mockSellers: Seller[] = [
     id: 's1',
     name: 'Sarah Johnson',
     email: 'sarah@luxebags.com',
-    type: 'seller',
+    role: 'SELLER',
     phone: '+1 234 567 8901',
     address: '123 Fashion St, New York, NY',
     storeName: 'Luxe Bags Co',
@@ -114,7 +115,7 @@ export const mockSellers: Seller[] = [
     id: 's2',
     name: 'Michael Chen',
     email: 'michael@urbancarry.com',
-    type: 'seller',
+    role: 'SELLER',
     phone: '+1 234 567 8902',
     address: '456 Market Ave, Los Angeles, CA',
     storeName: 'Urban Carry',
@@ -126,7 +127,7 @@ export const mockSellers: Seller[] = [
     id: 's3',
     name: 'Emma Davis',
     email: 'emma@craftleather.com',
-    type: 'seller',
+    role: 'SELLER',
     phone: '+1 234 567 8903',
     address: '789 Craft Blvd, Austin, TX',
     storeName: 'Craft Leather Studio',
@@ -141,7 +142,7 @@ export const mockBuyers: User[] = [
     id: 'b1',
     name: 'John Smith',
     email: 'john@email.com',
-    type: 'buyer',
+    role: 'BUYER',
     phone: '+1 345 678 9001',
     address: '321 Oak St, Chicago, IL',
   },
@@ -149,7 +150,7 @@ export const mockBuyers: User[] = [
     id: 'b2',
     name: 'Lisa Anderson',
     email: 'lisa@email.com',
-    type: 'buyer',
+    role: 'BUYER',
     phone: '+1 345 678 9002',
     address: '654 Pine Rd, Seattle, WA',
   },

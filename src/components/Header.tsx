@@ -1,7 +1,6 @@
 import { ShoppingCart, User } from "lucide-react";
 import type { CartItem, User as UserType } from "../types";
 
-
 interface HeaderProps {
   currentUser: UserType | null;
   onNavigate: (page: string) => void;
@@ -46,7 +45,7 @@ export function Header({
             >
               Shop
             </button>
-            {currentUser?.type === "seller" && (
+            {currentUser?.role === "SELLER" && (
               <button
                 onClick={() => onNavigate("seller-dashboard")}
                 className={`${
@@ -58,11 +57,11 @@ export function Header({
                 My Store
               </button>
             )}
-            {currentUser?.type === "buyer" && (
+            {currentUser?.role === "BUYER" && (
               <button
-                onClick={() => onNavigate("buyer-dashboard")}
+                onClick={() => onNavigate("BUYER-dashboard")}
                 className={`${
-                  currentPage === "buyer-dashboard"
+                  currentPage === "BUYER-dashboard"
                     ? "text-purple-600"
                     : "text-gray-600 hover:text-gray-900"
                 }`}
@@ -70,23 +69,23 @@ export function Header({
                 My Orders
               </button>
             )}
-            {currentUser?.type === "admin" && (
+            {currentUser?.role === "ADMIN" && (
               <button
-                onClick={() => onNavigate("admin-dashboard")}
+                onClick={() => onNavigate("ADMIN-dashboard")}
                 className={`${
-                  currentPage === "admin-dashboard"
+                  currentPage === "ADMIN-dashboard"
                     ? "text-purple-600"
                     : "text-gray-600 hover:text-gray-900"
                 }`}
               >
-                Admin Panel
+                ADMIN Panel
               </button>
             )}
           </nav>
 
           {/* Right side */}
           <div className="flex items-center gap-4">
-            {currentUser?.type === "buyer" && (
+            {currentUser?.role === "BUYER" && (
               <button
                 onClick={() => onNavigate("cart")}
                 className="relative p-2 hover:bg-gray-100 rounded-lg"

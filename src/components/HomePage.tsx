@@ -125,7 +125,7 @@ export function HomePage() {
                   product={product}
                   onViewDetails={handleViewProduct}
                   onAddToCart={
-                    currentUser?.type === "buyer" ? handleAddToCart : undefined
+                    currentUser?.role === "BUYER" ? handleAddToCart : undefined
                   }
                 />
               ))}

@@ -61,8 +61,8 @@ export function CartPage() {
       return;
     }
 
-    if (currentUser.type !== 'buyer') {
-      toast.error('Only buyers can checkout');
+    if (currentUser.role !== 'BUYER') {
+      toast.error('Only BUYERs can checkout');
       return;
     }
 
@@ -74,7 +74,7 @@ export function CartPage() {
       
       clearCart();
       toast.success('Order placed successfully! Thank you for your purchase.');
-      navigate('/buyer-dashboard');
+      navigate('/BUYER-dashboard');
     } catch (error) { 
       console.error('Checkout error:', error);
       toast.error('Checkout failed. Please try again.');
@@ -241,15 +241,15 @@ export function CartPage() {
 
               <button
                 onClick={handleCheckout}
-                disabled={isCheckingOut || cartItems.length === 0 || currentUser.type !== 'buyer'}
+                disabled={isCheckingOut || cartItems.length === 0 || currentUser.role !== 'BUYER'}
                 className="w-full bg-purple-600 text-white py-3 rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
               >
                 {isCheckingOut ? 'Processing...' : 'Proceed to Checkout'}
               </button>
 
-              {currentUser.type !== 'buyer' && (
+              {currentUser.role !== 'BUYER' && (
                 <p className="text-center text-sm text-red-600 mt-3">
-                  Only buyers can checkout
+                  Only BUYERs can checkout
                 </p>
               )}
 

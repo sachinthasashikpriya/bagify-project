@@ -1,29 +1,36 @@
-import { useState } from 'react';
-import { ShoppingBag, Star, Package, User, LogOut, Heart } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
-import { useAuth } from '../hooks/useAuth';
-import { useCart } from '../hooks/useCart';
-import { useProducts } from '../hooks/useProduct';
+import { Heart, LogOut, Package, ShoppingBag, Star, User } from "lucide-react";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import { useAuth } from "../hooks/useAuth";
+import { useCart } from "../hooks/useCart";
+import { useProducts } from "../hooks/useProduct";
 
-export function BuyerDashboard() {  // ✅ Fixed: Changed from SellerDashboard to BuyerDashboard
+export function BuyerDashboard() {
+  // ✅ Fixed: Changed from SellerDashboard to BuyerDashboard
   const { currentUser, logout } = useAuth();
   const { cartItems } = useCart();
   const { products } = useProducts();
   const navigate = useNavigate();
-  
-  const [activeTab, setActiveTab] = useState<'orders' | 'wishlist' | 'reviews'>('orders');
+
+  const [activeTab, setActiveTab] = useState<"orders" | "wishlist" | "reviews">(
+    "orders"
+  );
 
   // Check if user is a buyer (✅ Fixed: Changed from seller to buyer)
-  if (!currentUser || currentUser.type !== 'buyer') {
+  if (!currentUser || currentUser.role !== "BUYER") {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="bg-white rounded-xl p-8 shadow-sm text-center max-w-md">
           <User className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Access Denied</h2>
-          <p className="text-gray-600 mb-4">You need to be logged in as a buyer to access this page.</p>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">
+            Access Denied
+          </h2>
+          <p className="text-gray-600 mb-4">
+            You need to be logged in as a buyer to access this page.
+          </p>
           <button
-            onClick={() => navigate('/login')}
+            onClick={() => navigate("/login")}
             className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700"
           >
             Go to Login
@@ -36,33 +43,33 @@ export function BuyerDashboard() {  // ✅ Fixed: Changed from SellerDashboard t
   // Mock orders (you can implement order context later)
   const mockOrders = [
     {
-      id: 'order1',
-      date: '2024-01-20',
-      status: 'delivered',
+      id: "order1",
+      date: "2024-01-20",
+      status: "delivered",
       total: 89.99,
       items: [
-        { productId: 'p1', name: 'Leather Handbag', price: 89.99, quantity: 1 }
-      ]
+        { productId: "p1", name: "Leather Handbag", price: 89.99, quantity: 1 },
+      ],
     },
     {
-      id: 'order2',
-      date: '2024-01-18',
-      status: 'shipped',
-      total: 45.50,
+      id: "order2",
+      date: "2024-01-18",
+      status: "shipped",
+      total: 45.5,
       items: [
-        { productId: 'p2', name: 'Canvas Backpack', price: 45.50, quantity: 1 }
-      ]
-    }
+        { productId: "p2", name: "Canvas Backpack", price: 45.5, quantity: 1 },
+      ],
+    },
   ];
 
   // Mock wishlist (you can implement wishlist context later)
   const wishlistItems = products.slice(0, 3);
 
   const handleLogout = () => {
-    if (window.confirm('Are you sure you want to logout?')) {
+    if (window.confirm("Are you sure you want to logout?")) {
       logout();
-      navigate('/');
-      toast.success('Logged out successfully');
+      navigate("/");
+      toast.success("Logged out successfully");
     }
   };
 
@@ -100,7 +107,9 @@ export function BuyerDashboard() {  // ✅ Fixed: Changed from SellerDashboard t
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-600 mb-1">Total Orders</p>
-                <p className="text-3xl font-bold text-gray-900">{totalOrders}</p>
+                <p className="text-3xl font-bold text-gray-900">
+                  {totalOrders}
+                </p>
               </div>
               <Package className="w-12 h-12 text-purple-600" />
             </div>
@@ -110,7 +119,9 @@ export function BuyerDashboard() {  // ✅ Fixed: Changed from SellerDashboard t
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-600 mb-1">Total Spent</p>
-                <p className="text-3xl font-bold text-gray-900">${totalSpent.toFixed(2)}</p>
+                <p className="text-3xl font-bold text-gray-900">
+                  ${totalSpent.toFixed(2)}
+                </p>
               </div>
               <ShoppingBag className="w-12 h-12 text-green-600" />
             </div>
@@ -120,7 +131,9 @@ export function BuyerDashboard() {  // ✅ Fixed: Changed from SellerDashboard t
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-600 mb-1">Cart Items</p>
-                <p className="text-3xl font-bold text-gray-900">{cartItemsCount}</p>
+                <p className="text-3xl font-bold text-gray-900">
+                  {cartItemsCount}
+                </p>
               </div>
               <ShoppingBag className="w-12 h-12 text-blue-600" />
             </div>
@@ -130,7 +143,9 @@ export function BuyerDashboard() {  // ✅ Fixed: Changed from SellerDashboard t
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-600 mb-1">Wishlist</p>
-                <p className="text-3xl font-bold text-gray-900">{wishlistItems.length}</p>
+                <p className="text-3xl font-bold text-gray-900">
+                  {wishlistItems.length}
+                </p>
               </div>
               <Heart className="w-12 h-12 text-red-600" />
             </div>
@@ -139,32 +154,32 @@ export function BuyerDashboard() {  // ✅ Fixed: Changed from SellerDashboard t
 
         {/* Quick Actions */}
         <div className="bg-white rounded-xl p-6 shadow-sm mb-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Quick Actions</h2>
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">
+            Quick Actions
+          </h2>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <button
-              onClick={() => handleNavigate('/')}
+              onClick={() => handleNavigate("/")}
               className="flex items-center gap-2 p-4 bg-purple-50 text-purple-700 rounded-lg hover:bg-purple-100 transition-colors"
             >
               <ShoppingBag className="w-5 h-5" />
               Browse Products
             </button>
             <button
-              onClick={() => handleNavigate('/cart')}
+              onClick={() => handleNavigate("/cart")}
               className="flex items-center gap-2 p-4 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors"
             >
               <ShoppingBag className="w-5 h-5" />
               View Cart
             </button>
             <button
-              onClick={() => handleNavigate('/edit-profile')}
+              onClick={() => handleNavigate("/edit-profile")}
               className="flex items-center gap-2 p-4 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition-colors"
             >
               <User className="w-5 h-5" />
               Edit Profile
             </button>
-            <button
-              className="flex items-center gap-2 p-4 bg-yellow-50 text-yellow-700 rounded-lg hover:bg-yellow-100 transition-colors"
-            >
+            <button className="flex items-center gap-2 p-4 bg-yellow-50 text-yellow-700 rounded-lg hover:bg-yellow-100 transition-colors">
               <Star className="w-5 h-5" />
               My Reviews
             </button>
@@ -176,33 +191,33 @@ export function BuyerDashboard() {  // ✅ Fixed: Changed from SellerDashboard t
           <div className="border-b border-gray-200">
             <nav className="-mb-px flex space-x-8 px-6">
               <button
-                onClick={() => setActiveTab('orders')}
+                onClick={() => setActiveTab("orders")}
                 className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === 'orders'
-                    ? 'border-purple-500 text-purple-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  activeTab === "orders"
+                    ? "border-purple-500 text-purple-600"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                 }`}
               >
                 <Package className="w-5 h-5 inline mr-2" />
                 Recent Orders
               </button>
               <button
-                onClick={() => setActiveTab('wishlist')}
+                onClick={() => setActiveTab("wishlist")}
                 className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === 'wishlist'
-                    ? 'border-purple-500 text-purple-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  activeTab === "wishlist"
+                    ? "border-purple-500 text-purple-600"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                 }`}
               >
                 <Heart className="w-5 h-5 inline mr-2" />
                 Wishlist
               </button>
               <button
-                onClick={() => setActiveTab('reviews')}
+                onClick={() => setActiveTab("reviews")}
                 className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === 'reviews'
-                    ? 'border-purple-500 text-purple-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  activeTab === "reviews"
+                    ? "border-purple-500 text-purple-600"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                 }`}
               >
                 <Star className="w-5 h-5 inline mr-2" />
@@ -213,16 +228,22 @@ export function BuyerDashboard() {  // ✅ Fixed: Changed from SellerDashboard t
 
           <div className="p-6">
             {/* Orders Tab */}
-            {activeTab === 'orders' && (
+            {activeTab === "orders" && (
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Orders</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  Recent Orders
+                </h3>
                 {mockOrders.length === 0 ? (
                   <div className="text-center py-8">
                     <Package className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                    <h4 className="text-lg font-medium text-gray-900 mb-2">No orders yet</h4>
-                    <p className="text-gray-500 mb-4">Start shopping to see your orders here!</p>
+                    <h4 className="text-lg font-medium text-gray-900 mb-2">
+                      No orders yet
+                    </h4>
+                    <p className="text-gray-500 mb-4">
+                      Start shopping to see your orders here!
+                    </p>
                     <button
-                      onClick={() => handleNavigate('/')}
+                      onClick={() => handleNavigate("/")}
                       className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
                     >
                       Browse Products
@@ -231,30 +252,49 @@ export function BuyerDashboard() {  // ✅ Fixed: Changed from SellerDashboard t
                 ) : (
                   <div className="space-y-4">
                     {mockOrders.map((order) => (
-                      <div key={order.id} className="border border-gray-200 rounded-lg p-4">
+                      <div
+                        key={order.id}
+                        className="border border-gray-200 rounded-lg p-4"
+                      >
                         <div className="flex items-center justify-between mb-3">
                           <div>
-                            <p className="font-medium text-gray-900">Order #{order.id}</p>
-                            <p className="text-sm text-gray-500">{order.date}</p>
+                            <p className="font-medium text-gray-900">
+                              Order #{order.id}
+                            </p>
+                            <p className="text-sm text-gray-500">
+                              {order.date}
+                            </p>
                           </div>
                           <div className="text-right">
-                            <p className="font-medium text-gray-900">${order.total.toFixed(2)}</p>
-                            <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
-                              order.status === 'delivered' 
-                                ? 'bg-green-100 text-green-800'
-                                : order.status === 'shipped'
-                                ? 'bg-blue-100 text-blue-800'
-                                : 'bg-yellow-100 text-yellow-800'
-                            }`}>
-                              {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                            <p className="font-medium text-gray-900">
+                              ${order.total.toFixed(2)}
+                            </p>
+                            <span
+                              className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
+                                order.status === "delivered"
+                                  ? "bg-green-100 text-green-800"
+                                  : order.status === "shipped"
+                                  ? "bg-blue-100 text-blue-800"
+                                  : "bg-yellow-100 text-yellow-800"
+                              }`}
+                            >
+                              {order.status.charAt(0).toUpperCase() +
+                                order.status.slice(1)}
                             </span>
                           </div>
                         </div>
                         <div className="border-t pt-3">
                           {order.items.map((item, index) => (
-                            <div key={index} className="flex items-center justify-between">
-                              <span className="text-gray-600">{item.name} × {item.quantity}</span>
-                              <span className="text-gray-900">${item.price.toFixed(2)}</span>
+                            <div
+                              key={index}
+                              className="flex items-center justify-between"
+                            >
+                              <span className="text-gray-600">
+                                {item.name} × {item.quantity}
+                              </span>
+                              <span className="text-gray-900">
+                                ${item.price.toFixed(2)}
+                              </span>
                             </div>
                           ))}
                         </div>
@@ -266,16 +306,22 @@ export function BuyerDashboard() {  // ✅ Fixed: Changed from SellerDashboard t
             )}
 
             {/* Wishlist Tab */}
-            {activeTab === 'wishlist' && (
+            {activeTab === "wishlist" && (
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Wishlist</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  Wishlist
+                </h3>
                 {wishlistItems.length === 0 ? (
                   <div className="text-center py-8">
                     <Heart className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                    <h4 className="text-lg font-medium text-gray-900 mb-2">No items in wishlist</h4>
-                    <p className="text-gray-500 mb-4">Add products to your wishlist to see them here!</p>
+                    <h4 className="text-lg font-medium text-gray-900 mb-2">
+                      No items in wishlist
+                    </h4>
+                    <p className="text-gray-500 mb-4">
+                      Add products to your wishlist to see them here!
+                    </p>
                     <button
-                      onClick={() => handleNavigate('/')}
+                      onClick={() => handleNavigate("/")}
                       className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
                     >
                       Browse Products
@@ -284,16 +330,25 @@ export function BuyerDashboard() {  // ✅ Fixed: Changed from SellerDashboard t
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {wishlistItems.map((product) => (
-                      <div key={product.id} className="border border-gray-200 rounded-lg p-4">
+                      <div
+                        key={product.id}
+                        className="border border-gray-200 rounded-lg p-4"
+                      >
                         <img
                           src={product.image}
                           alt={product.name}
                           className="w-full h-48 object-cover rounded mb-3"
                         />
-                        <h4 className="font-medium text-gray-900 mb-2">{product.name}</h4>
-                        <p className="text-purple-600 font-bold mb-3">${product.price.toFixed(2)}</p>
+                        <h4 className="font-medium text-gray-900 mb-2">
+                          {product.name}
+                        </h4>
+                        <p className="text-purple-600 font-bold mb-3">
+                          ${product.price.toFixed(2)}
+                        </p>
                         <button
-                          onClick={() => handleNavigate(`/product/${product.id}`)}
+                          onClick={() =>
+                            handleNavigate(`/product/${product.id}`)
+                          }
                           className="w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 transition-colors"
                         >
                           View Product
@@ -306,15 +361,21 @@ export function BuyerDashboard() {  // ✅ Fixed: Changed from SellerDashboard t
             )}
 
             {/* Reviews Tab */}
-            {activeTab === 'reviews' && (
+            {activeTab === "reviews" && (
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">My Reviews</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  My Reviews
+                </h3>
                 <div className="text-center py-8">
                   <Star className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                  <h4 className="text-lg font-medium text-gray-900 mb-2">No reviews yet</h4>
-                  <p className="text-gray-500 mb-4">Purchase products to leave reviews!</p>
+                  <h4 className="text-lg font-medium text-gray-900 mb-2">
+                    No reviews yet
+                  </h4>
+                  <p className="text-gray-500 mb-4">
+                    Purchase products to leave reviews!
+                  </p>
                   <button
-                    onClick={() => handleNavigate('/')}
+                    onClick={() => handleNavigate("/")}
                     className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
                   >
                     Start Shopping

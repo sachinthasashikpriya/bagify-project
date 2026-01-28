@@ -1,6 +1,6 @@
 // src/services/auth.service.ts
 import { httpClient } from '../api/httpClient';
-import { clearAuthToken, setAuthToken } from '../state/authToken';
+import { clearAuthToken } from '../state/authToken';
 import { endpoints } from '../api/endpoints';
 import type {
   LoginRequest,
@@ -8,75 +8,41 @@ import type {
   Result,
   User,
 } from '../types';
-import { mockBuyers, mockSellers } from '../types/index';
+import { mockBuyers } from '../types/index';
 
 // Mock admin user
-const mockAdmin: User = {
-  id: 'admin1',
-  name: 'Admin User',
-  email: 'admin@bagify.com',
-  type: 'admin',
-  phone: '+1 (555) 000-0000',
-  address: 'Admin Office, Bagify HQ',
-};
-
+// const mockAdmin: User = {
+//   id: 'admin1',
+//   name: 'Admin User',
+//   email: 'admin@bagify.com',
+//   type: 'admin',
+//   phone: '+1 (555) 000-0000',
+//   address: 'Admin Office, Bagify HQ',
+// };
+type LoginResponse = { token: string; user: User };
 class AuthService {
   
   
 async register(payload: RegisterRequest): Promise<Result<User>> {
-  // Choose the right service key based on your registry:
-  // - If register is under Auth service, use service: 'auth'
-  // - If it's under Users service, use service: 'users'
+  
   return httpClient.post<User>(endpoints.auth.register, payload, {
-    service: 'auth-service',       // <-- change to 'users' if needed
-    auth: false,           // registration is public
-    retry: { attempts: 0, backoffMs: 0 }, // usually no retry for register
+    service: 'auth-service',      
+    auth: false,          
+    retry: { attempts: 0, backoffMs: 0 }, 
   });
 }
 
 
+async login(
+  payload: LoginRequest
+): Promise<Result<{ token: string; user: User }>> {
+  return httpClient.post<LoginResponse>(endpoints.auth.login, payload, {
+    service: 'auth-service',  
+    auth: false,
+    retry: { attempts: 0, backoffMs: 0 },
+  });
+}
 
-
-  /**
-   * Login user (mock implementation)
-   */
-  async login(payload: LoginRequest): Promise<Result<{ token: string; user: User }>> {
-    try {
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 800));
-
-      // Check credentials against mock data
-      const allUsers = [...mockBuyers, ...mockSellers, mockAdmin];
-      const foundUser = allUsers.find(user => 
-        user.email.toLowerCase() === payload.email.toLowerCase()
-      );
-
-      // For demo, accept "password123" for all users
-      if (foundUser && payload.password === "password123") {
-        const token = `demo_token_${foundUser.id}_${Date.now()}`;
-        setAuthToken(token);
-
-        return {
-          ok: true,
-          data: { token, user: foundUser },
-          message: 'Login successful',
-        };
-      }
-
-      return {
-        ok: false,
-        error: 'Invalid credentials',
-        message: 'Please check your email and password. Use "password123" for demo.',
-      };
-    } catch (error) {
-      console.error('Login error:', error);
-      return {
-        ok: false,
-        error: 'Login failed',
-        message: 'An unexpected error occurred',
-      };
-    }
-  }
 
   /**
    * Get current user profile (mock implementation)

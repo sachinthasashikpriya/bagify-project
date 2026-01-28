@@ -21,7 +21,7 @@ export function SellerDashboard() {
   });
 
   // Check if user is a seller
-  if (!currentUser || currentUser.type !== 'seller') {
+  if (!currentUser || currentUser.role !== 'SELLER') {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="bg-white rounded-xl p-8 shadow-sm text-center max-w-md">

@@ -53,7 +53,7 @@ export function ProductDetail() {
       navigate("/login");
       return;
     }
-    if (currentUser.type !== "buyer") {
+    if (currentUser.role !== "BUYER") {
       toast.error("Only buyers can add items to cart");
       return;
     }
@@ -75,7 +75,7 @@ export function ProductDetail() {
       return;
     }
 
-    if (currentUser.type !== "buyer") {
+    if (currentUser.role !== "BUYER") {
       toast.error("Only buyers can submit reviews");
       return;
     }
@@ -219,7 +219,7 @@ export function ProductDetail() {
           <button
             onClick={handleAddToCart}
             disabled={
-              product.stock <= 0 || !currentUser || currentUser.type !== "buyer"
+              product.stock <= 0 || !currentUser || currentUser.role !== "BUYER"
             }
             className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-purple-600"
           >
@@ -239,7 +239,7 @@ export function ProductDetail() {
             </p>
           )}
 
-          {currentUser && currentUser.type !== "buyer" && (
+          {currentUser && currentUser.role !== "BUYER" && (
             <p className="text-center text-sm text-yellow-600 mt-3">
               Only buyers can add items to cart
             </p>
@@ -293,7 +293,7 @@ export function ProductDetail() {
         )}
 
         {/* Add Review Form */}
-        {currentUser?.type === "buyer" && (
+        {currentUser?.role === "BUYER" && (
           <div className="border-t pt-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
               Write a Review
@@ -357,7 +357,7 @@ export function ProductDetail() {
           </div>
         )}
 
-        {currentUser?.type === "seller" && (
+        {currentUser?.role === "SELLER" && (
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-center">
             <p className="text-yellow-800">
               Sellers cannot review products. Switch to a buyer account to leave
@@ -366,7 +366,7 @@ export function ProductDetail() {
           </div>
         )}
 
-        {currentUser?.type === "admin" && (
+        {currentUser?.role === "ADMIN" && (
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
             <p className="text-blue-800">
               Admins cannot review products. This is for customer reviews only.
