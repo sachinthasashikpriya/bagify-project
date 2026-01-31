@@ -97,7 +97,7 @@ export interface Order {
   orderDate: string;
   shippingAddress: string;
 }
-
+//Mock data for development
 export const mockSellers: Seller[] = [
   {
     id: 's1',

@@ -6,9 +6,10 @@ import { useCart } from "../hooks/useCart";
 import { useAuth } from "../hooks/useAuth";
 import { useNavigate } from 'react-router-dom';
 import type { Product } from "../types";
+import { toast } from "sonner";
 
 export function HomePage() {
-  const { products } = useProducts();
+  const { products, getCategories } = useProducts();
   const { addToCart } = useCart();
   const { currentUser } = useAuth();
   const navigate = useNavigate();
@@ -17,17 +18,16 @@ export function HomePage() {
   const [selectedCategory, setSelectedCategory] = useState("all");
 
   const handleViewProduct = (productId: string) => {
+    console.log("🔍 Viewing product:", productId);
     navigate(`/product/${productId}`);
   };
 
   const handleAddToCart = (product: Product) => {
     addToCart(product);
+    toast.success(`${product.name} added to cart!`);
   };
 
-  const categories = [
-    "all",
-    ...Array.from(new Set(products.map((p) => p.category))),
-  ];
+  const categories = ["all", ...getCategories()];
 
   const filteredProducts = products.filter((product) => {
     const matchesSearch =

@@ -7,7 +7,7 @@ import { useCart } from "../hooks/useCart";
 import { useProducts } from "../hooks/useProduct";
 
 export function ProductDetailPage() {
-  const { id } = useParams<{ id: string }>();
+  const { productId } = useParams<{ productId: string }>();
   const navigate = useNavigate();
   const { currentUser } = useAuth();
   const { addToCart } = useCart();
@@ -17,7 +17,7 @@ export function ProductDetailPage() {
   const [comment, setComment] = useState("");
   const [showReviewForm, setShowReviewForm] = useState(false);
 
-  const product = products.find((p) => p.id === id);
+  const product = products.find((p) => p.id === productId);
 
   if (!product) {
     return (
@@ -86,7 +86,15 @@ export function ProductDetailPage() {
       return;
     }
 
-    addReview(product.id, rating, comment.trim(), currentUser.id, currentUser.name);
+    addReview(product.id, {
+      id: crypto.randomUUID(),
+      productId: product.id,
+      buyerId: String(currentUser.id),
+      buyerName: currentUser.name,
+      rating,
+      comment: comment.trim(),
+      date: new Date().toISOString().split("T")[0],
+    });
     toast.success("Review submitted successfully!");
     setComment("");
     setRating(5);

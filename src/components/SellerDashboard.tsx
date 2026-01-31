@@ -39,8 +39,11 @@ export function SellerDashboard() {
     );
   }
 
-  // Filter products for current seller
-  const sellerProducts = products.filter(p => p.sellerId === currentUser.id);
+  // ✅ FIX 1: Convert currentUser.id to string for comparison
+  const currentSellerId = String(currentUser.id);
+
+  // ✅ FIX 2: Define sellerProducts - filter products for current seller
+  const sellerProducts = products.filter(p => p.sellerId === currentSellerId);
   
   // Calculate seller stats
   const totalRevenue = sellerProducts.reduce((sum, p) => {
@@ -82,7 +85,7 @@ export function SellerDashboard() {
       return;
     }
 
-    // Add product with seller info
+    // ✅ FIX 3: Add product with ALL required seller info
     addProduct({
       name: formData.name.trim(),
       description: formData.description.trim(),
@@ -90,6 +93,9 @@ export function SellerDashboard() {
       category: formData.category.trim(),
       image: formData.image.trim(),
       stock: parseInt(formData.stock),
+      sellerId: currentSellerId,
+      sellerName: currentUser.name,
+      sellerRating: 4.5, // Default seller rating
     });
 
     // Reset form and close modal
@@ -124,7 +130,7 @@ export function SellerDashboard() {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  // Mock seller rating (you can add this to your user context later)
+  // Mock seller rating
   const sellerRating = 4.5;
   const totalReviews = sellerProducts.reduce((sum, p) => sum + p.reviews.length, 0);
 
@@ -257,6 +263,7 @@ export function SellerDashboard() {
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Category *
                     </label>
+                    {/* ✅ FIX 4: Updated category options to match mock data */}
                     <select
                       required
                       value={formData.category}
@@ -264,14 +271,18 @@ export function SellerDashboard() {
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                     >
                       <option value="">Select category</option>
-                      <option value="handbags">Handbags</option>
-                      <option value="backpacks">Backpacks</option>
-                      <option value="clutches">Clutches</option>
-                      <option value="totes">Tote Bags</option>
-                      <option value="crossbody">Crossbody</option>
-                      <option value="laptop">Laptop Bags</option>
-                      <option value="travel">Travel Bags</option>
-                      <option value="other">Other</option>
+                      <option value="Tote Bags">Tote Bags</option>
+                      <option value="Backpacks">Backpacks</option>
+                      <option value="Crossbody Bags">Crossbody Bags</option>
+                      <option value="Briefcases">Briefcases</option>
+                      <option value="Duffle Bags">Duffle Bags</option>
+                      <option value="Clutches">Clutches</option>
+                      <option value="Messenger Bags">Messenger Bags</option>
+                      <option value="Gym Bags">Gym Bags</option>
+                      <option value="Handbags">Handbags</option>
+                      <option value="Laptop Bags">Laptop Bags</option>
+                      <option value="Travel Bags">Travel Bags</option>
+                      <option value="Other">Other</option>
                     </select>
                   </div>
 
@@ -319,6 +330,9 @@ export function SellerDashboard() {
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                     placeholder="https://example.com/image.jpg"
                   />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Tip: Use images from Unsplash (e.g., https://images.unsplash.com/photo-xxx?w=400)
+                  </p>
                 </div>
 
                 <div className="mb-6">

@@ -3,8 +3,8 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
-import { authService } from "../services/auth.service";
 import { useAuth } from "../hooks/useAuth"; // ✅ Add this import
+import { authService } from "../services/auth.service";
 
 interface LoginFormData {
   email: string;
@@ -92,7 +92,7 @@ export function LoginPage() {
       // Using setTimeout to ensure context is updated before navigation
       setTimeout(() => {
         console.log("🚀 Navigating for role:", user.role);
-        
+
         switch (user.role) {
           case "ADMIN":
             navigate("/admin-dashboard", { replace: true });
@@ -101,14 +101,13 @@ export function LoginPage() {
             navigate("/seller-dashboard", { replace: true });
             break;
           case "BUYER":
-            navigate("/buyer-dashboard", { replace: true });
+            navigate("/", { replace: true });
             break;
           default:
             navigate("/", { replace: true });
             break;
         }
       }, 100);
-
     } catch (error) {
       console.error("💥 Login error:", error);
       toast.error("An unexpected error occurred. Please try again.");

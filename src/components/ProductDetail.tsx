@@ -85,13 +85,15 @@ export function ProductDetail() {
       return;
     }
 
-    addReview(
-      product.id,
+    addReview(product.id, {
+      id: crypto.randomUUID(),
+      productId: product.id,
+      buyerId: String(currentUser.id),
+      buyerName: currentUser.name,
       rating,
-      comment.trim(),
-      currentUser.id,
-      currentUser.name
-    );
+      comment: comment.trim(),
+      date: new Date().toISOString().split("T")[0],
+    });
     toast.success("Review submitted successfully!");
     setComment("");
     setRating(5);
