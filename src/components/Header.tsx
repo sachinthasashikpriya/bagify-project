@@ -1,4 +1,5 @@
 import { ShoppingCart, User } from "lucide-react";
+import { useCart } from "../hooks/useCart";
 import type { CartItem, User as UserType } from "../types";
 
 interface HeaderProps {
@@ -13,10 +14,11 @@ export function Header({
   currentUser,
   onNavigate,
   onLogout,
-  cartItems,
+
   currentPage,
 }: HeaderProps) {
-  const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+  const { cartItems } = useCart(); // Add this hook
+  const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0); // Calculate total count
 
   return (
     <header className="bg-white shadow-sm sticky top-0 z-50">
