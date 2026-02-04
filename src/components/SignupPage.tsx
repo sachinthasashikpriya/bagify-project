@@ -37,6 +37,10 @@ export function SignupPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // ✅ DEBUG: Log form data before processing
+    console.log("📝 ====== SIGNUP FORM SUBMITTED ======");
+    console.log("📝 Raw Form Data:", formData);
+
     // Minimal client-side check (optional). Remove if you want zero checks.
     if (formData.password !== formData.confirmPassword) {
       toast.error("Passwords do not match");
@@ -233,7 +237,9 @@ export function SignupPage() {
                 type="password"
                 id="confirmPassword"
                 value={formData.confirmPassword}
-                onChange={(e) => handleChange("confirmPassword", e.target.value)}
+                onChange={(e) =>
+                  handleChange("confirmPassword", e.target.value)
+                }
                 className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent border-gray-300"
                 placeholder="••••••••"
                 disabled={isLoading}
