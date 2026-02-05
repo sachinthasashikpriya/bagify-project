@@ -1,21 +1,24 @@
-import { useState } from 'react';
-import { User, Save, X, ArrowLeft } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
-import { useAuth } from '../hooks/useAuth';
-import type { User as UserType } from '../types';
+import { ArrowLeft, Save, User, X } from "lucide-react";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import { useAuth } from "../hooks/useAuth";
+import { userService } from "../services/user.service";
+import type { User as UserType } from "../types";
+import { ProfilePhotoUpload } from "./ProfilePhotoUpload";
 
 export function EditProfile() {
-  const { currentUser, setCurrentUser } = useAuth();
+  const { currentUser, updateUser, token } = useAuth();
   const navigate = useNavigate();
-  
+
   const [formData, setFormData] = useState({
-    name: currentUser?.name || '',
-    email: currentUser?.email || '',
-    phone: currentUser?.phone || '',
-    address: currentUser?.address || '',
+    name: currentUser?.name || "",
+    email: currentUser?.email || "",
+    phone: currentUser?.phone || "",
+    address: currentUser?.address || "",
+    profileImage: currentUser?.profileImage || "",
   });
-  
+
   const [isSaving, setIsSaving] = useState(false);
 
   // Check if user is logged in
@@ -24,10 +27,14 @@ export function EditProfile() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="bg-white rounded-xl p-8 shadow-sm text-center max-w-md">
           <User className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Please Login</h2>
-          <p className="text-gray-600 mb-4">You need to be logged in to edit your profile.</p>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">
+            Please Login
+          </h2>
+          <p className="text-gray-600 mb-4">
+            You need to be logged in to edit your profile.
+          </p>
           <button
-            onClick={() => navigate('/login')}
+            onClick={() => navigate("/login")}
             className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700"
           >
             Go to Login
@@ -38,58 +45,88 @@ export function EditProfile() {
   }
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleProfileImageChange = (imageUrl: string | undefined) => {
+    setFormData((prev) => ({ ...prev, profileImage: imageUrl || "" }));
   };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Validation
     if (!formData.name.trim()) {
-      toast.error('Name is required');
+      toast.error("Name is required");
       return;
     }
-    
+
     if (!formData.email.trim()) {
-      toast.error('Email is required');
+      toast.error("Email is required");
       return;
     }
-    
+
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
-      toast.error('Please enter a valid email address');
+      toast.error("Please enter a valid email address");
+      return;
+    }
+
+    if (!token) {
+      toast.error('You must be logged in to update your profile');
       return;
     }
 
     setIsSaving(true);
-    
+
+    console.log("📝 ====== SAVING PROFILE ======");
+    console.log("📝 User ID:", currentUser.id);
+    console.log("📝 Form Data:", formData);
+
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Update user in context
+      // ✅ Call backend API to update profile
+      const response = await userService.updateProfile(token, {
+        name: formData.name.trim(),
+        phone: formData.phone.trim() || undefined,
+        address: formData.address.trim() || undefined,
+        profileImage: formData.profileImage || undefined,
+      });
+
+      console.log("📝 API Response:", response);
+
+      if (!response.ok) {
+        console.error("📝 Update failed:", response.error);
+        toast.error(response.error || "Failed to update profile");
+        return;
+      }
+
+      // ✅ Update local user state with response from backend
+      const updatedUserFromBackend = response.data;
+
+      // Create updated user object (merge with existing data)
       const updatedUser: UserType = {
         ...currentUser,
-        name: formData.name.trim(),
-        email: formData.email.trim().toLowerCase(),
-        phone: formData.phone.trim(),
-        address: formData.address.trim(),
+        name: updatedUserFromBackend?.name || formData.name.trim(),
+        phone: updatedUserFromBackend?.phone || formData.phone.trim(),
+        address: updatedUserFromBackend?.address || formData.address.trim(),
+        profileImage:
+          updatedUserFromBackend?.profileImage ||
+          formData.profileImage ||
+          undefined,
       };
-      
-      setCurrentUser(updatedUser); // Update the user in context
-      toast.success('Profile updated successfully!');
-      
+
+      console.log("📝 Updating local user:", updatedUser);
+
+      // ✅ Update user in AuthContext (also updates localStorage)
+      updateUser(updatedUser);
+
+      toast.success("Profile updated successfully!");
+
       // Navigate back to appropriate dashboard
-      if (currentUser.role === 'SELLER') {
-        navigate('/seller-dashboard');
-      } else if (currentUser.role === 'ADMIN') {
-        navigate('/admin-dashboard');
-      } else {
-        navigate('/buyer-dashboard');
-      }
+      navigateToDashboard();
     } catch (error) {
-      console.error('Failed to update profile:', error);
-      toast.error('Failed to update profile. Please try again.');
+      console.error("📝 Failed to update profile:", error);
+      toast.error("Failed to update profile. Please try again.");
     } finally {
       setIsSaving(false);
     }
@@ -97,23 +134,36 @@ export function EditProfile() {
 
   const handleCancel = () => {
     // Navigate back to appropriate dashboard without saving
-    if (currentUser.role === 'SELLER') {
-      navigate('/seller-dashboard');
-    } else if (currentUser.role === 'ADMIN') {
-      navigate('/admin-dashboard');
+    if (currentUser.role === "SELLER") {
+      navigate("/seller-dashboard");
+    } else if (currentUser.role === "ADMIN") {
+      navigate("/admin-dashboard");
     } else {
-      navigate('/buyer-dashboard');
+      navigate("/buyer-dashboard");
+    }
+  };
+
+  const navigateToDashboard = () => {
+    switch (currentUser.role) {
+      case "SELLER":
+        navigate("/seller-dashboard");
+        break;
+      case "ADMIN":
+        navigate("/admin-dashboard");
+        break;
+      default:
+        navigate("/buyer-dashboard");
     }
   };
 
   const getDashboardPath = () => {
     switch (currentUser.role) {
-      case 'SELLER':
-        return '/seller-dashboard';
-      case 'ADMIN':
-        return '/admin-dashboard';
+      case "SELLER":
+        return "/seller-dashboard";
+      case "ADMIN":
+        return "/admin-dashboard";
       default:
-        return '/buyer-dashboard';
+        return "/buyer-dashboard";
     }
   };
 
@@ -136,8 +186,12 @@ export function EditProfile() {
                 <User className="w-6 h-6 text-purple-600" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-gray-900">Edit Profile</h1>
-                <p className="text-gray-600">Update your personal information</p>
+                <h1 className="text-xl font-bold text-gray-900">
+                  Edit Profile
+                </h1>
+                <p className="text-gray-600">
+                  Update your personal information
+                </p>
               </div>
             </div>
           </div>
@@ -157,16 +211,29 @@ export function EditProfile() {
               </p>
             </div>
 
+            {/* ✅ Profile Photo Upload Section */}
+            <div className="flex justify-center pb-6 border-b border-gray-200">
+              <ProfilePhotoUpload
+                currentImage={formData.profileImage}
+                userName={formData.name || currentUser.name}
+                onImageChange={handleProfileImageChange}
+                disabled={isSaving}
+              />
+            </div>
+
             {/* Name */}
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="name"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 Full Name *
               </label>
               <input
                 type="text"
                 id="name"
                 value={formData.name}
-                onChange={(e) => handleInputChange('name', e.target.value)}
+                onChange={(e) => handleInputChange("name", e.target.value)}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 placeholder="Enter your full name"
                 disabled={isSaving}
@@ -176,14 +243,17 @@ export function EditProfile() {
 
             {/* Email */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 Email Address *
               </label>
               <input
                 type="email"
                 id="email"
                 value={formData.email}
-                onChange={(e) => handleInputChange('email', e.target.value)}
+                onChange={(e) => handleInputChange("email", e.target.value)}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 placeholder="Enter your email address"
                 disabled={isSaving}
@@ -193,14 +263,17 @@ export function EditProfile() {
 
             {/* Phone */}
             <div>
-              <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="phone"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 Phone Number
               </label>
               <input
                 type="tel"
                 id="phone"
                 value={formData.phone}
-                onChange={(e) => handleInputChange('phone', e.target.value)}
+                onChange={(e) => handleInputChange("phone", e.target.value)}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 placeholder="Enter your phone number"
                 disabled={isSaving}
@@ -209,13 +282,16 @@ export function EditProfile() {
 
             {/* Address */}
             <div>
-              <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="address"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 Address
               </label>
               <textarea
                 id="address"
                 value={formData.address}
-                onChange={(e) => handleInputChange('address', e.target.value)}
+                onChange={(e) => handleInputChange("address", e.target.value)}
                 rows={3}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
                 placeholder="Enter your address"
@@ -231,9 +307,9 @@ export function EditProfile() {
                 className="flex items-center gap-2 px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
               >
                 <Save className="w-4 h-4" />
-                {isSaving ? 'Saving...' : 'Save Changes'}
+                {isSaving ? "Saving..." : "Save Changes"}
               </button>
-              
+
               <button
                 type="button"
                 onClick={handleCancel}

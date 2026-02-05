@@ -1,7 +1,7 @@
 // src/services/auth.service.ts
+import { endpoints } from '../api/endpoints';
 import { httpClient } from '../api/httpClient';
 import { clearAuthToken } from '../state/authToken';
-import { endpoints } from '../api/endpoints';
 import type {
   LoginRequest,
   RegisterRequest,

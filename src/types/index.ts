@@ -42,6 +42,9 @@ export interface User {
   phone?: string;
   address?: string;
   role: 'BUYER' | 'SELLER' | 'ADMIN';
+  profileImage?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Seller extends User {

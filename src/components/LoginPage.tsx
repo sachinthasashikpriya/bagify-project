@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
-import { useAuth } from "../hooks/useAuth"; // ✅ Add this import
+import { useAuth } from "../hooks/useAuth"; // This should now use AuthContext
 import { authService } from "../services/auth.service";
 
 interface LoginFormData {
@@ -13,7 +13,7 @@ interface LoginFormData {
 
 export function LoginPage() {
   const navigate = useNavigate();
-  const { setCurrentUser } = useAuth(); // ✅ Get setCurrentUser from context
+  const { login } = useAuth(); // ✅ Use login instead of setCurrentUser
 
   const [formData, setFormData] = useState<LoginFormData>({
     email: "",
@@ -77,37 +77,35 @@ export function LoginPage() {
         return;
       }
 
-      const { user } = loginResponse.data;
+      const { user, token } = loginResponse.data; // ✅ Get token from response
 
       console.log("✅ Login successful! User:", user.email);
+      console.log("🔑 Token received:", token ? "Yes" : "No");
       console.log("📡 User role:", user.role);
 
-      // ✅ IMPORTANT: Set user in auth context BEFORE navigating
-      setCurrentUser(user);
-      console.log("🔐 User set in context");
+      // ✅ CRITICAL FIX: Use login function with BOTH user and token
+      login(user, token);
+      console.log("🔐 User and token saved to context and localStorage");
 
       toast.success(`Welcome back, ${user.name}!`);
 
-      // ✅ FIX: Navigate to correct paths (match AppRoutes.tsx)
-      // Using setTimeout to ensure context is updated before navigation
-      setTimeout(() => {
-        console.log("🚀 Navigating for role:", user.role);
+      // ✅ Navigate based on role
+      console.log("🚀 Navigating for role:", user.role);
 
-        switch (user.role) {
-          case "ADMIN":
-            navigate("/admin-dashboard", { replace: true });
-            break;
-          case "SELLER":
-            navigate("/seller-dashboard", { replace: true });
-            break;
-          case "BUYER":
-            navigate("/", { replace: true });
-            break;
-          default:
-            navigate("/", { replace: true });
-            break;
-        }
-      }, 100);
+      switch (user.role) {
+        case "ADMIN":
+          navigate("/admin-dashboard", { replace: true });
+          break;
+        case "SELLER":
+          navigate("/seller-dashboard", { replace: true });
+          break;
+        case "BUYER":
+          navigate("/", { replace: true });
+          break;
+        default:
+          navigate("/", { replace: true });
+          break;
+      }
     } catch (error) {
       console.error("💥 Login error:", error);
       toast.error("An unexpected error occurred. Please try again.");
