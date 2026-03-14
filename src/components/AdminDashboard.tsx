@@ -1,62 +1,96 @@
-import {
-  Search,
-  ShoppingBag,
-  Star,
-  Store,
-  TrendingUp,
-  Users,
-} from "lucide-react";
-import { useState } from "react";
-import { Order, Product, Seller, User } from "../types";
+import { useState } from 'react';
+import { Shield, Users, Package, TrendingUp, LogOut, AlertTriangle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
+import { useAuth } from '../hooks/useAuth';
+import { useProducts } from '../hooks/useProduct';
+import { mockBuyers, mockSellers } from '../types';
 
-interface AdminDashboardProps {
-  sellers: Seller[];
-  buyers: User[];
-  products: Product[];
-  orders: Order[];
-}
+export function AdminDashboard() {
+  const { currentUser, logout } = useAuth();
+  const { products, deleteProduct } = useProducts();
+  const navigate = useNavigate();
+  
+  const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'users'>('overview');
 
-export function AdminDashboard({
-  sellers,
-  buyers,
-  products,
-  orders,
-}: AdminDashboardProps) {
-  const [activeTab, setActiveTab] = useState<
-    "sellers" | "buyers" | "products" | "orders"
-  >("sellers");
-  const [searchTerm, setSearchTerm] = useState("");
+  // Check if user is an admin
+  if (!currentUser || currentUser.role !== 'ADMIN') {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="bg-white rounded-xl p-8 shadow-sm text-center max-w-md">
+          <Shield className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Access Denied</h2>
+          <p className="text-gray-600 mb-4">You need to be logged in as an admin to access this page.</p>
+          <button
+            onClick={() => navigate('/login')}
+            className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700"
+          >
+            Go to Login
+          </button>
+        </div>
+      </div>
+    );
+  }
 
-  const totalRevenue = orders.reduce(
-    (sum, order) => sum + order.totalAmount,
-    0
-  );
-  const averageRating =
-    sellers.reduce((sum, seller) => sum + seller.rating, 0) / sellers.length;
+  const handleLogout = () => {
+    if (window.confirm('Are you sure you want to logout?')) {
+      logout();
+      navigate('/');
+      toast.success('Logged out successfully');
+    }
+  };
+
+  const handleDeleteProduct = (productId: string, productName: string) => {
+    if (window.confirm(`Are you sure you want to delete "${productName}"? This action cannot be undone.`)) {
+      deleteProduct(productId);
+      toast.success('Product deleted successfully');
+    }
+  };
+
+  // Calculate stats
+  const totalProducts = products.length;
+  const totalUsers = mockBuyers.length + mockSellers.length;
+  const totalRevenue = products.reduce((sum, p) => {
+    const soldQuantity = Math.max(0, 30 - p.stock);
+    return sum + (p.price * soldQuantity);
+  }, 0);
+  const lowStockProducts = products.filter(p => p.stock < 5);
 
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
-        <h1 className="text-3xl text-gray-900 mb-8">Admin Dashboard</h1>
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin Dashboard</h1>
+            <p className="text-gray-600">Welcome back, {currentUser.name}</p>
+          </div>
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+          >
+            <LogOut className="w-5 h-5" />
+            Logout
+          </button>
+        </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {/* Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <div className="bg-white rounded-xl p-6 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 mb-1">Total Sellers</p>
-                <p className="text-3xl text-gray-900">{sellers.length}</p>
+                <p className="text-gray-600 mb-1">Total Products</p>
+                <p className="text-3xl font-bold text-gray-900">{totalProducts}</p>
               </div>
-              <Store className="w-12 h-12 text-purple-600" />
+              <Package className="w-12 h-12 text-purple-600" />
             </div>
           </div>
 
           <div className="bg-white rounded-xl p-6 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 mb-1">Total Buyers</p>
-                <p className="text-3xl text-gray-900">{buyers.length}</p>
+                <p className="text-gray-600 mb-1">Total Users</p>
+                <p className="text-3xl font-bold text-gray-900">{totalUsers}</p>
               </div>
               <Users className="w-12 h-12 text-blue-600" />
             </div>
@@ -65,333 +99,229 @@ export function AdminDashboard({
           <div className="bg-white rounded-xl p-6 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 mb-1">Total Products</p>
-                <p className="text-3xl text-gray-900">{products.length}</p>
+                <p className="text-gray-600 mb-1">Total Revenue</p>
+                <p className="text-3xl font-bold text-gray-900">${totalRevenue.toFixed(2)}</p>
               </div>
-              <ShoppingBag className="w-12 h-12 text-green-600" />
+              <TrendingUp className="w-12 h-12 text-green-600" />
             </div>
           </div>
 
           <div className="bg-white rounded-xl p-6 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 mb-1">Total Revenue</p>
-                <p className="text-3xl text-gray-900">
-                  ${totalRevenue.toFixed(2)}
-                </p>
+                <p className="text-gray-600 mb-1">Low Stock Alert</p>
+                <p className="text-3xl font-bold text-gray-900">{lowStockProducts.length}</p>
               </div>
-              <TrendingUp className="w-12 h-12 text-yellow-600" />
+              <AlertTriangle className="w-12 h-12 text-red-600" />
             </div>
           </div>
         </div>
 
-        {/* Main Content */}
-        <div className="bg-white rounded-xl shadow-sm p-6">
-          {/* Tabs */}
-          <div className="flex gap-2 mb-6 border-b border-gray-200">
-            <button
-              onClick={() => setActiveTab("sellers")}
-              className={`px-4 py-2 border-b-2 ${
-                activeTab === "sellers"
-                  ? "border-purple-600 text-purple-600"
-                  : "border-transparent text-gray-600 hover:text-gray-900"
-              }`}
-            >
-              Sellers
-            </button>
-            <button
-              onClick={() => setActiveTab("buyers")}
-              className={`px-4 py-2 border-b-2 ${
-                activeTab === "buyers"
-                  ? "border-purple-600 text-purple-600"
-                  : "border-transparent text-gray-600 hover:text-gray-900"
-              }`}
-            >
-              Buyers
-            </button>
-            <button
-              onClick={() => setActiveTab("products")}
-              className={`px-4 py-2 border-b-2 ${
-                activeTab === "products"
-                  ? "border-purple-600 text-purple-600"
-                  : "border-transparent text-gray-600 hover:text-gray-900"
-              }`}
-            >
-              Products
-            </button>
-            <button
-              onClick={() => setActiveTab("orders")}
-              className={`px-4 py-2 border-b-2 ${
-                activeTab === "orders"
-                  ? "border-purple-600 text-purple-600"
-                  : "border-transparent text-gray-600 hover:text-gray-900"
-              }`}
-            >
-              Orders
-            </button>
+        {/* Alerts */}
+        {lowStockProducts.length > 0 && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <div className="flex items-center gap-2 mb-2">
+              <AlertTriangle className="w-5 h-5 text-red-600" />
+              <h3 className="font-medium text-red-800">Low Stock Alert</h3>
+            </div>
+            <p className="text-red-700 text-sm">
+              {lowStockProducts.length} product{lowStockProducts.length > 1 ? 's' : ''} running low on stock (less than 5 items).
+            </p>
+          </div>
+        )}
+
+        {/* Tabs */}
+        <div className="bg-white rounded-xl shadow-sm">
+          <div className="border-b border-gray-200">
+            <nav className="-mb-px flex space-x-8 px-6">
+              <button
+                onClick={() => setActiveTab('overview')}
+                className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'overview'
+                    ? 'border-purple-500 text-purple-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <TrendingUp className="w-5 h-5 inline mr-2" />
+                Overview
+              </button>
+              <button
+                onClick={() => setActiveTab('products')}
+                className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'products'
+                    ? 'border-purple-500 text-purple-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <Package className="w-5 h-5 inline mr-2" />
+                Products
+              </button>
+              <button
+                onClick={() => setActiveTab('users')}
+                className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'users'
+                    ? 'border-purple-500 text-purple-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <Users className="w-5 h-5 inline mr-2" />
+                Users
+              </button>
+            </nav>
           </div>
 
-          {/* Search */}
-          <div className="mb-6">
-            <div className="relative max-w-md">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-              />
-            </div>
-          </div>
-
-          {/* Sellers Tab */}
-          {activeTab === "sellers" && (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-gray-200">
-                    <th className="text-left py-3 px-4 text-gray-700">
-                      Seller
-                    </th>
-                    <th className="text-left py-3 px-4 text-gray-700">
-                      Store Name
-                    </th>
-                    <th className="text-left py-3 px-4 text-gray-700">Email</th>
-                    <th className="text-left py-3 px-4 text-gray-700">Phone</th>
-                    <th className="text-left py-3 px-4 text-gray-700">
-                      Rating
-                    </th>
-                    <th className="text-left py-3 px-4 text-gray-700">
-                      Joined
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {sellers
-                    .filter(
-                      (s) =>
-                        s.name
-                          .toLowerCase()
-                          .includes(searchTerm.toLowerCase()) ||
-                        s.storeName
-                          .toLowerCase()
-                          .includes(searchTerm.toLowerCase())
-                    )
-                    .map((seller) => (
-                      <tr
-                        key={seller.id}
-                        className="border-b border-gray-100 hover:bg-gray-50"
-                      >
-                        <td className="py-3 px-4 text-gray-900">
-                          {seller.name}
-                        </td>
-                        <td className="py-3 px-4 text-gray-700">
-                          {seller.storeName}
-                        </td>
-                        <td className="py-3 px-4 text-gray-700">
-                          {seller.email}
-                        </td>
-                        <td className="py-3 px-4 text-gray-700">
-                          {seller.phone}
-                        </td>
-                        <td className="py-3 px-4">
-                          <div className="flex items-center gap-1">
-                            <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                            <span className="text-gray-700">
-                              {seller.rating.toFixed(1)}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="py-3 px-4 text-gray-700">
-                          {seller.joinedDate}
-                        </td>
-                      </tr>
-                    ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-          {/* Buyers Tab */}
-          {activeTab === "buyers" && (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-gray-200">
-                    <th className="text-left py-3 px-4 text-gray-700">Name</th>
-                    <th className="text-left py-3 px-4 text-gray-700">Email</th>
-                    <th className="text-left py-3 px-4 text-gray-700">Phone</th>
-                    <th className="text-left py-3 px-4 text-gray-700">
-                      Address
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {buyers
-                    .filter(
-                      (b) =>
-                        b.name
-                          .toLowerCase()
-                          .includes(searchTerm.toLowerCase()) ||
-                        b.email.toLowerCase().includes(searchTerm.toLowerCase())
-                    )
-                    .map((buyer) => (
-                      <tr
-                        key={buyer.id}
-                        className="border-b border-gray-100 hover:bg-gray-50"
-                      >
-                        <td className="py-3 px-4 text-gray-900">
-                          {buyer.name}
-                        </td>
-                        <td className="py-3 px-4 text-gray-700">
-                          {buyer.email}
-                        </td>
-                        <td className="py-3 px-4 text-gray-700">
-                          {buyer.phone || "N/A"}
-                        </td>
-                        <td className="py-3 px-4 text-gray-700">
-                          {buyer.address || "N/A"}
-                        </td>
-                      </tr>
-                    ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-          {/* Products Tab */}
-          {activeTab === "products" && (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-gray-200">
-                    <th className="text-left py-3 px-4 text-gray-700">
-                      Product
-                    </th>
-                    <th className="text-left py-3 px-4 text-gray-700">
-                      Seller
-                    </th>
-                    <th className="text-left py-3 px-4 text-gray-700">
-                      Category
-                    </th>
-                    <th className="text-left py-3 px-4 text-gray-700">Price</th>
-                    <th className="text-left py-3 px-4 text-gray-700">Stock</th>
-                    <th className="text-left py-3 px-4 text-gray-700">
-                      Rating
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {products
-                    .filter(
-                      (p) =>
-                        p.name
-                          .toLowerCase()
-                          .includes(searchTerm.toLowerCase()) ||
-                        p.category
-                          .toLowerCase()
-                          .includes(searchTerm.toLowerCase())
-                    )
-                    .map((product) => (
-                      <tr
-                        key={product.id}
-                        className="border-b border-gray-100 hover:bg-gray-50"
-                      >
-                        <td className="py-3 px-4">
-                          <div className="flex items-center gap-3">
-                            <img
-                              src={product.image}
-                              alt={product.name}
-                              className="w-12 h-12 rounded object-cover"
-                            />
-                            <span className="text-gray-900">
-                              {product.name}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="py-3 px-4 text-gray-700">
-                          {product.sellerName}
-                        </td>
-                        <td className="py-3 px-4 text-gray-700">
-                          {product.category}
-                        </td>
-                        <td className="py-3 px-4 text-gray-900">
-                          ${product.price}
-                        </td>
-                        <td className="py-3 px-4 text-gray-700">
-                          {product.stock}
-                        </td>
-                        <td className="py-3 px-4">
-                          <div className="flex items-center gap-1">
-                            <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                            <span className="text-gray-700">
-                              {product.averageRating > 0
-                                ? product.averageRating.toFixed(1)
-                                : "N/A"}
-                            </span>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-          {/* Orders Tab */}
-          {activeTab === "orders" && (
-            <div className="space-y-4">
-              {orders.map((order) => (
-                <div
-                  key={order.id}
-                  className="border border-gray-200 rounded-lg p-6"
-                >
-                  <div className="flex items-start justify-between mb-4">
-                    <div>
-                      <p className="text-gray-900">
-                        Order #{order.id.toUpperCase()}
-                      </p>
-                      <p className="text-sm text-gray-500 mt-1">
-                        {order.orderDate}
-                      </p>
+          <div className="p-6">
+            {/* Overview Tab */}
+            {activeTab === 'overview' && (
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Platform Overview</h3>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Recent Activity */}
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <h4 className="font-medium text-gray-900 mb-3">Recent Activity</h4>
+                    <div className="space-y-2 text-sm">
+                      <p className="text-gray-600">• 5 new products added today</p>
+                      <p className="text-gray-600">• 12 new user registrations</p>
+                      <p className="text-gray-600">• 8 orders completed</p>
+                      <p className="text-gray-600">• {lowStockProducts.length} products need restocking</p>
                     </div>
-                    <span
-                      className={`px-3 py-1 rounded-full text-sm ${
-                        order.status === "delivered"
-                          ? "bg-green-100 text-green-700"
-                          : order.status === "shipped"
-                          ? "bg-blue-100 text-blue-700"
-                          : order.status === "cancelled"
-                          ? "bg-red-100 text-red-700"
-                          : "bg-yellow-100 text-yellow-700"
-                      }`}
-                    >
-                      {order.status.charAt(0).toUpperCase() +
-                        order.status.slice(1)}
-                    </span>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                    <div>
-                      <p className="text-gray-600">Total Amount</p>
-                      <p className="text-gray-900">
-                        ${order.totalAmount.toFixed(2)}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-gray-600">Items</p>
-                      <p className="text-gray-900">{order.products.length}</p>
-                    </div>
-                    <div>
-                      <p className="text-gray-600">Shipping Address</p>
-                      <p className="text-gray-900">{order.shippingAddress}</p>
+                  {/* Top Categories */}
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <h4 className="font-medium text-gray-900 mb-3">Popular Categories</h4>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Handbags</span>
+                        <span className="font-medium">
+                          {products.filter(p => p.category === 'handbags').length}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Backpacks</span>
+                        <span className="font-medium">
+                          {products.filter(p => p.category === 'backpacks').length}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Clutches</span>
+                        <span className="font-medium">
+                          {products.filter(p => p.category === 'clutches').length}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
+              </div>
+            )}
+
+            {/* Products Tab */}
+            {activeTab === 'products' && (
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Product Management</h3>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-gray-200">
+                        <th className="text-left py-3 px-4 font-medium text-gray-700">Product</th>
+                        <th className="text-left py-3 px-4 font-medium text-gray-700">Category</th>
+                        <th className="text-left py-3 px-4 font-medium text-gray-700">Price</th>
+                        <th className="text-left py-3 px-4 font-medium text-gray-700">Stock</th>
+                        <th className="text-left py-3 px-4 font-medium text-gray-700">Seller</th>
+                        <th className="text-left py-3 px-4 font-medium text-gray-700">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {products.map((product) => (
+                        <tr key={product.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                          <td className="py-3 px-4">
+                            <div className="flex items-center gap-3">
+                              <img
+                                src={product.image}
+                                alt={product.name}
+                                className="w-12 h-12 rounded object-cover"
+                              />
+                              <div>
+                                <p className="font-medium text-gray-900">{product.name}</p>
+                                <p className="text-sm text-gray-500 truncate max-w-xs">
+                                  {product.description}
+                                </p>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="py-3 px-4">
+                            <span className="capitalize text-gray-700">{product.category}</span>
+                          </td>
+                          <td className="py-3 px-4">
+                            <span className="font-medium text-gray-900">${product.price.toFixed(2)}</span>
+                          </td>
+                          <td className="py-3 px-4">
+                            <span className={`font-medium ${
+                              product.stock < 5 ? 'text-red-600' : 
+                              product.stock < 10 ? 'text-yellow-600' : 'text-green-600'
+                            }`}>
+                              {product.stock}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4">
+                            <span className="text-gray-700">{product.sellerName || 'Unknown'}</span>
+                          </td>
+                          <td className="py-3 px-4">
+                            <button
+                              onClick={() => handleDeleteProduct(product.id, product.name)}
+                              className="text-red-600 hover:text-red-800 text-sm font-medium"
+                            >
+                              Delete
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* Users Tab */}
+            {activeTab === 'users' && (
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">User Management</h3>
+                
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Buyers */}
+                  <div>
+                    <h4 className="font-medium text-gray-900 mb-3">
+                      Buyers ({mockBuyers.length})
+                    </h4>
+                    <div className="space-y-2 max-h-64 overflow-y-auto">
+                      {mockBuyers.map((buyer) => (
+                        <div key={buyer.id} className="bg-gray-50 rounded-lg p-3">
+                          <p className="font-medium text-gray-900">{buyer.name}</p>
+                          <p className="text-sm text-gray-600">{buyer.email}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Sellers */}
+                  <div>
+                    <h4 className="font-medium text-gray-900 mb-3">
+                      Sellers ({mockSellers.length})
+                    </h4>
+                    <div className="space-y-2 max-h-64 overflow-y-auto">
+                      {mockSellers.map((seller) => (
+                        <div key={seller.id} className="bg-gray-50 rounded-lg p-3">
+                          <p className="font-medium text-gray-900">{seller.storeName}</p>
+                          <p className="text-sm text-gray-600">{seller.email}</p>
+                          <p className="text-sm text-gray-500">{seller.address}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
