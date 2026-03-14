@@ -1,137 +1,266 @@
-import { Minus, Plus, Trash2, ShoppingCart } from 'lucide-react';
-import { CartItem } from '../types';
+import { useState } from 'react';
+import { ShoppingCart, Plus, Minus, Trash2, ArrowLeft } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
+import { useAuth } from '../hooks/useAuth';
+import { useCart } from '../hooks/useCart';
 
-interface CartPageProps {
-  cartItems: CartItem[];
-  onUpdateQuantity: (productId: string, quantity: number) => void;
-  onRemoveItem: (productId: string) => void;
-  onCheckout: () => void;
-  onContinueShopping: () => void;
-}
+export function CartPage() {
+  const { currentUser } = useAuth();
+  const { cartItems, updateQuantity, removeFromCart, clearCart } = useCart();
+  const navigate = useNavigate();
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
 
-export function CartPage({ 
-  cartItems, 
-  onUpdateQuantity, 
-  onRemoveItem, 
-  onCheckout,
-  onContinueShopping 
-}: CartPageProps) {
+  // Check if user is logged in
+  if (!currentUser) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="bg-white rounded-xl p-8 shadow-sm text-center max-w-md">
+          <ShoppingCart className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Please Login</h2>
+          <p className="text-gray-600 mb-4">You need to be logged in to view your cart.</p>
+          <button
+            onClick={() => navigate('/login')}
+            className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700"
+          >
+            Go to Login
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const handleUpdateQuantity = (productId: string, newQuantity: number) => {
+    if (newQuantity < 1) {
+      handleRemoveItem(productId);
+      return;
+    }
+    updateQuantity(productId, newQuantity);
+  };
+
+  const handleRemoveItem = (productId: string) => {
+    const item = cartItems.find(item => item.product.id === productId);
+    if (item && window.confirm(`Remove "${item.product.name}" from cart?`)) {
+      removeFromCart(productId);
+      toast.success('Item removed from cart');
+    }
+  };
+
+  const handleClearCart = () => {
+    if (cartItems.length === 0) return;
+    
+    if (window.confirm('Are you sure you want to clear your entire cart?')) {
+      clearCart();
+      toast.success('Cart cleared');
+    }
+  };
+
+  const handleCheckout = async () => {
+    if (cartItems.length === 0) {
+      toast.error('Your cart is empty');
+      return;
+    }
+
+    if (currentUser.role !== 'BUYER') {
+      toast.error('Only BUYERs can checkout');
+      return;
+    }
+
+    setIsCheckingOut(true);
+    
+    try {
+      // Simulate checkout process
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      clearCart();
+      toast.success('Order placed successfully! Thank you for your purchase.');
+      navigate('/BUYER-dashboard');
+    } catch (error) { 
+      console.error('Checkout error:', error);
+      toast.error('Checkout failed. Please try again.');
+    } finally {
+      setIsCheckingOut(false);
+    }
+  };
+
   const subtotal = cartItems.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
-  const shipping = subtotal > 0 ? 10 : 0;
-  const total = subtotal + shipping;
+  const shipping = subtotal > 100 ? 0 : 10;
+  const tax = subtotal * 0.08; // 8% tax
+  const total = subtotal + shipping + tax;
+
+  if (cartItems.length === 0) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <Link
+            to="/"
+            className="inline-flex items-center gap-2 text-purple-600 hover:text-purple-700 mb-6"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Continue Shopping
+          </Link>
+          
+          <div className="bg-white rounded-xl p-12 shadow-sm text-center">
+            <ShoppingCart className="w-20 h-20 text-gray-300 mx-auto mb-6" />
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">Your cart is empty</h2>
+            <p className="text-gray-600 mb-8">
+              Looks like you haven't added any items to your cart yet. Start exploring our amazing collection!
+            </p>
+            <Link
+              to="/"
+              className="inline-flex items-center gap-2 bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition-colors"
+            >
+              <ShoppingCart className="w-5 h-5" />
+              Start Shopping
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <h1 className="text-3xl text-gray-900 mb-8">Shopping Cart</h1>
+        <Link
+          to="/"
+          className="inline-flex items-center gap-2 text-purple-600 hover:text-purple-700 mb-6"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Continue Shopping
+        </Link>
 
-        {cartItems.length === 0 ? (
-          <div className="bg-white rounded-xl shadow-sm p-12 text-center">
-            <ShoppingCart className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h2 className="text-xl text-gray-900 mb-2">Your cart is empty</h2>
-            <p className="text-gray-600 mb-6">Add some items to get started</p>
-            <button
-              onClick={onContinueShopping}
-              className="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700"
-            >
-              Continue Shopping
-            </button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Cart Items */}
-            <div className="lg:col-span-2 space-y-4">
-              {cartItems.map((item) => (
-                <div key={item.product.id} className="bg-white rounded-xl shadow-sm p-6">
-                  <div className="flex gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Cart Items */}
+          <div className="lg:col-span-2">
+            <div className="bg-white rounded-xl shadow-sm">
+              <div className="flex items-center justify-between p-6 border-b border-gray-200">
+                <h1 className="text-2xl font-bold text-gray-900">
+                  Shopping Cart ({cartItems.length} items)
+                </h1>
+                <button
+                  onClick={handleClearCart}
+                  className="text-red-600 hover:text-red-700 text-sm font-medium"
+                >
+                  Clear Cart
+                </button>
+              </div>
+
+              <div className="p-6 space-y-4">
+                {cartItems.map((item) => (
+                  <div key={item.product.id} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
                     <img
                       src={item.product.image}
                       alt={item.product.name}
-                      className="w-24 h-24 rounded object-cover"
+                      className="w-20 h-20 rounded-lg object-cover"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = 'https://via.placeholder.com/80x80?text=No+Image';
+                      }}
                     />
                     
                     <div className="flex-1">
-                      <h3 className="text-lg text-gray-900 mb-1">{item.product.name}</h3>
-                      <p className="text-sm text-gray-600 mb-2">{item.product.sellerName}</p>
-                      <p className="text-lg text-purple-600">${item.product.price}</p>
+                      <h3 className="font-medium text-gray-900 mb-1">{item.product.name}</h3>
+                      <p className="text-gray-600 text-sm mb-2 line-clamp-2">{item.product.description}</p>
+                      <p className="text-purple-600 font-semibold">${item.product.price.toFixed(2)}</p>
                     </div>
 
-                    <div className="flex flex-col items-end justify-between">
+                    <div className="flex items-center gap-3">
                       <button
-                        onClick={() => onRemoveItem(item.product.id)}
-                        className="p-2 hover:bg-gray-100 rounded"
+                        onClick={() => handleUpdateQuantity(item.product.id, item.quantity - 1)}
+                        className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center hover:bg-gray-300 transition-colors"
+                        disabled={isCheckingOut}
                       >
-                        <Trash2 className="w-5 h-5 text-red-600" />
+                        <Minus className="w-4 h-4" />
                       </button>
-
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => onUpdateQuantity(item.product.id, item.quantity - 1)}
-                          disabled={item.quantity <= 1}
-                          className="p-1 bg-gray-100 rounded hover:bg-gray-200 disabled:opacity-50"
-                        >
-                          <Minus className="w-4 h-4" />
-                        </button>
-                        <span className="w-8 text-center text-gray-900">{item.quantity}</span>
-                        <button
-                          onClick={() => onUpdateQuantity(item.product.id, item.quantity + 1)}
-                          disabled={item.quantity >= item.product.stock}
-                          className="p-1 bg-gray-100 rounded hover:bg-gray-200 disabled:opacity-50"
-                        >
-                          <Plus className="w-4 h-4" />
-                        </button>
-                      </div>
+                      
+                      <span className="w-12 text-center font-medium">{item.quantity}</span>
+                      
+                      <button
+                        onClick={() => handleUpdateQuantity(item.product.id, item.quantity + 1)}
+                        className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center hover:bg-gray-300 transition-colors"
+                        disabled={isCheckingOut || item.quantity >= item.product.stock}
+                      >
+                        <Plus className="w-4 h-4" />
+                      </button>
                     </div>
-                  </div>
-                </div>
-              ))}
-            </div>
 
-            {/* Order Summary */}
-            <div className="lg:col-span-1">
-              <div className="bg-white rounded-xl shadow-sm p-6 sticky top-24">
-                <h2 className="text-xl text-gray-900 mb-6">Order Summary</h2>
-
-                <div className="space-y-3 mb-6">
-                  <div className="flex justify-between text-gray-700">
-                    <span>Subtotal ({cartItems.length} items)</span>
-                    <span>${subtotal.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between text-gray-700">
-                    <span>Shipping</span>
-                    <span>${shipping.toFixed(2)}</span>
-                  </div>
-                  <div className="border-t border-gray-200 pt-3">
-                    <div className="flex justify-between text-xl">
-                      <span className="text-gray-900">Total</span>
-                      <span className="text-purple-600">${total.toFixed(2)}</span>
+                    <div className="text-right min-w-[80px]">
+                      <p className="font-semibold text-gray-900">
+                        ${(item.product.price * item.quantity).toFixed(2)}
+                      </p>
                     </div>
+
+                    <button
+                      onClick={() => handleRemoveItem(item.product.id)}
+                      className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+                      disabled={isCheckingOut}
+                    >
+                      <Trash2 className="w-5 h-5" />
+                    </button>
                   </div>
-                </div>
-
-                <button
-                  onClick={onCheckout}
-                  className="w-full bg-purple-600 text-white py-3 rounded-lg hover:bg-purple-700 mb-3"
-                >
-                  Proceed to Checkout
-                </button>
-
-                <button
-                  onClick={onContinueShopping}
-                  className="w-full bg-gray-100 text-gray-700 py-3 rounded-lg hover:bg-gray-200"
-                >
-                  Continue Shopping
-                </button>
-
-                <div className="mt-6 pt-6 border-t border-gray-200">
-                  <p className="text-sm text-gray-600">
-                    Free shipping on orders over $100
-                  </p>
-                </div>
+                ))}
               </div>
             </div>
           </div>
-        )}
+
+          {/* Order Summary */}
+          <div className="lg:col-span-1">
+            <div className="bg-white rounded-xl shadow-sm p-6 sticky top-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-6">Order Summary</h2>
+              
+              <div className="space-y-4 mb-6">
+                <div className="flex justify-between text-gray-600">
+                  <span>Subtotal</span>
+                  <span>${subtotal.toFixed(2)}</span>
+                </div>
+                
+                <div className="flex justify-between text-gray-600">
+                  <span>Shipping</span>
+                  <span>{shipping === 0 ? 'Free' : `$${shipping.toFixed(2)}`}</span>
+                </div>
+                
+                <div className="flex justify-between text-gray-600">
+                  <span>Tax</span>
+                  <span>${tax.toFixed(2)}</span>
+                </div>
+                
+                {shipping === 0 && (
+                  <p className="text-sm text-green-600 font-medium">
+                    🎉 Free shipping on orders over $100!
+                  </p>
+                )}
+                
+                <div className="border-t pt-4">
+                  <div className="flex justify-between text-lg font-bold text-gray-900">
+                    <span>Total</span>
+                    <span>${total.toFixed(2)}</span>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                onClick={handleCheckout}
+                disabled={isCheckingOut || cartItems.length === 0 || currentUser.role !== 'BUYER'}
+                className="w-full bg-purple-600 text-white py-3 rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+              >
+                {isCheckingOut ? 'Processing...' : 'Proceed to Checkout'}
+              </button>
+
+              {currentUser.role !== 'BUYER' && (
+                <p className="text-center text-sm text-red-600 mt-3">
+                  Only BUYERs can checkout
+                </p>
+              )}
+
+              <div className="mt-6 text-sm text-gray-600">
+                <p className="mb-2">🔒 Secure checkout with SSL encryption</p>
+                <p className="mb-2">📦 Free returns within 30 days</p>
+                <p>🚚 Fast delivery in 2-5 business days</p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
