@@ -197,4 +197,60 @@ export const userService = {
       };
     }
   },
+
+  /**
+   * Change user password
+   */
+  async changePassword(
+    token: string,
+    currentPassword: string,
+    newPassword: string,
+    confirmPassword: string
+  ): Promise<Result<string>> {
+    try {
+      const response = await fetch(`${USER_SERVICE_URL}${endpoints.users.changePassword}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify({ currentPassword, password: newPassword, confirmPassword }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("🔑 Error response:", errorText);
+        
+        let errorData;
+        try {
+          errorData = JSON.parse(errorText);
+        } catch {
+          return { 
+            ok: false, 
+            error: errorText || `HTTP ${response.status}: ${response.statusText}`,
+            status: response.status 
+          };
+        }
+
+        return {
+          ok: false,
+          error: errorData.error || errorData.message || "Failed to change password",
+          status: response.status,
+        };
+      }
+
+      return {
+        ok: true,
+        data: "Password changed successfully",
+        message: "Password changed successfully",
+        status: response.status,
+      };
+    } catch (error) {
+      console.error("🔑 Change password error:", error);
+      return {
+        ok: false,
+        error: error instanceof Error ? error.message : "Network error",
+      };
+    }
+  },
 };

@@ -2,6 +2,8 @@ import { useEffect, useState, useCallback, type ReactNode } from "react";
 import type { User } from "../types";
 import { AuthContext } from "./AuthContext";
 import type { AuthContextType } from "./AuthContext";
+import { authService } from "../services/authservice";
+import { LoadingSpinner } from "../components/common/LoadingSpinner";
 
 const USER_STORAGE_KEY = "auth_user";
 const TOKEN_STORAGE_KEY = "auth_token";
@@ -12,21 +14,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    try {
-      const storedUser = localStorage.getItem(USER_STORAGE_KEY);
-      const storedToken = localStorage.getItem(TOKEN_STORAGE_KEY);  // ✅ Load token
-      
-      if (storedUser) {
-        setCurrentUser(JSON.parse(storedUser));
+    const initializeAuth = async () => {
+      try {
+        const storedToken = localStorage.getItem(TOKEN_STORAGE_KEY);
+        
+        if (storedToken) {
+          setToken(storedToken);
+          // Refresh user data from backend
+          const result = await authService.getCurrentUser();
+          if (result.ok && result.data) {
+            setCurrentUser(result.data);
+            localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(result.data));
+          } else {
+            // If token is invalid or user not found, logout
+            console.warn("Session invalid, logging out");
+            logout();
+          }
+        } else {
+          // No token, ensure state is clear
+          setCurrentUser(null);
+          setToken(null);
+        }
+      } catch (error) {
+        console.error("Failed to restore user session:", error);
+        logout();
+      } finally {
+        setIsLoading(false);
       }
-      if (storedToken) {
-        setToken(storedToken);
-      }
-    } catch (error) {
-      console.error("Failed to restore user session:", error);
-    } finally {
-      setIsLoading(false);
-    }
+    };
+
+    initializeAuth();
   }, []);
 
   const login = (user: User, authToken: string) => {
@@ -98,7 +115,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Optional: Show loading state while checking auth
   if (isLoading) {
-    return <div>Loading...</div>; // Or your loading component
+    return <LoadingSpinner />;
   }
 
   return (

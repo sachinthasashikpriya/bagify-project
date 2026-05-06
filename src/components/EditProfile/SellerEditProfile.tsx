@@ -16,6 +16,7 @@ import { userService } from "../../services/userservice";
 import type { User as UserType, VerificationStatus } from "../../types";
 import { ProfileEditForm } from "./ProfileEditForm";
 import { SellerDocumentUpload } from "./SellerDocumentUpload";
+import { ChangePasswordForm } from "./ChangePasswordForm";
 
 // ─── Status badge helper ────────────────────────────────────────────────────
 
@@ -74,10 +75,12 @@ export function SellerEditProfile() {
   } = useEditProfileForm();
 
   const [activeSection, setActiveSection] = useState<
-    "profile" | "verification"
+    "profile" | "verification" | "security"
   >(() => {
     const section = new URLSearchParams(location.search).get("section");
-    return section === "verification" ? "verification" : "profile";
+    if (section === "verification") return "verification";
+    if (section === "security") return "security";
+    return "profile";
   });
 
   useEffect(() => {
@@ -207,8 +210,41 @@ export function SellerEditProfile() {
           Back to Dashboard
         </button>
 
-        
-
+        <div className="flex items-center gap-1 mb-8 bg-white p-1.5 rounded-2xl shadow-sm border border-gray-100">
+          <button
+            onClick={() => setActiveSection("profile")}
+            className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-bold transition-all ${
+              activeSection === "profile"
+                ? "bg-purple-600 text-white shadow-lg shadow-purple-200"
+                : "text-gray-500 hover:bg-gray-50"
+            }`}
+          >
+            <User className="w-4 h-4" />
+            Profile
+          </button>
+          <button
+            onClick={() => setActiveSection("verification")}
+            className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-bold transition-all ${
+              activeSection === "verification"
+                ? "bg-purple-600 text-white shadow-lg shadow-purple-200"
+                : "text-gray-500 hover:bg-gray-50"
+            }`}
+          >
+            <ShieldCheck className="w-4 h-4" />
+            Verification
+          </button>
+          <button
+            onClick={() => setActiveSection("security")}
+            className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-bold transition-all ${
+              activeSection === "security"
+                ? "bg-purple-600 text-white shadow-lg shadow-purple-200"
+                : "text-gray-500 hover:bg-gray-50"
+            }`}
+          >
+            <Lock className="w-4 h-4" />
+            Security
+          </button>
+        </div>
         {/* ── Main profile card ── */}
         {activeSection === "profile" && (
           <div className="mb-6">
@@ -409,6 +445,13 @@ export function SellerEditProfile() {
                 </div>
               )}
             </div>
+          </div>
+        )}
+        
+        {/* ── Security section ── */}
+        {activeSection === "security" && (
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <ChangePasswordForm />
           </div>
         )}
       </div>

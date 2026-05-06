@@ -1,11 +1,11 @@
 export interface RegisterRequest {
   name: string;
   email: string;
-  //phone: string;
-  //address: string;
+  phone: string;
+  address: string;
   password: string;
   confirmPassword: string;
-  userrole: 'BUYER' | 'SELLER' | 'ADMIN';
+  userrole: 'BUYER' | 'SELLER';
 }
 
 

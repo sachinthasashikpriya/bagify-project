@@ -80,17 +80,27 @@ async login(
 
 
   /**
-   * Get current user profile (mock implementation)
+   * Get current user profile from backend
    */
   async getCurrentUser(): Promise<Result<User>> {
     try {
-      await new Promise(resolve => setTimeout(resolve, 300));
-      
-      // For demo, return the first buyer
-      return {
-        ok: true,
-        data: mockBuyers[0],
-      };
+      const result = await httpClient.get<any>(endpoints.users.me, {
+        service: 'auth-service',
+        auth: true,
+      });
+
+      if (result.ok && result.data) {
+        // Map backend User (profileImageUrl) to frontend User (profileImage)
+        const mappedUser: User = {
+          ...result.data,
+          profileImage: result.data.profileImageUrl,
+          // Convert numeric id to string if necessary (frontend type expects string)
+          id: result.data.id.toString(),
+        };
+        return { ...result, data: mappedUser };
+      }
+
+      return result as Result<User>;
     } catch (error) {
       console.error('Get current user error:', error);
       return {

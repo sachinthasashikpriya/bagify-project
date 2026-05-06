@@ -4,7 +4,9 @@ export const endpoints = {
       login: '/auth/login',        // POST - returns { token: "..." }
     },
     users: {
-      profile: '/api/users/profile',       // GET
-      updateProfile: '/api/users/profile', // PUT
+      me: '/api/v1/users/me',               // GET - returns current user
+      profile: '/api/v1/users/profile',       // GET
+      updateProfile: '/api/v1/users/profile', // PUT
+      changePassword: '/api/v1/users/change-password', // POST
     },
   } as const;
