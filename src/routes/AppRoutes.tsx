@@ -2,7 +2,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import { AdminDashboard } from "../components/AdminDashboard";
 import { BuyerDashboard } from "../components/BuyerDashboard";
 import { CartPage } from "../components/CartPage";
-import { EditProfile } from "../components/EditProfile";
+import { EditProfile } from "../components/EditProfile/EditProfile";
 import { HomePage } from "../components/HomePage";
 import { LoginPage } from "../components/LoginPage";
 import { ProductDetailPage } from "../components/ProductDetailPage";

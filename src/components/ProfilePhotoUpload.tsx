@@ -1,7 +1,7 @@
 import { Camera, Loader, Trash2, User } from "lucide-react";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
-import { cloudinaryService } from "../services/cloudinary.service";
+import { cloudinaryService } from "../services/cloudinaryservice";
 
 interface ProfilePhotoUploadProps {
   currentImage?: string;

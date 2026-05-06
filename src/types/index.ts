@@ -1,8 +1,8 @@
 export interface RegisterRequest {
   name: string;
   email: string;
-  phone: string;
-  address: string;
+  //phone: string;
+  //address: string;
   password: string;
   confirmPassword: string;
   userrole: 'BUYER' | 'SELLER' | 'ADMIN';
@@ -34,6 +34,19 @@ export interface Result<T> {
   message?: string;
 }
 
+export type VerificationStatus = 'NONE' | 'PENDING' | 'APPROVED' | 'REJECTED';
+
+export interface BusinessVerification {
+  businessName: string;
+  registrationNumber: string;
+  brCertificateUrl?: string;   // Cloudinary URL for BR Certificate
+  nicImageUrl?: string;         // Cloudinary URL for NIC photo
+  status: VerificationStatus;
+  submittedAt?: string;
+  reviewedAt?: string;
+  rejectionReason?: string;
+}
+
 export interface User {
   
   id: string;
@@ -45,6 +58,8 @@ export interface User {
   profileImage?: string;
   createdAt?: string;
   updatedAt?: string;
+  // Seller verification
+  verification?: BusinessVerification;
 }
 
 export interface Seller extends User {

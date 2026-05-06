@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 import { useAuth } from "../hooks/useAuth"; // This should now use AuthContext
-import { authService } from "../services/auth.service";
+import { authService } from "../services/authservice";
 
 interface LoginFormData {
   email: string;

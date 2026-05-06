@@ -3,7 +3,7 @@ export const env = {
   
   // Service URLs
   USER_SERVICE_BASE_URL: import.meta.env.VITE_USER_BASE_URL ?? 'http://localhost:8085',
-  AUTH_SERVICE_BASE_URL: import.meta.env.VITE_USER_BASE_URL ?? 'http://localhost:8085',
+  AUTH_SERVICE_BASE_URL: import.meta.env.VITE_AUTH_BASE_URL ?? import.meta.env.VITE_USER_BASE_URL ?? 'http://localhost:8085',
   ORDER_SERVICE_BASE_URL: import.meta.env.VITE_ORDER_BASE_URL ?? 'http://localhost:8086',
   PRODUCT_SERVICE_BASE_URL: import.meta.env.VITE_PRODUCT_BASE_URL ?? 'http://localhost:8087',
   
