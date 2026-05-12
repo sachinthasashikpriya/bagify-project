@@ -4,6 +4,7 @@ import {
   BadgeCheck,
   Building2,
   Clock,
+  Lock,
   ShieldCheck,
   User,
 } from "lucide-react";
@@ -85,7 +86,9 @@ export function SellerEditProfile() {
 
   useEffect(() => {
     const section = new URLSearchParams(location.search).get("section");
-    setActiveSection(section === "verification" ? "verification" : "profile");
+    if (section === "verification") setActiveSection("verification");
+    else if (section === "security") setActiveSection("security");
+    else setActiveSection("profile");
   }, [location.search]);
 
   /* ---- Verification state ---- */

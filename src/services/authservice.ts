@@ -118,10 +118,23 @@ async login(
   }
 
   /**
-   * Check if user is authenticated
+   * Send forgot password email
    */
-  isAuthenticated(): boolean {
-    return !!getAuthToken();
+  async forgotPassword(email: string): Promise<Result<string>> {
+    return httpClient.post<string>(endpoints.auth.forgotPassword, { email }, {
+      service: 'auth-service',
+      auth: false,
+    });
+  }
+
+  /**
+   * Reset password with token
+   */
+  async resetPassword(payload: any): Promise<Result<string>> {
+    return httpClient.post<string>(endpoints.auth.resetPassword, payload, {
+      service: 'auth-service',
+      auth: false,
+    });
   }
 }
 

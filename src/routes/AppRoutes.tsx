@@ -8,6 +8,8 @@ import { LoginPage } from "../components/LoginPage";
 import { ProductDetailPage } from "../components/ProductDetailPage";
 import { SellerDashboard } from "../components/SellerDashboard";
 import { SignupPage } from "../components/SignupPage";
+import { ForgotPasswordPage } from "../components/ForgotPasswordPage";
+import { ResetPasswordPage } from "../components/ResetPasswordPage";
 import { MainLayout } from "../layouts/MainLayout";
 import { ProtectedRoute } from "./ProtectedRoute";
 
@@ -18,6 +20,8 @@ export function AppRoutes() {
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/product/:productId" element={<ProductDetailPage />} />
 
         <Route

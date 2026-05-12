@@ -197,6 +197,15 @@ export function LoginPage() {
                 {errors.password && (
                   <p className="mt-1 text-sm text-red-600">{errors.password}</p>
                 )}
+                <div className="flex justify-end mt-2">
+                  <button
+                    type="button"
+                    onClick={() => navigate("/forgot-password")}
+                    className="text-xs font-bold text-purple-600 hover:text-purple-700 transition-colors"
+                  >
+                    Forgot password?
+                  </button>
+                </div>
               </div>
 
               <button
