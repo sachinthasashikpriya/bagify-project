@@ -22,10 +22,22 @@ export const userService = {
    * Get current user profile
    */
   async getMyProfile(_token?: string): Promise<Result<User>> {
-    return httpClient.get<User>(endpoints.users.profile, {
+    const result = await httpClient.get<any>(endpoints.users.profile, {
       service: 'user-service',
       auth: true,
     });
+
+    if (result.ok && result.data) {
+      const user = result.data;
+      const mappedUser: User = {
+        ...user,
+        profileImage: user.profileImageUrl || user.profileImage,
+        id: user.id.toString(),
+      };
+      return { ...result, data: mappedUser };
+    }
+
+    return result;
   },
 
   /**
@@ -53,10 +65,22 @@ export const userService = {
         : {}),
     };
 
-    return httpClient.put<User>(endpoints.users.updateProfile, payload, {
+    const result = await httpClient.put<any>(endpoints.users.updateProfile, payload, {
       service: 'user-service',
       auth: true,
     });
+
+    if (result.ok && result.data) {
+      const user = result.data;
+      const mappedUser: User = {
+        ...user,
+        profileImage: user.profileImageUrl || user.profileImage,
+        id: user.id.toString(),
+      };
+      return { ...result, data: mappedUser };
+    }
+
+    return result;
   },
 
   /**

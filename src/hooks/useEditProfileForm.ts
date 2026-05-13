@@ -1,5 +1,4 @@
-import type { FormEvent } from "react";
-import { useState } from "react";
+import { useState, useEffect, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useAuth } from "./useAuth";
@@ -12,6 +11,7 @@ export interface EditProfileFormData {
   phone: string;
   address: string;
   profileImage: string;
+  createdAt?: string;
 }
 
 export function useEditProfileForm() {
@@ -24,7 +24,23 @@ export function useEditProfileForm() {
     phone: currentUser?.phone || "",
     address: currentUser?.address || "",
     profileImage: currentUser?.profileImage || "",
+    createdAt: currentUser?.createdAt,
   });
+
+  // ✅ Update form data when currentUser changes (e.g. after initial fetch)
+  useEffect(() => {
+    if (currentUser) {
+      setFormData(prev => ({
+        ...prev,
+        name: prev.name || currentUser.name || "",
+        email: prev.email || currentUser.email || "",
+        phone: prev.phone || currentUser.phone || "",
+        address: prev.address || currentUser.address || "",
+        profileImage: prev.profileImage || currentUser.profileImage || "",
+        createdAt: currentUser.createdAt,
+      }));
+    }
+  }, [currentUser]);
 
   const [isSaving, setIsSaving] = useState(false);
 

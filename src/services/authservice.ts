@@ -53,30 +53,64 @@ async register(payload: RegisterRequest): Promise<Result<User>> {
 }
 
 
-async login(
-  payload: LoginRequest
-): Promise<Result<LoginResponse>> {
-  const primaryResult = await httpClient.post<LoginResponse>(endpoints.auth.login, payload, {
-    service: 'auth-service',  
-    auth: false,
-    retry: { attempts: 0, backoffMs: 0 },
-  });
+  async login(
+    payload: LoginRequest
+  ): Promise<Result<LoginResponse>> {
+    const primaryResult = await httpClient.post<LoginResponse>(endpoints.auth.login, payload, {
+      service: 'auth-service',  
+      auth: false,
+      retry: { attempts: 0, backoffMs: 0 },
+    });
 
-  if (!shouldTryLegacyAuthRoute(primaryResult)) {
-    return primaryResult;
+    if (primaryResult.ok && primaryResult.data) {
+      const user = primaryResult.data.user;
+      const mappedUser: User = {
+        ...user,
+        profileImage: (user as any).profileImageUrl || user.profileImage,
+        id: user.id.toString(),
+      };
+      return {
+        ...primaryResult,
+        data: {
+          ...primaryResult.data,
+          user: mappedUser,
+        },
+      };
+    }
+
+    if (!shouldTryLegacyAuthRoute(primaryResult)) {
+      return primaryResult;
+    }
+
+    const legacyPath = toLegacyAuthPath(endpoints.auth.login);
+    if (legacyPath === endpoints.auth.login) {
+      return primaryResult;
+    }
+
+    const legacyResult = await httpClient.post<LoginResponse>(legacyPath, payload, {
+      service: 'auth-service',
+      auth: false,
+      retry: { attempts: 0, backoffMs: 0 },
+    });
+
+    if (legacyResult.ok && legacyResult.data) {
+      const user = legacyResult.data.user;
+      const mappedUser: User = {
+        ...user,
+        profileImage: (user as any).profileImageUrl || user.profileImage,
+        id: user.id.toString(),
+      };
+      return {
+        ...legacyResult,
+        data: {
+          ...legacyResult.data,
+          user: mappedUser,
+        },
+      };
+    }
+
+    return legacyResult;
   }
-
-  const legacyPath = toLegacyAuthPath(endpoints.auth.login);
-  if (legacyPath === endpoints.auth.login) {
-    return primaryResult;
-  }
-
-  return httpClient.post<LoginResponse>(legacyPath, payload, {
-    service: 'auth-service',
-    auth: false,
-    retry: { attempts: 0, backoffMs: 0 },
-  });
-}
 
 
   /**

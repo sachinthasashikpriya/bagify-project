@@ -39,14 +39,30 @@ export function ProfileEditForm({
       </div>
 
       <form onSubmit={onSave} className="p-6 space-y-6">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Account Type
-          </label>
-          <div className="px-4 py-2 bg-gray-100 rounded-lg text-gray-700 capitalize">
-            {role}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Account Type
+            </label>
+            <div className="px-4 py-2 bg-gray-100 rounded-lg text-gray-700 capitalize">
+              {role}
+            </div>
+            <p className="text-xs text-gray-500 mt-1">Account type cannot be changed</p>
           </div>
-          <p className="text-xs text-gray-500 mt-1">Account type cannot be changed</p>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Member Since
+            </label>
+            <div className="px-4 py-2 bg-gray-100 rounded-lg text-gray-700">
+              {formData.createdAt ? new Date(formData.createdAt).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+              }) : 'N/A'}
+            </div>
+            <p className="text-xs text-gray-500 mt-1">Join date is fixed</p>
+          </div>
         </div>
 
         <div className="flex justify-center pb-6 border-b border-gray-200">

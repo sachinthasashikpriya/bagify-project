@@ -1,5 +1,5 @@
 import { Camera, Loader, Trash2, User } from "lucide-react";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { toast } from "sonner";
 import { cloudinaryService } from "../services/cloudinaryservice";
 
@@ -19,6 +19,11 @@ export function ProfilePhotoUpload({
   const [isUploading, setIsUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | undefined>(currentImage);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // ✅ Sync preview URL when currentImage prop changes
+  useEffect(() => {
+    setPreviewUrl(currentImage);
+  }, [currentImage]);
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
