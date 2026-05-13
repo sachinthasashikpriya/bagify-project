@@ -9,7 +9,7 @@ import type {
 } from '../types';
 import { mockBuyers } from '../types/index';
 
-type LoginResponse = { token: string; user: User };
+type LoginResponse = { token: string; refreshToken: string; user: User };
 
 const AUTH_FALLBACK_PREFIX = '/api/v1';
 
@@ -55,7 +55,7 @@ async register(payload: RegisterRequest): Promise<Result<User>> {
 
 async login(
   payload: LoginRequest
-): Promise<Result<{ token: string; user: User }>> {
+): Promise<Result<LoginResponse>> {
   const primaryResult = await httpClient.post<LoginResponse>(endpoints.auth.login, payload, {
     service: 'auth-service',  
     auth: false,

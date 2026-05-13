@@ -3,6 +3,7 @@ import { serviceRegistry } from './serviceRegistry';
 import type { ServiceName } from './serviceRegistry';
 import type { Result } from '../types/index';
 import { getAuthToken, onUnauthorized } from '../state/authToken';
+import { refreshAccessToken } from './tokenRefresher';
 
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
@@ -226,7 +227,54 @@ async function executeRequest<T>(
 
       // Handle 401 Unauthorized
       if (response.status === 401) {
-        onUnauthorized?.();
+        // If it's a request that needs auth, try refreshing the token
+        if (options.auth) {
+          const newToken = await refreshAccessToken();
+          if (newToken) {
+            // Re-build headers with the new token
+            const retryHeaders = buildHeaders(options);
+            
+            // Retry the exact same request
+            const retryResponse = await fetchWithTimeout(
+              url,
+              {
+                method,
+                headers: retryHeaders,
+                body: body !== undefined && body !== null 
+                  ? JSON.stringify(body) 
+                  : undefined,
+                credentials: options.credentials,
+                mode: options.mode,
+                cache: options.cache,
+                redirect: options.redirect,
+                referrerPolicy: options.referrerPolicy,
+              },
+              timeoutMs
+            );
+
+            if (retryResponse.ok) {
+              const retryPayload = await parseResponse<T>(retryResponse);
+              const retryData = extractData<T>(retryPayload);
+              return {
+                ok: true,
+                data: retryData,
+                status: retryResponse.status,
+              };
+            }
+            
+            // If retry fails, return that error
+            const retryPayload = await parseResponse<T>(retryResponse);
+            return {
+              ok: false,
+              error: extractErrorMessage(retryPayload, retryResponse, isJson),
+              status: retryResponse.status,
+              details: retryPayload,
+            };
+          }
+        } else {
+          // If not an auth request but still 401, something is wrong
+          onUnauthorized?.();
+        }
       }
 
       return {

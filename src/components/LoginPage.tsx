@@ -1,9 +1,10 @@
 import { Loader, Lock, Mail, ShoppingCart, User } from "lucide-react";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
+import { useEffect } from "react";
 
-import { useAuth } from "../hooks/useAuth"; // This should now use AuthContext
+import { useAuth } from "../hooks/useAuth"; 
 import { authService } from "../services/authservice";
 
 interface LoginFormData {
@@ -13,7 +14,20 @@ interface LoginFormData {
 
 export function LoginPage() {
   const navigate = useNavigate();
-  const { login } = useAuth(); // ✅ Use login instead of setCurrentUser
+  const [searchParams] = useSearchParams();
+  const { login } = useAuth(); 
+
+  useEffect(() => {
+    if (searchParams.get("expired") === "true") {
+      // Small delay to ensure toast is ready
+      const timer = setTimeout(() => {
+        toast.error("Session expired. Please login again.", {
+          description: "For your security, we've logged you out due to inactivity."
+        });
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [searchParams]);
 
   const [formData, setFormData] = useState<LoginFormData>({
     email: "",
@@ -77,14 +91,14 @@ export function LoginPage() {
         return;
       }
 
-      const { user, token } = loginResponse.data; // ✅ Get token from response
+      const { user, token, refreshToken } = loginResponse.data; // ✅ Get tokens from response
 
       console.log("✅ Login successful! User:", user.email);
-      console.log("🔑 Token received:", token ? "Yes" : "No");
+      console.log("🔑 Tokens received:", token ? "Yes" : "No", refreshToken ? "Yes" : "No");
       console.log("📡 User role:", user.role);
 
-      // ✅ CRITICAL FIX: Use login function with BOTH user and token
-      login(user, token);
+      // ✅ CRITICAL FIX: Use login function with user, token, and refreshToken
+      login(user, token, refreshToken);
       console.log("🔐 User and token saved to context and localStorage");
 
       toast.success(`Welcome back, ${user.name}!`);
