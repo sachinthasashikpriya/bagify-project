@@ -99,6 +99,15 @@ export function useEditProfileForm() {
       return;
     }
 
+    // Phone validation (optional but must match format if provided)
+    if (formData.phone.trim()) {
+      const phoneRegex = /^\+?[\d\s-]{10,}$/;
+      if (!phoneRegex.test(formData.phone.trim())) {
+        toast.error("Please enter a valid phone number");
+        return;
+      }
+    }
+
     setIsSaving(true);
 
     try {
@@ -107,7 +116,7 @@ export function useEditProfileForm() {
         email: formData.email.trim(),
         phone: formData.phone.trim() || undefined,
         address: formData.address.trim() || undefined,
-        profileImage: formData.profileImage || undefined,
+        profileImageUrl: formData.profileImage || undefined,
       });
 
       if (!response.ok) {

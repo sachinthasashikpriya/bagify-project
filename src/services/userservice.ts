@@ -7,7 +7,7 @@ export interface UpdateProfileRequest {
   phone?: string;
   address?: string;
   email?: string;
-  profileImage?: string;
+  profileImageUrl?: string;
 }
 
 export interface VerificationRequest {
@@ -51,7 +51,7 @@ export const userService = {
     const normalizedName = request.name?.trim();
     const normalizedPhone = request.phone?.trim();
     const normalizedAddress = request.address?.trim();
-    const normalizedProfileImage = request.profileImage?.trim();
+    const normalizedProfileImageUrl = request.profileImageUrl?.trim();
 
     const payload: UpdateProfileRequest = {
       ...(normalizedName !== undefined ? { name: normalizedName } : {}),
@@ -60,8 +60,8 @@ export const userService = {
       ...(normalizedAddress !== undefined
         ? { address: normalizedAddress }
         : {}),
-      ...(normalizedProfileImage !== undefined
-        ? { profileImage: normalizedProfileImage }
+      ...(normalizedProfileImageUrl !== undefined
+        ? { profileImageUrl: normalizedProfileImageUrl }
         : {}),
     };
 

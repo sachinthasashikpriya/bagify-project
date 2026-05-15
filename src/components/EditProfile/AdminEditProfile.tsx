@@ -1,6 +1,6 @@
 import { ArrowLeft, User, Lock } from "lucide-react";
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { useEditProfileForm } from "../../hooks/useEditProfileForm";
 import { ProfileEditForm } from "./ProfileEditForm";
@@ -9,7 +9,17 @@ import { ChangePasswordForm } from "./ChangePasswordForm";
 export function AdminEditProfile() {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
-  const [activeSection, setActiveSection] = useState<"profile" | "security">("profile");
+  const location = useLocation();
+  const [activeSection, setActiveSection] = useState<"profile" | "security">(() => {
+    const section = new URLSearchParams(location.search).get("section");
+    return section === "security" ? "security" : "profile";
+  });
+
+  useEffect(() => {
+    const section = new URLSearchParams(location.search).get("section");
+    if (section === "security") setActiveSection("security");
+    else setActiveSection("profile");
+  }, [location.search]);
 
   const {
     formData,
@@ -58,7 +68,7 @@ export function AdminEditProfile() {
         {/* Tab Navigation */}
         <div className="flex items-center gap-1 mb-8 bg-white p-1.5 rounded-2xl shadow-sm border border-gray-100">
           <button
-            onClick={() => setActiveSection("profile")}
+            onClick={() => navigate("?section=profile")}
             className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-bold transition-all ${
               activeSection === "profile"
                 ? "bg-purple-600 text-white shadow-lg shadow-purple-200"
@@ -69,7 +79,7 @@ export function AdminEditProfile() {
             Profile
           </button>
           <button
-            onClick={() => setActiveSection("security")}
+            onClick={() => navigate("?section=security")}
             className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-bold transition-all ${
               activeSection === "security"
                 ? "bg-purple-600 text-white shadow-lg shadow-purple-200"

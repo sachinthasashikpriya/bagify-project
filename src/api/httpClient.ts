@@ -225,56 +225,61 @@ async function executeRequest<T>(
     if (!response.ok) {
       const errorMessage = extractErrorMessage(payload, response, isJson);
 
-      // Handle 401 Unauthorized
-      if (response.status === 401) {
-        // If it's a request that needs auth, try refreshing the token
-        if (options.auth) {
-          const newToken = await refreshAccessToken();
-          if (newToken) {
-            // Re-build headers with the new token
-            const retryHeaders = buildHeaders(options);
-            
-            // Retry the exact same request
-            const retryResponse = await fetchWithTimeout(
-              url,
-              {
-                method,
-                headers: retryHeaders,
-                body: body !== undefined && body !== null 
-                  ? JSON.stringify(body) 
-                  : undefined,
-                credentials: options.credentials,
-                mode: options.mode,
-                cache: options.cache,
-                redirect: options.redirect,
-                referrerPolicy: options.referrerPolicy,
-              },
-              timeoutMs
-            );
+      // Handle 401 Unauthorized OR 403 Forbidden when a token was sent.
+      // The backend returns 401 when the token is expired (after the fix),
+      // but we also guard against 403 as a defensive fallback.
+      const isTokenError =
+        response.status === 401 ||
+        (response.status === 403 && !!getAuthToken());
 
-            if (retryResponse.ok) {
-              const retryPayload = await parseResponse<T>(retryResponse);
-              const retryData = extractData<T>(retryPayload);
-              return {
-                ok: true,
-                data: retryData,
-                status: retryResponse.status,
-              };
-            }
-            
-            // If retry fails, return that error
+      if (isTokenError && options.auth) {
+        const newToken = await refreshAccessToken();
+        if (newToken) {
+          // Re-build headers with the new token
+          const retryHeaders = buildHeaders(options);
+
+          // Retry the exact same request
+          const retryResponse = await fetchWithTimeout(
+            url,
+            {
+              method,
+              headers: retryHeaders,
+              body: body !== undefined && body !== null
+                ? JSON.stringify(body)
+                : undefined,
+              credentials: options.credentials,
+              mode: options.mode,
+              cache: options.cache,
+              redirect: options.redirect,
+              referrerPolicy: options.referrerPolicy,
+            },
+            timeoutMs
+          );
+
+          if (retryResponse.ok) {
             const retryPayload = await parseResponse<T>(retryResponse);
+            const retryData = extractData<T>(retryPayload);
             return {
-              ok: false,
-              error: extractErrorMessage(retryPayload, retryResponse, isJson),
+              ok: true,
+              data: retryData,
               status: retryResponse.status,
-              details: retryPayload,
             };
           }
-        } else {
-          // If not an auth request but still 401, something is wrong
-          onUnauthorized?.();
+
+          // Retry itself failed — token is truly invalid, log out
+          onUnauthorized();
+          const retryPayload = await parseResponse<T>(retryResponse);
+          return {
+            ok: false,
+            error: extractErrorMessage(retryPayload, retryResponse, isJson),
+            status: retryResponse.status,
+            details: retryPayload,
+          };
         }
+        // refreshAccessToken already called onUnauthorized internally
+      } else if (response.status === 401 && !options.auth) {
+        // Non-auth request got a 401 — unexpected, log out
+        onUnauthorized();
       }
 
       return {

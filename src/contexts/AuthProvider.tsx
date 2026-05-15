@@ -27,6 +27,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // Refresh user data from backend
           const result = await authService.getCurrentUser();
           if (result.ok && result.data) {
+            // ✅ Re-sync tokens in case they were refreshed during getCurrentUser()
+            const currentToken = localStorage.getItem(TOKEN_STORAGE_KEY);
+            const currentRefreshToken = localStorage.getItem(REFRESH_TOKEN_STORAGE_KEY);
+            if (currentToken) setToken(currentToken);
+            if (currentRefreshToken) setRefreshToken(currentRefreshToken);
+
             setCurrentUser(result.data);
             localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(result.data));
           } else {
