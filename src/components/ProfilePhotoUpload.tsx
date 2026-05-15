@@ -2,6 +2,7 @@ import { Camera, Loader, Trash2, User } from "lucide-react";
 import { useRef, useState, useEffect } from "react";
 import { toast } from "sonner";
 import { cloudinaryService } from "../services/cloudinaryservice";
+import { ConfirmModal } from "./common/ConfirmModal";
 
 interface ProfilePhotoUploadProps {
   currentImage?: string;
@@ -66,6 +67,8 @@ export function ProfilePhotoUpload({
       }
     }
   };
+
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
   const handleRemovePhoto = () => {
     setPreviewUrl(undefined);
@@ -155,7 +158,7 @@ export function ProfilePhotoUpload({
             <span className="text-gray-300">|</span>
             <button
               type="button"
-              onClick={handleRemovePhoto}
+              onClick={() => setIsConfirmOpen(true)}
               disabled={disabled || isUploading}
               className="text-sm text-red-600 hover:text-red-700 font-medium flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
             >
@@ -165,6 +168,17 @@ export function ProfilePhotoUpload({
           </>
         )}
       </div>
+
+      {/* Confirmation Modal */}
+      <ConfirmModal
+        isOpen={isConfirmOpen}
+        onClose={() => setIsConfirmOpen(false)}
+        onConfirm={handleRemovePhoto}
+        title="Remove Profile Photo"
+        message="Are you sure you want to remove your profile photo? This action will set your avatar back to the default initials until you upload a new one."
+        confirmText="Remove Photo"
+        isDestructive={true}
+      />
 
       {/* Help Text */}
       <p className="text-xs text-gray-500 text-center">

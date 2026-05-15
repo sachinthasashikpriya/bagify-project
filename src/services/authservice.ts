@@ -66,7 +66,7 @@ async register(payload: RegisterRequest): Promise<Result<User>> {
       const user = primaryResult.data.user;
       const mappedUser: User = {
         ...user,
-        profileImage: (user as any).profileImageUrl || user.profileImage,
+        profileImage: (user as any).profileImageUrl,
         id: user.id.toString(),
       };
       return {
@@ -97,7 +97,7 @@ async register(payload: RegisterRequest): Promise<Result<User>> {
       const user = legacyResult.data.user;
       const mappedUser: User = {
         ...user,
-        profileImage: (user as any).profileImageUrl || user.profileImage,
+        profileImage: (user as any).profileImageUrl,
         id: user.id.toString(),
       };
       return {

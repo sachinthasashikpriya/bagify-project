@@ -67,7 +67,7 @@ export function ProfileEditForm({
 
         <div className="flex justify-center pb-6 border-b border-gray-200">
           <ProfilePhotoUpload
-            currentImage={formData.profileImage}
+            currentImage={formData.profileImage ?? undefined}
             userName={formData.name || currentUserName}
             onImageChange={onImageChange}
             disabled={isSaving}

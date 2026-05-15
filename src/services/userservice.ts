@@ -7,7 +7,7 @@ export interface UpdateProfileRequest {
   phone?: string;
   address?: string;
   email?: string;
-  profileImageUrl?: string;
+  profileImageUrl?: string | null;
 }
 
 export interface VerificationRequest {
@@ -31,7 +31,7 @@ export const userService = {
       const user = result.data;
       const mappedUser: User = {
         ...user,
-        profileImage: user.profileImageUrl || user.profileImage,
+        profileImage: user.profileImageUrl,
         id: user.id.toString(),
       };
       return { ...result, data: mappedUser };
@@ -51,7 +51,6 @@ export const userService = {
     const normalizedName = request.name?.trim();
     const normalizedPhone = request.phone?.trim();
     const normalizedAddress = request.address?.trim();
-    const normalizedProfileImageUrl = request.profileImageUrl?.trim();
 
     const payload: UpdateProfileRequest = {
       ...(normalizedName !== undefined ? { name: normalizedName } : {}),
@@ -60,8 +59,8 @@ export const userService = {
       ...(normalizedAddress !== undefined
         ? { address: normalizedAddress }
         : {}),
-      ...(normalizedProfileImageUrl !== undefined
-        ? { profileImageUrl: normalizedProfileImageUrl }
+      ...(request.profileImageUrl !== undefined
+        ? { profileImageUrl: request.profileImageUrl }
         : {}),
     };
 
@@ -74,7 +73,7 @@ export const userService = {
       const user = result.data;
       const mappedUser: User = {
         ...user,
-        profileImage: user.profileImageUrl || user.profileImage,
+        profileImage: user.profileImageUrl,
         id: user.id.toString(),
       };
       return { ...result, data: mappedUser };

@@ -10,7 +10,7 @@ export interface EditProfileFormData {
   email: string;
   phone: string;
   address: string;
-  profileImage: string;
+  profileImage: string | null;  // null = explicitly removed; "" = never set
   createdAt?: string;
 }
 
@@ -23,24 +23,27 @@ export function useEditProfileForm() {
     email: currentUser?.email || "",
     phone: currentUser?.phone || "",
     address: currentUser?.address || "",
-    profileImage: currentUser?.profileImage || "",
+    // Use null when there is no image so we can distinguish "removed" from "not loaded yet"
+    profileImage: currentUser?.profileImage ?? null,
     createdAt: currentUser?.createdAt,
   });
 
-  // ✅ Update form data when currentUser changes (e.g. after initial fetch)
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  // ✅ Update form data when currentUser changes (only for the first load)
   useEffect(() => {
-    if (currentUser) {
-      setFormData(prev => ({
-        ...prev,
-        name: prev.name || currentUser.name || "",
-        email: prev.email || currentUser.email || "",
-        phone: prev.phone || currentUser.phone || "",
-        address: prev.address || currentUser.address || "",
-        profileImage: prev.profileImage || currentUser.profileImage || "",
+    if (currentUser && !isInitialized) {
+      setFormData({
+        name: currentUser.name || "",
+        email: currentUser.email || "",
+        phone: currentUser.phone || "",
+        address: currentUser.address || "",
+        profileImage: currentUser.profileImage ?? null,
         createdAt: currentUser.createdAt,
-      }));
+      });
+      setIsInitialized(true);
     }
-  }, [currentUser]);
+  }, [currentUser, isInitialized]);
 
   const [isSaving, setIsSaving] = useState(false);
 
@@ -62,7 +65,9 @@ export function useEditProfileForm() {
   };
 
   const handleProfileImageChange = (imageUrl: string | undefined) => {
-    setFormData((prev) => ({ ...prev, profileImage: imageUrl || "" }));
+    // Preserve null explicitly: undefined from "Remove" → null (not "") so the
+    // backend receives profileImageUrl: null and clears the field.
+    setFormData((prev) => ({ ...prev, profileImage: imageUrl ?? null }));
   };
 
   const handleCancel = () => {
@@ -111,12 +116,19 @@ export function useEditProfileForm() {
     setIsSaving(true);
 
     try {
+      // profileImage: null means the user explicitly removed it → send null to backend
+      // profileImage: "" means it was never set → also send null
+      const profileImageUrl: string | null =
+        formData.profileImage?.trim() || null;
+
+      console.log('[DEBUG] Sending profileImageUrl to backend:', profileImageUrl);
+
       const response = await userService.updateProfile(token, {
         name: formData.name.trim(),
         email: formData.email.trim(),
         phone: formData.phone.trim() || undefined,
         address: formData.address.trim() || undefined,
-        profileImageUrl: formData.profileImage || undefined,
+        profileImageUrl,
       });
 
       if (!response.ok) {
@@ -124,16 +136,29 @@ export function useEditProfileForm() {
         return;
       }
 
-      const updatedUserFromBackend = response.data;
+      console.log('[DEBUG] Backend response data:', response.data);
 
-      const updatedUser: UserType = {
-        ...currentUser,
-        name: updatedUserFromBackend?.name || formData.name.trim(),
-        email: updatedUserFromBackend?.email || formData.email.trim(),
-        phone: updatedUserFromBackend?.phone || formData.phone.trim(),
-        address: updatedUserFromBackend?.address || formData.address.trim(),
-        profileImage: updatedUserFromBackend?.profileImage ?? formData.profileImage,
-      };
+      // If the backend returned a full user object, use it; otherwise fall back to
+      // merging the form values onto the current user. This guards against backends
+      // that return an empty body on a successful update.
+      const updatedUser: UserType = response.data
+        ? {
+            ...currentUser,
+            ...response.data,
+            // Explicitly set to null (not undefined) so JSON.stringify persists it
+            profileImage: response.data.profileImage ?? null,
+          }
+        : {
+            ...currentUser,
+            name: formData.name.trim(),
+            email: formData.email.trim(),
+            phone: formData.phone.trim() || undefined,
+            address: formData.address.trim() || undefined,
+            // Trust what we sent: if we sent null, the removal succeeded
+            profileImage: profileImageUrl,
+          };
+
+      console.log('[DEBUG] Saving updatedUser to context:', updatedUser);
 
       updateUser(updatedUser);
 
