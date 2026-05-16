@@ -112,4 +112,14 @@ export const userService = {
       }
     );
   },
+
+  /**
+   * Delete current user account
+   */
+  async deleteAccount(): Promise<Result<void>> {
+    return httpClient.delete<void>(endpoints.users.me, {
+      service: 'user-service',
+      auth: true,
+    });
+  },
 };

@@ -73,6 +73,8 @@ export function SellerEditProfile() {
     handleProfileImageChange,
     handleCancel,
     handleSave,
+    isDeleting,
+    handleDeleteAccount,
   } = useEditProfileForm();
 
   const [activeSection, setActiveSection] = useState<
@@ -260,6 +262,8 @@ export function SellerEditProfile() {
               onImageChange={handleProfileImageChange}
               onSave={handleSave}
               onCancel={handleCancel}
+              onDeleteAccount={handleDeleteAccount}
+              isDeleting={isDeleting}
             />
           </div>
         )}

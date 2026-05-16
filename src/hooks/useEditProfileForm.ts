@@ -181,14 +181,40 @@ export function useEditProfileForm() {
     }
   };
 
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDeleteAccount = async () => {
+    setIsDeleting(true);
+    try {
+      const response = await userService.deleteAccount();
+      
+      if (!response.ok) {
+        // If 409 Conflict, response.error should contain the message from backend
+        toast.error(response.error || "Could not delete account. You may have ongoing orders.");
+        return;
+      }
+
+      toast.success("Your account has been deleted");
+      logout();
+      navigate("/");
+    } catch (error) {
+      void error;
+      toast.error("An unexpected error occurred. Please try again.");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return {
     currentUser,
     formData,
     isSaving,
+    isDeleting,
     getDashboardPath,
     handleInputChange,
     handleProfileImageChange,
     handleCancel,
     handleSave,
+    handleDeleteAccount,
   };
 }

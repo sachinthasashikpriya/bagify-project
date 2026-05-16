@@ -29,6 +29,8 @@ export function BuyerEditProfile() {
     handleProfileImageChange,
     handleCancel,
     handleSave,
+    isDeleting,
+    handleDeleteAccount,
   } = useEditProfileForm();
 
   if (!currentUser) {
@@ -100,6 +102,8 @@ export function BuyerEditProfile() {
             onImageChange={handleProfileImageChange}
             onSave={handleSave}
             onCancel={handleCancel}
+            onDeleteAccount={handleDeleteAccount}
+            isDeleting={isDeleting}
           />
         ) : (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">

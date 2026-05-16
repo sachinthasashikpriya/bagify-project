@@ -29,6 +29,8 @@ export function AdminEditProfile() {
     handleProfileImageChange,
     handleCancel,
     handleSave,
+    isDeleting,
+    handleDeleteAccount,
   } = useEditProfileForm();
 
   // Check if user is logged in
@@ -101,6 +103,8 @@ export function AdminEditProfile() {
             onImageChange={handleProfileImageChange}
             onSave={handleSave}
             onCancel={handleCancel}
+            onDeleteAccount={handleDeleteAccount}
+            isDeleting={isDeleting}
           />
         ) : (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">

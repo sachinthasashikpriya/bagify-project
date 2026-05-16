@@ -1,5 +1,6 @@
-import { Save, User, X } from "lucide-react";
-import type { FormEvent } from "react";
+import { Save, User, X, Trash2, AlertOctagon } from "lucide-react";
+import { useState, type FormEvent } from "react";
+import { ConfirmModal } from "../common/ConfirmModal";
 import { ProfilePhotoUpload } from "../ProfilePhotoUpload";
 import type { EditProfileFormData } from "../../hooks/useEditProfileForm";
 
@@ -12,6 +13,8 @@ interface ProfileEditFormProps {
   onImageChange: (imageUrl: string | undefined) => void;
   onSave: (e: FormEvent) => void;
   onCancel: () => void;
+  onDeleteAccount: () => void;
+  isDeleting: boolean;
 }
 
 export function ProfileEditForm({
@@ -23,7 +26,10 @@ export function ProfileEditForm({
   onImageChange,
   onSave,
   onCancel,
+  onDeleteAccount,
+  isDeleting,
 }: ProfileEditFormProps) {
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   return (
     <div className="bg-white rounded-xl shadow-sm">
       <div className="px-6 py-4 border-b border-gray-200">
@@ -167,6 +173,44 @@ export function ProfileEditForm({
           </ul>
         </div>
       </form>
+
+      {/* Danger Zone */}
+      <div className="mt-8 border-t border-red-100 pt-8 px-6 pb-8">
+        <div className="bg-red-50/50 border border-red-100 rounded-2xl p-6">
+          <div className="flex items-start gap-4">
+            <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
+              <AlertOctagon className="w-6 h-6 text-red-600" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-lg font-bold text-red-900">Danger Zone</h3>
+              <p className="text-sm text-red-700 mt-1 mb-6">
+                Permanently delete your account and all associated data. This action cannot be undone.
+                {role === 'BUYER' && " You can only delete your account if you have no ongoing orders."}
+                {role === 'SELLER' && " You can only delete your account if you have no active products with pending orders."}
+              </p>
+              <button
+                type="button"
+                onClick={() => setIsDeleteModalOpen(true)}
+                disabled={isSaving || isDeleting}
+                className="flex items-center gap-2 px-6 py-2.5 bg-white border-2 border-red-200 text-red-600 rounded-xl hover:bg-red-50 hover:border-red-300 transition-all font-bold disabled:opacity-50 disabled:cursor-not-allowed group"
+              >
+                <Trash2 className="w-4 h-4 group-hover:shake" />
+                {isDeleting ? "Deleting..." : "Delete Account"}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <ConfirmModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={onDeleteAccount}
+        title="Delete Account"
+        message="Are you sure you want to delete your account? This action cannot be undone and all your data will be permanently removed."
+        confirmText={isDeleting ? "Deleting..." : "Delete Permanently"}
+        isDestructive={true}
+      />
     </div>
   );
 }
