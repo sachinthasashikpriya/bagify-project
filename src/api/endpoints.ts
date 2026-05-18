@@ -12,5 +12,6 @@ export const endpoints = {
       updateProfile: '/api/v1/users/profile', // PUT
       changePassword: '/api/v1/users/change-password', // POST
       verification: '/api/v1/users/profile/verification', // POST
+      all: '/api/v1/users', // GET
     },
   } as const;

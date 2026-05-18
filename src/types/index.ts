@@ -58,6 +58,7 @@ export interface User {
   profileImage?: string;
   createdAt?: string;
   updatedAt?: string;
+  status?: string;
   // Seller verification
   verification?: BusinessVerification;
 }

@@ -144,4 +144,21 @@ export const userService = {
       auth: true,
     });
   },
+
+  /**
+   * Get all users (Admin only)
+   */
+  async getAllUsers(): Promise<Result<User[]>> {
+    const result = await httpClient.get<any[]>(endpoints.users.all, {
+      service: 'user-service',
+      auth: true,
+    });
+
+    if (result.ok && result.data) {
+      const users = result.data.map(mapBackendUserToFrontendUser);
+      return { ...result, data: users };
+    }
+
+    return { ...result, data: undefined };
+  },
 };

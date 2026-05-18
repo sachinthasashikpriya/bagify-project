@@ -1,10 +1,11 @@
-import { useState } from 'react';
-import { Shield, Users, Package, TrendingUp, LogOut, AlertTriangle } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Shield, Users, Package, TrendingUp, LogOut, AlertTriangle, Search, Filter, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useAuth } from '../hooks/useAuth';
 import { useProducts } from '../hooks/useProduct';
-import { mockBuyers, mockSellers } from '../types';
+import { userService } from '../services/userservice';
+import type { User } from '../types';
 
 export function AdminDashboard() {
   const { currentUser, logout } = useAuth();
@@ -12,6 +13,32 @@ export function AdminDashboard() {
   const navigate = useNavigate();
   
   const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'users'>('overview');
+  const [users, setUsers] = useState<User[]>([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+  const [userSearchQuery, setUserSearchQuery] = useState('');
+  const [userRoleFilter, setUserRoleFilter] = useState<'ALL' | 'BUYER' | 'SELLER'>('ALL');
+
+  useEffect(() => {
+    if (currentUser?.role === 'ADMIN') {
+      const fetchUsers = async () => {
+        setLoadingUsers(true);
+        try {
+          const result = await userService.getAllUsers();
+          if (result.ok && result.data) {
+            setUsers(result.data);
+          } else {
+            toast.error(result.error || 'Failed to fetch users');
+          }
+        } catch (error) {
+          toast.error('An error occurred while fetching users');
+        } finally {
+          setLoadingUsers(false);
+        }
+      };
+      
+      fetchUsers();
+    }
+  }, [currentUser]);
 
   // Check if user is an admin
   if (!currentUser || currentUser.role !== 'ADMIN') {
@@ -49,12 +76,19 @@ export function AdminDashboard() {
 
   // Calculate stats
   const totalProducts = products.length;
-  const totalUsers = mockBuyers.length + mockSellers.length;
+  const totalUsers = users.length;
   const totalRevenue = products.reduce((sum, p) => {
     const soldQuantity = Math.max(0, 30 - p.stock);
     return sum + (p.price * soldQuantity);
   }, 0);
   const lowStockProducts = products.filter(p => p.stock < 5);
+
+  const filteredUsers = users.filter(user => {
+    const matchesSearch = user.name.toLowerCase().includes(userSearchQuery.toLowerCase()) || 
+                          user.email.toLowerCase().includes(userSearchQuery.toLowerCase());
+    const matchesRole = userRoleFilter === 'ALL' || user.role === userRoleFilter;
+    return matchesSearch && matchesRole;
+  });
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -285,40 +319,104 @@ export function AdminDashboard() {
             {/* Users Tab */}
             {activeTab === 'users' && (
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">User Management</h3>
-                
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {/* Buyers */}
-                  <div>
-                    <h4 className="font-medium text-gray-900 mb-3">
-                      Buyers ({mockBuyers.length})
-                    </h4>
-                    <div className="space-y-2 max-h-64 overflow-y-auto">
-                      {mockBuyers.map((buyer) => (
-                        <div key={buyer.id} className="bg-gray-50 rounded-lg p-3">
-                          <p className="font-medium text-gray-900">{buyer.name}</p>
-                          <p className="text-sm text-gray-600">{buyer.email}</p>
-                        </div>
-                      ))}
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                  <h3 className="text-lg font-semibold text-gray-900">User Management</h3>
+                  
+                  <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                      <input
+                        type="text"
+                        placeholder="Search users..."
+                        value={userSearchQuery}
+                        onChange={(e) => setUserSearchQuery(e.target.value)}
+                        className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent w-full sm:w-64"
+                      />
                     </div>
-                  </div>
-
-                  {/* Sellers */}
-                  <div>
-                    <h4 className="font-medium text-gray-900 mb-3">
-                      Sellers ({mockSellers.length})
-                    </h4>
-                    <div className="space-y-2 max-h-64 overflow-y-auto">
-                      {mockSellers.map((seller) => (
-                        <div key={seller.id} className="bg-gray-50 rounded-lg p-3">
-                          <p className="font-medium text-gray-900">{seller.storeName}</p>
-                          <p className="text-sm text-gray-600">{seller.email}</p>
-                          <p className="text-sm text-gray-500">{seller.address}</p>
-                        </div>
-                      ))}
+                    
+                    <div className="relative">
+                      <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                      <select
+                        value={userRoleFilter}
+                        onChange={(e) => setUserRoleFilter(e.target.value as any)}
+                        className="pl-10 pr-8 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent appearance-none bg-white w-full sm:w-40"
+                      >
+                        <option value="ALL">All Roles</option>
+                        <option value="BUYER">Buyers</option>
+                        <option value="SELLER">Sellers</option>
+                        <option value="ADMIN">Admins</option>
+                      </select>
                     </div>
                   </div>
                 </div>
+                
+                {loadingUsers ? (
+                  <div className="flex justify-center items-center py-12">
+                    <Loader2 className="w-8 h-8 text-purple-600 animate-spin" />
+                    <span className="ml-2 text-gray-600">Loading users...</span>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="border-b border-gray-200 bg-gray-50">
+                          <th className="py-3 px-4 font-medium text-gray-700">Name</th>
+                          <th className="py-3 px-4 font-medium text-gray-700">Email</th>
+                          <th className="py-3 px-4 font-medium text-gray-700">Role</th>
+                          <th className="py-3 px-4 font-medium text-gray-700">Status</th>
+                          <th className="py-3 px-4 font-medium text-gray-700">Joined Date</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredUsers.length > 0 ? (
+                          filteredUsers.map((user) => (
+                            <tr key={user.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                              <td className="py-3 px-4">
+                                <div className="flex items-center gap-3">
+                                  {user.profileImage ? (
+                                    <img src={user.profileImage} alt={user.name} className="w-8 h-8 rounded-full object-cover" />
+                                  ) : (
+                                    <div className="w-8 h-8 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center font-bold">
+                                      {user.name.charAt(0).toUpperCase()}
+                                    </div>
+                                  )}
+                                  <span className="font-medium text-gray-900">{user.name}</span>
+                                </div>
+                              </td>
+                              <td className="py-3 px-4 text-gray-600">{user.email}</td>
+                              <td className="py-3 px-4">
+                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                  user.role === 'ADMIN' ? 'bg-purple-100 text-purple-700' :
+                                  user.role === 'SELLER' ? 'bg-blue-100 text-blue-700' :
+                                  'bg-green-100 text-green-700'
+                                }`}>
+                                  {user.role}
+                                </span>
+                              </td>
+                              <td className="py-3 px-4">
+                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                  user.status === 'DISABLED' ? 'bg-red-100 text-red-700' :
+                                  'bg-green-100 text-green-700'
+                                }`}>
+                                  {user.status || 'ENABLED'}
+                                </span>
+                              </td>
+                              <td className="py-3 px-4 text-gray-600">
+                                {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan={5} className="py-8 text-center text-gray-500">
+                              No users found matching your criteria.
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
             )}
           </div>
