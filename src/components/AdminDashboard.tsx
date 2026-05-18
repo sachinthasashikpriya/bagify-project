@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Shield, Users, Package, TrendingUp, LogOut, AlertTriangle, Search, Filter, Loader2 } from 'lucide-react';
+import { Shield, Users, Package, TrendingUp, LogOut, AlertTriangle, Search, Filter, Loader2, UserCheck } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useAuth } from '../hooks/useAuth';
@@ -74,6 +74,34 @@ export function AdminDashboard() {
     }
   };
 
+  const handleToggleUserStatus = async (userId: string, currentStatus?: string) => {
+    const isDisable = currentStatus !== 'DISABLED';
+    const action = isDisable ? 'disable' : 'enable';
+    
+    if (window.confirm(`Are you sure you want to ${action} this user?`)) {
+      try {
+        const result = isDisable 
+          ? await userService.disableUser(userId)
+          : await userService.enableUser(userId);
+          
+        if (result.ok) {
+          toast.success(`User ${action}d successfully`);
+          setUsers(prevUsers => 
+            prevUsers.map(u => 
+              u.id === userId 
+                ? { ...u, status: isDisable ? 'DISABLED' : 'ENABLED' } 
+                : u
+            )
+          );
+        } else {
+          toast.error(result.error || `Failed to ${action} user`);
+        }
+      } catch (error) {
+        toast.error(`An error occurred while trying to ${action} the user`);
+      }
+    }
+  };
+
   // Calculate stats
   const totalProducts = products.length;
   const totalUsers = users.length;
@@ -99,13 +127,22 @@ export function AdminDashboard() {
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin Dashboard</h1>
             <p className="text-gray-600">Welcome back, {currentUser.name}</p>
           </div>
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-          >
-            <LogOut className="w-5 h-5" />
-            Logout
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => navigate('/admin/verifications')}
+              className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors font-medium shadow-sm"
+            >
+              <UserCheck className="w-5 h-5" />
+              Seller Verifications
+            </button>
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+            >
+              <LogOut className="w-5 h-5" />
+              Logout
+            </button>
+          </div>
         </div>
 
         {/* Stats */}
@@ -365,6 +402,7 @@ export function AdminDashboard() {
                           <th className="py-3 px-4 font-medium text-gray-700">Role</th>
                           <th className="py-3 px-4 font-medium text-gray-700">Status</th>
                           <th className="py-3 px-4 font-medium text-gray-700">Joined Date</th>
+                          <th className="py-3 px-4 font-medium text-gray-700">Actions</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -404,11 +442,25 @@ export function AdminDashboard() {
                               <td className="py-3 px-4 text-gray-600">
                                 {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}
                               </td>
+                              <td className="py-3 px-4">
+                                {user.role !== 'ADMIN' && (
+                                  <button
+                                    onClick={() => handleToggleUserStatus(user.id, user.status)}
+                                    className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
+                                      user.status === 'DISABLED'
+                                        ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                                        : 'bg-rose-600 hover:bg-rose-700 text-white'
+                                    }`}
+                                  >
+                                    {user.status === 'DISABLED' ? 'Enable' : 'Disable'}
+                                  </button>
+                                )}
+                              </td>
                             </tr>
                           ))
                         ) : (
                           <tr>
-                            <td colSpan={5} className="py-8 text-center text-gray-500">
+                            <td colSpan={6} className="py-8 text-center text-gray-500">
                               No users found matching your criteria.
                             </td>
                           </tr>

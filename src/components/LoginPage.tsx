@@ -1,4 +1,4 @@
-import { Loader, Lock, Mail, ShoppingCart, User } from "lucide-react";
+import { Loader, Lock, Mail, ShoppingCart, User, AlertCircle } from "lucide-react";
 import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
@@ -35,6 +35,7 @@ export function LoginPage() {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [apiError, setApiError] = useState<string | null>(null);
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -65,10 +66,14 @@ export function LoginPage() {
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: "" }));
     }
+    if (apiError) {
+      setApiError(null);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setApiError(null);
 
     if (!validateForm()) {
       toast.error("Please fix the errors in the form");
@@ -87,6 +92,7 @@ export function LoginPage() {
       console.log("📡 Login response:", loginResponse);
 
       if (!loginResponse.ok || !loginResponse.data) {
+        setApiError(loginResponse.error || "Login failed. Please try again.");
         toast.error(loginResponse.error || "Login failed. Please try again.");
         return;
       }
@@ -122,6 +128,7 @@ export function LoginPage() {
       }
     } catch (error) {
       console.error("💥 Login error:", error);
+      setApiError("An unexpected error occurred. Please try again.");
       toast.error("An unexpected error occurred. Please try again.");
     } finally {
       setIsLoading(false);
@@ -153,6 +160,17 @@ export function LoginPage() {
           <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">
             Login
           </h2>
+
+          {/* General API Error Banner */}
+          {apiError && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <h4 className="text-sm font-semibold text-red-800">Login Failed</h4>
+                <p className="text-xs text-red-700 mt-0.5">{apiError}</p>
+              </div>
+            </div>
+          )}
 
           {/* Login Form */}
           <form onSubmit={handleSubmit}>

@@ -22,6 +22,7 @@ function mapBackendUserToFrontendUser(user: any): User {
     ...user,
     profileImage: user.profileImageUrl,
     id: user.id?.toString(),
+    status: user.enabled !== undefined ? (user.enabled ? 'ENABLED' : 'DISABLED') : 'ENABLED',
   };
 
   if (user.role === 'SELLER' && user.verificationStatus) {
@@ -160,5 +161,25 @@ export const userService = {
     }
 
     return { ...result, data: undefined };
+  },
+
+  /**
+   * Disable a user (Admin only)
+   */
+  async disableUser(userId: string): Promise<Result<string>> {
+    return httpClient.put<string>(`/api/v1/users/${userId}/disable`, null, {
+      service: 'user-service',
+      auth: true,
+    });
+  },
+
+  /**
+   * Enable a user (Admin only)
+   */
+  async enableUser(userId: string): Promise<Result<string>> {
+    return httpClient.put<string>(`/api/v1/users/${userId}/enable`, null, {
+      service: 'user-service',
+      auth: true,
+    });
   },
 };

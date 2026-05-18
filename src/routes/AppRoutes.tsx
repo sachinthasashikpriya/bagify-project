@@ -12,6 +12,7 @@ import { ForgotPasswordPage } from "../components/ForgotPasswordPage";
 import { ResetPasswordPage } from "../components/ResetPasswordPage";
 import { MainLayout } from "../layouts/MainLayout";
 import { ProtectedRoute } from "./ProtectedRoute";
+import { AdminVerificationPage } from "../components/AdminVerificationPage";
 
 export function AppRoutes() {
   return (
@@ -47,6 +48,15 @@ export function AppRoutes() {
           element={
             <ProtectedRoute allowedroles={["ADMIN"]}>
               <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/verifications"
+          element={
+            <ProtectedRoute allowedroles={["ADMIN"]}>
+              <AdminVerificationPage />
             </ProtectedRoute>
           }
         />
