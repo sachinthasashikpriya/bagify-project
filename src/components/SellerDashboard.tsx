@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Edit, Trash2, Star, Package, TrendingUp, LogOut } from 'lucide-react';
+import { Plus, Edit, Trash2, Star, Package, TrendingUp, LogOut, BadgeCheck } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useAuth } from '../hooks/useAuth';
@@ -140,8 +140,11 @@ export function SellerDashboard() {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2 flex items-center gap-2">
               {currentUser.name}'s Store
+              {currentUser.verification?.status === 'APPROVED' && (
+                <BadgeCheck className="w-8 h-8 text-green-500" title="Verified Seller" />
+              )}
             </h1>
             <div className="flex items-center gap-2">
               <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />

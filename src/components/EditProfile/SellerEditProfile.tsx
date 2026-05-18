@@ -99,11 +99,23 @@ export function SellerEditProfile() {
     existingVerification?.status ?? "NONE";
 
   const [verificationData, setVerificationData] = useState({
-    businessName: existingVerification?.businessName || "",
-    registrationNumber: existingVerification?.registrationNumber || "",
-    brCertificateUrl: existingVerification?.brCertificateUrl || "",
-    nicImageUrl: existingVerification?.nicImageUrl || "",
+    businessName: "",
+    registrationNumber: "",
+    brCertificateUrl: "",
+    nicImageUrl: "",
   });
+
+  // Pre-fill form when currentUser data is available
+  useEffect(() => {
+    if (currentUser?.verification) {
+      setVerificationData({
+        businessName: currentUser.verification.businessName || "",
+        registrationNumber: currentUser.verification.registrationNumber || "",
+        brCertificateUrl: currentUser.verification.brCertificateUrl || "",
+        nicImageUrl: currentUser.verification.nicImageUrl || "",
+      });
+    }
+  }, [currentUser]);
 
   const [isSubmittingVerification, setIsSubmittingVerification] =
     useState(false);
@@ -175,18 +187,22 @@ export function SellerEditProfile() {
       }
 
       // Update local state so badge refreshes
-      const updatedUser: UserType = {
-        ...currentUser,
-        verification: {
-          businessName: verificationData.businessName.trim(),
-          registrationNumber: verificationData.registrationNumber.trim(),
-          brCertificateUrl: verificationData.brCertificateUrl,
-          nicImageUrl: verificationData.nicImageUrl,
-          status: "PENDING",
-          submittedAt: new Date().toISOString(),
-        },
-      };
-      updateUser(updatedUser);
+      if (response.data) {
+        updateUser(response.data);
+      } else {
+        const updatedUser: UserType = {
+          ...currentUser,
+          verification: {
+            businessName: verificationData.businessName.trim(),
+            registrationNumber: verificationData.registrationNumber.trim(),
+            brCertificateUrl: verificationData.brCertificateUrl,
+            nicImageUrl: verificationData.nicImageUrl,
+            status: "PENDING",
+            submittedAt: new Date().toISOString(),
+          },
+        };
+        updateUser(updatedUser);
+      }
       toast.success(
         "Verification request submitted! We'll review it shortly."
       );
@@ -215,35 +231,36 @@ export function SellerEditProfile() {
           Back to Dashboard
         </button>
 
+        {/* ── Tab Navigation ────────────────────────────────────────────────── */}
         <div className="flex items-center gap-1 mb-8 bg-white p-1.5 rounded-2xl shadow-sm border border-gray-100">
           <button
             onClick={() => navigate("?section=profile")}
-            className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-bold transition-all ${
+            className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-bold transition-all duration-300 ${
               activeSection === "profile"
                 ? "bg-purple-600 text-white shadow-lg shadow-purple-200"
-                : "text-gray-500 hover:bg-gray-50"
+                : "text-gray-500 hover:bg-gray-50 hover:text-purple-600"
             }`}
           >
             <User className="w-4 h-4" />
-            Profile
+            Profile Info
           </button>
           <button
             onClick={() => navigate("?section=verification")}
-            className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-bold transition-all ${
+            className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-bold transition-all duration-300 ${
               activeSection === "verification"
                 ? "bg-purple-600 text-white shadow-lg shadow-purple-200"
-                : "text-gray-500 hover:bg-gray-50"
+                : "text-gray-500 hover:bg-gray-50 hover:text-purple-600"
             }`}
           >
             <ShieldCheck className="w-4 h-4" />
-            Verification
+            Business Verification
           </button>
           <button
             onClick={() => navigate("?section=security")}
-            className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-bold transition-all ${
+            className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-bold transition-all duration-300 ${
               activeSection === "security"
                 ? "bg-purple-600 text-white shadow-lg shadow-purple-200"
-                : "text-gray-500 hover:bg-gray-50"
+                : "text-gray-500 hover:bg-gray-50 hover:text-purple-600"
             }`}
           >
             <Lock className="w-4 h-4" />
@@ -331,9 +348,18 @@ export function SellerEditProfile() {
             {verificationStatus === "PENDING" && (
               <div className="mx-6 mt-4 flex items-start gap-3 bg-purple-50 border border-purple-200 rounded-lg p-4">
                 <Clock className="w-5 h-5 text-purple-600 mt-0.5 flex-shrink-0" />
-                <div className="text-sm text-purple-800">
-                  <span className="font-semibold">Review in progress.</span>{" "}
-                  Our team will verify your documents within 1–3 business days.
+                <div className="text-sm text-purple-800 flex-1">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <span className="font-semibold">Review in progress.</span>{" "}
+                      Our team will verify your documents within 1–3 business days.
+                    </div>
+                    {existingVerification?.submittedAt && (
+                      <div className="text-xs text-purple-600 bg-purple-100 px-2 py-1 rounded">
+                        Submitted: {new Date(existingVerification.submittedAt).toLocaleDateString()}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             )}

@@ -17,6 +17,28 @@ export interface VerificationRequest {
   nicImageUrl: string;
 }
 
+function mapBackendUserToFrontendUser(user: any): User {
+  const mappedUser: User = {
+    ...user,
+    profileImage: user.profileImageUrl,
+    id: user.id?.toString(),
+  };
+
+  if (user.role === 'SELLER' && user.verificationStatus) {
+    mappedUser.verification = {
+      status: user.verificationStatus,
+      businessName: user.businessName || '',
+      registrationNumber: user.registrationNumber || '',
+      nicImageUrl: user.nicImageUrl,
+      brCertificateUrl: user.brCertificateUrl,
+      rejectionReason: user.rejectionReason,
+      submittedAt: user.submittedAt,
+    };
+  }
+
+  return mappedUser;
+}
+
 export const userService = {
   /**
    * Get current user profile
@@ -29,11 +51,7 @@ export const userService = {
 
     if (result.ok && result.data) {
       const user = result.data;
-      const mappedUser: User = {
-        ...user,
-        profileImage: user.profileImageUrl,
-        id: user.id.toString(),
-      };
+      const mappedUser = mapBackendUserToFrontendUser(user);
       return { ...result, data: mappedUser };
     }
 
@@ -71,11 +89,7 @@ export const userService = {
 
     if (result.ok && result.data) {
       const user = result.data;
-      const mappedUser: User = {
-        ...user,
-        profileImage: user.profileImageUrl,
-        id: user.id.toString(),
-      };
+      const mappedUser = mapBackendUserToFrontendUser(user);
       return { ...result, data: mappedUser };
     }
 
@@ -89,10 +103,18 @@ export const userService = {
     _token: string,
     request: VerificationRequest
   ): Promise<Result<User>> {
-    return httpClient.post<User>(endpoints.users.verification, request, {
+    const result = await httpClient.post<any>(endpoints.users.verification, request, {
       service: 'user-service',
       auth: true,
     });
+
+    if (result.ok && result.data) {
+      const user = result.data;
+      const mappedUser = mapBackendUserToFrontendUser(user);
+      return { ...result, data: mappedUser };
+    }
+
+    return result;
   },
 
   /**

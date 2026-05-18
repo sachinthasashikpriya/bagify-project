@@ -26,6 +26,28 @@ function shouldTryLegacyAuthRoute<T>(result: Result<T>): boolean {
   );
 }
 
+function mapBackendUserToFrontendUser(user: any): User {
+  const mappedUser: User = {
+    ...user,
+    profileImage: user.profileImageUrl,
+    id: user.id?.toString(),
+  };
+
+  if (user.role === 'SELLER' && user.verificationStatus) {
+    mappedUser.verification = {
+      status: user.verificationStatus,
+      businessName: user.businessName || '',
+      registrationNumber: user.registrationNumber || '',
+      nicImageUrl: user.nicImageUrl,
+      brCertificateUrl: user.brCertificateUrl,
+      rejectionReason: user.rejectionReason,
+      submittedAt: user.submittedAt,
+    };
+  }
+
+  return mappedUser;
+}
+
 class AuthService {
   
   
@@ -64,11 +86,7 @@ async register(payload: RegisterRequest): Promise<Result<User>> {
 
     if (primaryResult.ok && primaryResult.data) {
       const user = primaryResult.data.user;
-      const mappedUser: User = {
-        ...user,
-        profileImage: (user as any).profileImageUrl,
-        id: user.id.toString(),
-      };
+      const mappedUser = mapBackendUserToFrontendUser(user);
       return {
         ...primaryResult,
         data: {
@@ -95,11 +113,7 @@ async register(payload: RegisterRequest): Promise<Result<User>> {
 
     if (legacyResult.ok && legacyResult.data) {
       const user = legacyResult.data.user;
-      const mappedUser: User = {
-        ...user,
-        profileImage: (user as any).profileImageUrl,
-        id: user.id.toString(),
-      };
+      const mappedUser = mapBackendUserToFrontendUser(user);
       return {
         ...legacyResult,
         data: {
@@ -125,12 +139,7 @@ async register(payload: RegisterRequest): Promise<Result<User>> {
 
       if (result.ok && result.data) {
         // Map backend User (profileImageUrl) to frontend User (profileImage)
-        const mappedUser: User = {
-          ...result.data,
-          profileImage: result.data.profileImageUrl,
-          // Convert numeric id to string if necessary (frontend type expects string)
-          id: result.data.id.toString(),
-        };
+        const mappedUser = mapBackendUserToFrontendUser(result.data);
         return { ...result, data: mappedUser };
       }
 
