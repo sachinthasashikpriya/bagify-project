@@ -5,11 +5,15 @@ export const productService = {
   /**
    * Fetch all active/published products
    */
-  async getProducts(category?: string): Promise<Result<Product[]>> {
+  async getProducts(category?: string, search?: string): Promise<Result<Product[]>> {
+    const query: Record<string, string> = {};
+    if (category) query.category = category;
+    if (search) query.search = search;
+    
     return httpClient.get<Product[]>('/api/v1/products', {
       service: 'product-service',
       auth: false, // public permitAll endpoint
-      query: category ? { category } : undefined,
+      query: Object.keys(query).length > 0 ? query : undefined,
     });
   },
 

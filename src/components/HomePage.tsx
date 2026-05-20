@@ -1,5 +1,5 @@
 import { Filter, Search } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ProductCard } from "./ProductCard";
 import { useProducts } from "../hooks/useProduct";
 import { useCart } from "../hooks/useCart";
@@ -15,8 +15,16 @@ export function HomePage() {
   const navigate = useNavigate();
 
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [searchParams, setSearchParams] = useSearchParams();
   const selectedCategory = searchParams.get("category") || "all";
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   const setSelectedCategory = (category: string) => {
     if (category === "all") {
@@ -41,8 +49,8 @@ export function HomePage() {
 
   const filteredProducts = products.filter((product) => {
     const matchesSearch =
-      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.description.toLowerCase().includes(searchTerm.toLowerCase());
+      product.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+      product.description.toLowerCase().includes(debouncedSearchTerm.toLowerCase());
     const matchesCategory =
       selectedCategory === "all" || 
       product.category.toLowerCase() === selectedCategory.toLowerCase();
@@ -146,7 +154,7 @@ export function HomePage() {
             <div className="text-center py-12">
               <div className="bg-white rounded-lg shadow-sm p-8">
                 <Search className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No products found</h3>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No results found</h3>
                 <p className="text-gray-600 mb-4">
                   Try adjusting your search or filter criteria
                 </p>
@@ -157,7 +165,7 @@ export function HomePage() {
                   }}
                   className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
                 >
-                  Clear filters
+                  Clear search
                 </button>
               </div>
             </div>

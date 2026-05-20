@@ -1,10 +1,12 @@
 import { ArrowLeft, Package, ShoppingCart, Star, Store } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { useAuth } from "../hooks/useAuth";
 import { useCart } from "../hooks/useCart";
 import { useProducts } from "../hooks/useProduct";
+import { productService } from "../services/productService";
+import type { Product } from "../types";
 
 export function ProductDetailPage() {
   const { productId } = useParams<{ productId: string }>();
@@ -16,10 +18,60 @@ export function ProductDetailPage() {
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
   const [showReviewForm, setShowReviewForm] = useState(false);
+  const [fetchedProduct, setFetchedProduct] = useState<Product | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [fetchError, setFetchError] = useState(false);
 
-  const product = products.find((p) => p.id === productId);
+  const product = products.find((p) => String(p.id) === String(productId)) || fetchedProduct;
 
-  if (!product) {
+  useEffect(() => {
+    if (productId && !products.find((p) => String(p.id) === String(productId))) {
+      setIsLoading(true);
+      setFetchError(false);
+      productService.getProductById(productId)
+        .then((res) => {
+          if (res.data) {
+            setFetchedProduct(res.data);
+          } else {
+            setFetchError(true);
+          }
+        })
+        .catch(() => {
+          setFetchError(true);
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
+    }
+  }, [productId, products]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="animate-pulse flex items-center gap-2 text-gray-300 mb-6">
+            <div className="w-5 h-5 bg-gray-300 rounded"></div>
+            <div className="w-32 h-4 bg-gray-300 rounded"></div>
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+            <div className="bg-gray-200 rounded-xl aspect-square animate-pulse"></div>
+            <div className="bg-white rounded-xl p-8 shadow-sm">
+              <div className="h-8 bg-gray-200 rounded w-3/4 mb-4 animate-pulse"></div>
+              <div className="h-6 bg-gray-200 rounded w-1/2 mb-6 animate-pulse"></div>
+              <div className="h-10 bg-gray-200 rounded w-1/4 mb-6 animate-pulse"></div>
+              <div className="space-y-3 mb-6">
+                <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                <div className="h-4 bg-gray-200 rounded w-5/6 animate-pulse"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!product || fetchError) {
     return (
       <div className="min-h-screen bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
