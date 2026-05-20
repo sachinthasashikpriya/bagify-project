@@ -9,7 +9,7 @@ import type { Product } from "../types";
 import { toast } from "sonner";
 
 export function HomePage() {
-  const { products, getCategories } = useProducts();
+  const { products, getCategories, isLoading, error, refreshProducts } = useProducts();
   const { addToCart } = useCart();
   const { currentUser } = useAuth();
   const navigate = useNavigate();
@@ -34,7 +34,8 @@ export function HomePage() {
       product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       product.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory =
-      selectedCategory === "all" || product.category === selectedCategory;
+      selectedCategory === "all" || 
+      product.category.toLowerCase() === selectedCategory.toLowerCase();
     return matchesSearch && matchesCategory;
   });
 
@@ -94,11 +95,44 @@ export function HomePage() {
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold text-gray-900">All Products</h2>
             <span className="text-gray-600">
-              {filteredProducts.length} product{filteredProducts.length !== 1 ? 's' : ''}
+              {isLoading ? 'Loading...' : `${filteredProducts.length} product${filteredProducts.length !== 1 ? 's' : ''}`}
             </span>
           </div>
 
-          {filteredProducts.length === 0 ? (
+          {isLoading ? (
+            /* Loading Skeleton Grid */
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {[...Array(8)].map((_, index) => (
+                <div key={index} className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100 p-4 animate-pulse">
+                  <div className="w-full aspect-square bg-gray-200 rounded-lg mb-4" />
+                  <div className="h-4 bg-gray-200 rounded w-1/3 mb-2" />
+                  <div className="h-6 bg-gray-200 rounded w-3/4 mb-3" />
+                  <div className="h-4 bg-gray-200 rounded w-full mb-4" />
+                  <div className="flex items-center justify-between">
+                    <div className="h-6 bg-gray-200 rounded w-1/4" />
+                    <div className="h-9 bg-gray-200 rounded w-1/3" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : error ? (
+            /* Error State with Retry */
+            <div className="text-center py-12">
+              <div className="bg-red-50 border border-red-200 rounded-xl p-8 max-w-lg mx-auto">
+                <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4 text-red-600 font-bold text-2xl">!</div>
+                <h3 className="text-lg font-semibold text-red-900 mb-2">Could not load products</h3>
+                <p className="text-red-700 mb-6">
+                  {error}
+                </p>
+                <button
+                  onClick={refreshProducts}
+                  className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg font-medium shadow-sm transition-all transform hover:scale-105 active:scale-95"
+                >
+                  Retry Connection
+                </button>
+              </div>
+            </div>
+          ) : filteredProducts.length === 0 ? (
             <div className="text-center py-12">
               <div className="bg-white rounded-lg shadow-sm p-8">
                 <Search className="w-16 h-16 text-gray-300 mx-auto mb-4" />
