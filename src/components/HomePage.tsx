@@ -4,7 +4,7 @@ import { ProductCard } from "./ProductCard";
 import { useProducts } from "../hooks/useProduct";
 import { useCart } from "../hooks/useCart";
 import { useAuth } from "../hooks/useAuth";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import type { Product } from "../types";
 import { toast } from "sonner";
 
@@ -15,7 +15,17 @@ export function HomePage() {
   const navigate = useNavigate();
 
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const selectedCategory = searchParams.get("category") || "all";
+
+  const setSelectedCategory = (category: string) => {
+    if (category === "all") {
+      searchParams.delete("category");
+    } else {
+      searchParams.set("category", category);
+    }
+    setSearchParams(searchParams);
+  };
 
   const handleViewProduct = (productId: string) => {
     console.log("🔍 Viewing product:", productId);
