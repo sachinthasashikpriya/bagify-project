@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useAuth } from '../hooks/useAuth';
 import { useCart } from '../hooks/useCart';
+import { orderService } from '../services/orderService';
 
 export function CartPage() {
   const { currentUser } = useAuth();
@@ -95,16 +96,29 @@ export function CartPage() {
 
     setIsCheckingOut(true);
     
+    const address = currentUser.address || window.prompt('Please enter your shipping address:', '');
+    if (!address) {
+      toast.error('Shipping address is required to proceed.');
+      setIsCheckingOut(false);
+      return;
+    }
+    
     try {
-      // Simulate checkout process
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      const response = await orderService.placeOrder(address);
       
-      await clearCart();
-      toast.success('Order placed successfully! Thank you for your purchase.');
-      navigate('/BUYER-dashboard');
-    } catch (error) { 
+      if (response.error) {
+        toast.error(response.error);
+        return;
+      }
+      
+      if (response.data) {
+        await clearCart();
+        toast.success('Order placed successfully! Thank you for your purchase.');
+        navigate(`/orders/${response.data.id}`);
+      }
+    } catch (error: any) { 
       console.error('Checkout error:', error);
-      toast.error('Checkout failed. Please try again.');
+      toast.error(error.response?.data?.message || error.message || 'Checkout failed. Please try again.');
     } finally {
       setIsCheckingOut(false);
     }
