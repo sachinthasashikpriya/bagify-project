@@ -10,6 +10,7 @@ export function CartPage() {
   const { cartItems, updateQuantity, removeFromCart, clearCart } = useCart();
   const navigate = useNavigate();
   const [isCheckingOut, setIsCheckingOut] = useState(false);
+  const [updatingItems, setUpdatingItems] = useState<Set<string>>(new Set());
 
   // Check if user is logged in
   if (!currentUser) {
@@ -30,19 +31,41 @@ export function CartPage() {
     );
   }
 
-  const handleUpdateQuantity = (productId: string, newQuantity: number) => {
+  const handleUpdateQuantity = async (productId: string, newQuantity: number) => {
     if (newQuantity < 1) {
       handleRemoveItem(productId);
       return;
     }
-    updateQuantity(productId, newQuantity);
+    try {
+      setUpdatingItems(prev => new Set(prev).add(productId));
+      await updateQuantity(productId, newQuantity);
+    } catch (error) {
+      toast.error('Failed to update quantity');
+    } finally {
+      setUpdatingItems(prev => {
+        const next = new Set(prev);
+        next.delete(productId);
+        return next;
+      });
+    }
   };
 
-  const handleRemoveItem = (productId: string) => {
+  const handleRemoveItem = async (productId: string) => {
     const item = cartItems.find(item => item.product.id === productId);
     if (item && window.confirm(`Remove "${item.product.name}" from cart?`)) {
-      removeFromCart(productId);
-      toast.success('Item removed from cart');
+      try {
+        setUpdatingItems(prev => new Set(prev).add(productId));
+        await removeFromCart(productId);
+        toast.success('Item removed from cart');
+      } catch (error) {
+        toast.error('Failed to remove item');
+      } finally {
+        setUpdatingItems(prev => {
+          const next = new Set(prev);
+          next.delete(productId);
+          return next;
+        });
+      }
     }
   };
 
@@ -168,8 +191,8 @@ export function CartPage() {
                     <div className="flex items-center gap-3">
                       <button
                         onClick={() => handleUpdateQuantity(item.product.id, item.quantity - 1)}
-                        className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center hover:bg-gray-300 transition-colors"
-                        disabled={isCheckingOut}
+                        className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center hover:bg-gray-300 transition-colors disabled:opacity-50"
+                        disabled={isCheckingOut || updatingItems.has(item.product.id)}
                       >
                         <Minus className="w-4 h-4" />
                       </button>
@@ -178,8 +201,8 @@ export function CartPage() {
                       
                       <button
                         onClick={() => handleUpdateQuantity(item.product.id, item.quantity + 1)}
-                        className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center hover:bg-gray-300 transition-colors"
-                        disabled={isCheckingOut || item.quantity >= item.product.stock}
+                        className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center hover:bg-gray-300 transition-colors disabled:opacity-50"
+                        disabled={isCheckingOut || updatingItems.has(item.product.id) || item.quantity >= item.product.stock}
                       >
                         <Plus className="w-4 h-4" />
                       </button>
@@ -193,8 +216,8 @@ export function CartPage() {
 
                     <button
                       onClick={() => handleRemoveItem(item.product.id)}
-                      className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
-                      disabled={isCheckingOut}
+                      className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+                      disabled={isCheckingOut || updatingItems.has(item.product.id)}
                     >
                       <Trash2 className="w-5 h-5" />
                     </button>

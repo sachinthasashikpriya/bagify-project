@@ -4,8 +4,8 @@ import type { CartItem, Product } from '../types';
 export interface CartContextType {
   cartItems: CartItem[];
   addToCart: (product: Product) => Promise<void>;
-  updateQuantity: (productId: string, quantity: number) => void;
-  removeFromCart: (productId: string) => void;
+  updateQuantity: (productId: string, quantity: number) => Promise<void>;
+  removeFromCart: (productId: string) => Promise<void>;
   clearCart: () => void;
 }
 

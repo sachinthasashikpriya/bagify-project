@@ -48,20 +48,38 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const updateQuantity = (productId: string, quantity: number) => {
+  const updateQuantity = async (productId: string, quantity: number) => {
     if (quantity <= 0) {
-      removeFromCart(productId);
+      await removeFromCart(productId);
       return;
     }
-    setCartItems((prev) =>
-      prev.map((item) =>
-        item.product.id === productId ? { ...item, quantity } : item
-      )
-    );
+    try {
+      const result = await cartService.updateQuantity(productId, quantity);
+      if (result.error) {
+        throw new Error(result.error);
+      }
+      setCartItems((prev) =>
+        prev.map((item) =>
+          item.product.id === productId ? { ...item, quantity } : item
+        )
+      );
+    } catch (error) {
+      console.error('Failed to update quantity:', error);
+      throw error;
+    }
   };
 
-  const removeFromCart = (productId: string) => {
-    setCartItems((prev) => prev.filter((item) => item.product.id !== productId));
+  const removeFromCart = async (productId: string) => {
+    try {
+      const result = await cartService.removeFromCart(productId);
+      if (result.error) {
+        throw new Error(result.error);
+      }
+      setCartItems((prev) => prev.filter((item) => item.product.id !== productId));
+    } catch (error) {
+      console.error('Failed to remove from cart:', error);
+      throw error;
+    }
   };
 
   const clearCart = () => {

@@ -17,5 +17,25 @@ export const cartService = {
       service: 'user-service',
       auth: true,
     });
+  },
+
+  /**
+   * Update quantity of an item in the cart
+   */
+  async updateQuantity(productId: string, quantity: number): Promise<Result<void>> {
+    return httpClient.put<void>(`/api/v1/cart/items/${productId}`, { quantity }, {
+      service: 'user-service',
+      auth: true,
+    });
+  },
+
+  /**
+   * Remove an item from the cart
+   */
+  async removeFromCart(productId: string): Promise<Result<void>> {
+    return httpClient.delete<void>(`/api/v1/cart/items/${productId}`, {
+      service: 'user-service',
+      auth: true,
+    });
   }
 };
