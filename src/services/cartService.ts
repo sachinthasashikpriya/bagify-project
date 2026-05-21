@@ -4,11 +4,25 @@ import type { Result } from "../types";
 export interface CartItemResponse {
   id?: string;
   productId: string;
+  productName?: string;
+  productImage?: string;
+  price?: number;
+  stock?: number;
   quantity: number;
   addedAt?: string;
 }
 
 export const cartService = {
+  /**
+   * Get all cart items for the authenticated user
+   */
+  async getCart(): Promise<Result<CartItemResponse[]>> {
+    return httpClient.get<CartItemResponse[]>('/api/v1/cart', {
+      service: 'user-service',
+      auth: true,
+    });
+  },
+
   /**
    * Add a product to cart or increase quantity
    */

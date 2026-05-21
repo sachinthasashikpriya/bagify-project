@@ -3,10 +3,12 @@ import type { CartItem, Product } from '../types';
 import type { ReactNode } from 'react';
 import { CartContext } from './CartContext';
 import { cartService } from '../services/cartService';
+import { useAuth } from '../hooks/useAuth';
 
 const CART_STORAGE_KEY = 'bagify_cart_items';
 
 export function CartProvider({ children }: { children: ReactNode }) {
+  const { currentUser } = useAuth();
   const [cartItems, setCartItems] = useState<CartItem[]>(() => {
     try {
       const stored = localStorage.getItem(CART_STORAGE_KEY);
@@ -16,6 +18,37 @@ export function CartProvider({ children }: { children: ReactNode }) {
       return [];
     }
   });
+
+  useEffect(() => {
+    async function loadCart() {
+      if (currentUser?.role === 'BUYER') {
+        const result = await cartService.getCart();
+        if (result.ok && result.data) {
+          const items: CartItem[] = result.data.map((dto) => ({
+            product: {
+              id: String(dto.productId),
+              name: dto.productName || '',
+              description: '', // Backend doesn't send description in DTO yet, or we can use placeholder
+              price: dto.price || 0,
+              category: '',
+              image: dto.productImage || '',
+              sellerId: '',
+              sellerName: '',
+              sellerRating: 0,
+              stock: dto.stock || 0,
+              reviews: [],
+              averageRating: 0,
+            },
+            quantity: dto.quantity,
+          }));
+          setCartItems(items);
+        }
+      } else if (!currentUser) {
+        setCartItems([]);
+      }
+    }
+    loadCart();
+  }, [currentUser]);
 
   useEffect(() => {
     try {
