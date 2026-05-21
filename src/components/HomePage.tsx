@@ -40,8 +40,8 @@ export function HomePage() {
     navigate(`/product/${productId}`);
   };
 
-  const handleAddToCart = (product: Product) => {
-    addToCart(product);
+  const handleAddToCart = async (product: Product) => {
+    await addToCart(product);
     toast.success(`${product.name} added to cart!`);
   };
 

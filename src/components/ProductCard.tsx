@@ -1,13 +1,32 @@
-import { Star, ShoppingCart } from 'lucide-react';
+import { Star, ShoppingCart, Loader2 } from 'lucide-react';
+import { useState } from 'react';
 import type { Product } from '../types';
+import { toast } from 'sonner';
 
 interface ProductCardProps {
   product: Product;
   onViewDetails: (productId: string) => void;
-  onAddToCart?: (product: Product) => void;
+  onAddToCart?: (product: Product) => Promise<void>;
 }
 
 export function ProductCard({ product, onViewDetails, onAddToCart }: ProductCardProps) {
+  const [isAdding, setIsAdding] = useState(false);
+  const isOutOfStock = product.stock <= 0;
+
+  const handleAdd = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!onAddToCart || isOutOfStock) return;
+    try {
+      setIsAdding(true);
+      await onAddToCart(product);
+    } catch (error) {
+      const e = error as Error;
+      toast.error(e.message || 'Failed to add to cart');
+    } finally {
+      setIsAdding(false);
+    }
+  };
+
   return (
     <div className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-shadow overflow-hidden cursor-pointer">
       <div onClick={() => onViewDetails(product.id)}>
@@ -49,11 +68,16 @@ export function ProductCard({ product, onViewDetails, onAddToCart }: ProductCard
       {onAddToCart && (
         <div className="px-4 pb-4">
           <button
-            onClick={() => onAddToCart(product)}
-            className="w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 flex items-center justify-center gap-2"
+            onClick={handleAdd}
+            disabled={isAdding || isOutOfStock}
+            className="w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 flex items-center justify-center gap-2 disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
-            <ShoppingCart className="w-4 h-4" />
-            Add to Cart
+            {isAdding ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <ShoppingCart className="w-4 h-4" />
+            )}
+            {isOutOfStock ? 'Out of Stock' : isAdding ? 'Adding...' : 'Add to Cart'}
           </button>
         </div>
       )}

@@ -1,4 +1,4 @@
-import { ArrowLeft, Package, ShoppingCart, Star, Store } from "lucide-react";
+import { Loader2, ArrowLeft, Package, ShoppingCart, Star, Store } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
@@ -21,6 +21,7 @@ export function ProductDetailPage() {
   const [fetchedProduct, setFetchedProduct] = useState<Product | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [fetchError, setFetchError] = useState(false);
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
 
   const product = products.find((p) => String(p.id) === String(productId)) || fetchedProduct;
 
@@ -102,7 +103,7 @@ export function ProductDetailPage() {
     );
   }
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     if (!currentUser) {
       toast.error("Please login to add items to cart");
       navigate("/login");
@@ -117,8 +118,16 @@ export function ProductDetailPage() {
       return;
     }
 
-    addToCart(product);
-    toast.success("Added to cart!");
+    try {
+      setIsAddingToCart(true);
+      await addToCart(product);
+      toast.success("Added to cart!");
+    } catch (error) {
+      const e = error as Error;
+      toast.error(e.message || "Failed to add to cart");
+    } finally {
+      setIsAddingToCart(false);
+    }
   };
 
   const handleSubmitReview = () => {
@@ -265,11 +274,15 @@ export function ProductDetailPage() {
             <div className="space-y-3">
               <button
                 onClick={handleAddToCart}
-                disabled={product.stock <= 0 || !currentUser || currentUser.role !== "BUYER"}
+                disabled={product.stock <= 0 || !currentUser || currentUser.role !== "BUYER" || isAddingToCart}
                 className="w-full bg-purple-600 text-white py-3 rounded-lg hover:bg-purple-700 transition-colors flex items-center justify-center gap-2 font-medium disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-purple-600"
               >
-                <ShoppingCart className="w-5 h-5" />
-                {product.stock <= 0 ? "Out of Stock" : "Add to Cart"}
+                {isAddingToCart ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <ShoppingCart className="w-5 h-5" />
+                )}
+                {product.stock <= 0 ? "Out of Stock" : isAddingToCart ? "Adding..." : "Add to Cart"}
               </button>
 
               {!currentUser && (
