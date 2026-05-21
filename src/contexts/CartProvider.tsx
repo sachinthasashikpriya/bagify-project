@@ -115,8 +115,17 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const clearCart = () => {
-    setCartItems([]);
+  const clearCart = async () => {
+    try {
+      const result = await cartService.clearCart();
+      if (result.error) {
+        throw new Error(result.error);
+      }
+      setCartItems([]);
+    } catch (error) {
+      console.error('Failed to clear cart:', error);
+      throw error;
+    }
   };
 
   return (

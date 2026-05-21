@@ -51,5 +51,15 @@ export const cartService = {
       service: 'user-service',
       auth: true,
     });
+  },
+
+  /**
+   * Clear all items from the cart
+   */
+  async clearCart(): Promise<Result<void>> {
+    return httpClient.delete<void>('/api/v1/cart', {
+      service: 'user-service',
+      auth: true,
+    });
   }
 };

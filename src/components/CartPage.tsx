@@ -69,12 +69,16 @@ export function CartPage() {
     }
   };
 
-  const handleClearCart = () => {
+  const handleClearCart = async () => {
     if (cartItems.length === 0) return;
     
     if (window.confirm('Are you sure you want to clear your entire cart?')) {
-      clearCart();
-      toast.success('Cart cleared');
+      try {
+        await clearCart();
+        toast.success('Cart cleared');
+      } catch (error) {
+        toast.error('Failed to clear cart');
+      }
     }
   };
 
@@ -95,7 +99,7 @@ export function CartPage() {
       // Simulate checkout process
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      clearCart();
+      await clearCart();
       toast.success('Order placed successfully! Thank you for your purchase.');
       navigate('/BUYER-dashboard');
     } catch (error) { 
