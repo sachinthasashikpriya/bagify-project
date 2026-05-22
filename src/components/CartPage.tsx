@@ -114,7 +114,7 @@ export function CartPage() {
       if (response.data) {
         await clearCart();
         toast.success('Order placed successfully! Thank you for your purchase.');
-        navigate(`/orders/${response.data.id}`);
+        navigate(`/orders/${response.data.id}/confirmation`);
       }
     } catch (error: any) { 
       console.error('Checkout error:', error);

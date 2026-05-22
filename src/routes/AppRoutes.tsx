@@ -12,6 +12,7 @@ import { ForgotPasswordPage } from "../components/ForgotPasswordPage";
 import { ResetPasswordPage } from "../components/ResetPasswordPage";
 import { MainLayout } from "../layouts/MainLayout";
 import { ProtectedRoute } from "./ProtectedRoute";
+import { OrderConfirmationPage } from "../components/OrderConfirmationPage";
 
 export function AppRoutes() {
   return (
@@ -56,6 +57,15 @@ export function AppRoutes() {
           element={
             <ProtectedRoute>
               <CartPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/orders/:orderId/confirmation"
+          element={
+            <ProtectedRoute allowedroles={["BUYER"]}>
+              <OrderConfirmationPage />
             </ProtectedRoute>
           }
         />
