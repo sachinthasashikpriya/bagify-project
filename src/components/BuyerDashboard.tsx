@@ -1,10 +1,11 @@
-import { Heart, LogOut, Package, ShoppingBag, Star, User } from "lucide-react";
-import { useState } from "react";
+import { Heart, LogOut, Package, ShoppingBag, Star, User, Loader2 } from "lucide-react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useAuth } from "../hooks/useAuth";
 import { useCart } from "../hooks/useCart";
 import { useProducts } from "../hooks/useProduct";
+import { orderService, type OrderResponse } from "../services/orderService";
 
 export function BuyerDashboard() {
   // ✅ Fixed: Changed from SellerDashboard to BuyerDashboard
@@ -40,27 +41,30 @@ export function BuyerDashboard() {
     );
   }
 
-  // Mock orders (you can implement order context later)
-  const mockOrders = [
-    {
-      id: "order1",
-      date: "2024-01-20",
-      status: "delivered",
-      total: 89.99,
-      items: [
-        { productId: "p1", name: "Leather Handbag", price: 89.99, quantity: 1 },
-      ],
-    },
-    {
-      id: "order2",
-      date: "2024-01-18",
-      status: "shipped",
-      total: 45.5,
-      items: [
-        { productId: "p2", name: "Canvas Backpack", price: 45.5, quantity: 1 },
-      ],
-    },
-  ];
+  const [orders, setOrders] = useState<OrderResponse[]>([]);
+  const [isLoadingOrders, setIsLoadingOrders] = useState(true);
+
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        setIsLoadingOrders(true);
+        const result = await orderService.getMyOrders();
+        if (result.success && result.data) {
+          setOrders(result.data);
+        } else {
+          toast.error(result.error || "Failed to fetch orders");
+        }
+      } catch (error) {
+        toast.error("An error occurred while fetching orders");
+      } finally {
+        setIsLoadingOrders(false);
+      }
+    };
+
+    if (currentUser?.role === "BUYER") {
+      fetchOrders();
+    }
+  }, [currentUser]);
 
   // Mock wishlist (you can implement wishlist context later)
   const wishlistItems = products.slice(0, 3);
@@ -77,8 +81,8 @@ export function BuyerDashboard() {
     navigate(path);
   };
 
-  const totalOrders = mockOrders.length;
-  const totalSpent = mockOrders.reduce((sum, order) => sum + order.total, 0);
+  const totalOrders = orders.length;
+  const totalSpent = orders.reduce((sum, order) => sum + order.totalAmount, 0);
   const cartItemsCount = cartItems.length;
 
   return (
@@ -233,7 +237,12 @@ export function BuyerDashboard() {
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">
                   Recent Orders
                 </h3>
-                {mockOrders.length === 0 ? (
+                {isLoadingOrders ? (
+                  <div className="text-center py-12">
+                    <Loader2 className="w-8 h-8 animate-spin text-purple-600 mx-auto mb-4" />
+                    <p className="text-gray-500">Loading your orders...</p>
+                  </div>
+                ) : orders.length === 0 ? (
                   <div className="text-center py-8">
                     <Package className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                     <h4 className="text-lg font-medium text-gray-900 mb-2">
@@ -251,7 +260,7 @@ export function BuyerDashboard() {
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {mockOrders.map((order) => (
+                    {orders.map((order) => (
                       <div
                         key={order.id}
                         className="border border-gray-200 rounded-lg p-4"
@@ -262,24 +271,24 @@ export function BuyerDashboard() {
                               Order #{order.id}
                             </p>
                             <p className="text-sm text-gray-500">
-                              {order.date}
+                              {new Date(order.createdAt).toLocaleDateString()}
                             </p>
                           </div>
                           <div className="text-right">
                             <p className="font-medium text-gray-900">
-                              ${order.total.toFixed(2)}
+                              ${order.totalAmount.toFixed(2)}
                             </p>
                             <span
                               className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
-                                order.status === "delivered"
+                                order.status === "DELIVERED"
                                   ? "bg-green-100 text-green-800"
-                                  : order.status === "shipped"
+                                  : order.status === "SHIPPED"
                                   ? "bg-blue-100 text-blue-800"
                                   : "bg-yellow-100 text-yellow-800"
                               }`}
                             >
                               {order.status.charAt(0).toUpperCase() +
-                                order.status.slice(1)}
+                                order.status.slice(1).toLowerCase()}
                             </span>
                           </div>
                         </div>
@@ -290,10 +299,10 @@ export function BuyerDashboard() {
                               className="flex items-center justify-between"
                             >
                               <span className="text-gray-600">
-                                {item.name} × {item.quantity}
+                                {item.productName} × {item.quantity}
                               </span>
                               <span className="text-gray-900">
-                                ${item.price.toFixed(2)}
+                                ${(item.priceAtPurchase * item.quantity).toFixed(2)}
                               </span>
                             </div>
                           ))}
