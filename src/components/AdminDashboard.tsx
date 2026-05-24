@@ -1,17 +1,92 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Shield, Users, Package, TrendingUp, LogOut, AlertTriangle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useAuth } from '../hooks/useAuth';
 import { useProducts } from '../hooks/useProduct';
 import { mockBuyers, mockSellers } from '../types';
+import { orderService, type OrderResponse } from '../services/orderService';
+import { ConfirmModal } from './common/ConfirmModal';
 
 export function AdminDashboard() {
   const { currentUser, logout } = useAuth();
   const { products, deleteProduct } = useProducts();
   const navigate = useNavigate();
   
-  const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'users'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'users' | 'orders'>('overview');
+  const [orders, setOrders] = useState<OrderResponse[]>([]);
+  const [isLoadingOrders, setIsLoadingOrders] = useState(false);
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+    isDestructive?: boolean;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+    isDestructive: true,
+  });
+
+  // Fetch orders when tab changes to orders
+  useEffect(() => {
+    if (activeTab === 'orders') {
+      const fetchOrders = async () => {
+        setIsLoadingOrders(true);
+        const result = await orderService.getAllOrders();
+        if (result.ok && result.data) {
+          setOrders(result.data);
+        } else {
+          toast.error(result.error || "Failed to load orders");
+        }
+        setIsLoadingOrders(false);
+      };
+      fetchOrders();
+    }
+  }, [activeTab]);
+
+  const handleStatusChange = async (orderId: number, newStatus: string) => {
+    try {
+      const result = await orderService.updateOrderStatus(orderId, newStatus);
+      if (result.ok && result.data) {
+        toast.success(`Order #${orderId} status updated to ${newStatus}`);
+        setOrders(orders.map(o => o.id === orderId ? result.data! : o));
+      } else {
+        toast.error(result.error || "Failed to update status");
+      }
+    } catch {
+      toast.error("An error occurred");
+    }
+  };
+
+  const handleItemStatusChange = async (orderId: number, itemId: number, newStatus: string) => {
+    try {
+      const result = await orderService.updateItemStatusAdmin(orderId, itemId, newStatus);
+      if (result.ok && result.data) {
+        toast.success(`Item status updated to ${newStatus}`);
+        setOrders(prev => prev.map(o => o.id === result.data!.id ? result.data! : o));
+      } else {
+        toast.error(result.error || 'Failed to update item status');
+      }
+    } catch {
+      toast.error('An error occurred');
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status?.toUpperCase()) {
+      case 'DELIVERED': return 'bg-green-100 text-green-800';
+      case 'SHIPPED': return 'bg-blue-100 text-blue-800';
+      case 'PARTIALLY_SHIPPED': return 'bg-indigo-100 text-indigo-800';
+      case 'PACKED': return 'bg-cyan-100 text-cyan-800';
+      case 'PROCESSING': return 'bg-orange-100 text-orange-800';
+      case 'CANCELLED': return 'bg-red-100 text-red-800';
+      case 'PENDING':
+      default: return 'bg-yellow-100 text-yellow-800';
+    }
+  };
 
   // Check if user is an admin
   if (!currentUser || currentUser.role !== 'ADMIN') {
@@ -33,18 +108,30 @@ export function AdminDashboard() {
   }
 
   const handleLogout = () => {
-    if (window.confirm('Are you sure you want to logout?')) {
-      logout();
-      navigate('/');
-      toast.success('Logged out successfully');
-    }
+    setConfirmModal({
+      isOpen: true,
+      title: 'Confirm Logout',
+      message: 'Are you sure you want to logout?',
+      onConfirm: () => {
+        logout();
+        navigate('/');
+        toast.success('Logged out successfully');
+      },
+      isDestructive: true,
+    });
   };
 
   const handleDeleteProduct = (productId: string, productName: string) => {
-    if (window.confirm(`Are you sure you want to delete "${productName}"? This action cannot be undone.`)) {
-      deleteProduct(productId);
-      toast.success('Product deleted successfully');
-    }
+    setConfirmModal({
+      isOpen: true,
+      title: 'Delete Product',
+      message: `Are you sure you want to delete "${productName}"? This action cannot be undone.`,
+      onConfirm: () => {
+        deleteProduct(productId);
+        toast.success('Product deleted successfully');
+      },
+      isDestructive: true,
+    });
   };
 
   // Calculate stats
@@ -166,6 +253,17 @@ export function AdminDashboard() {
               >
                 <Users className="w-5 h-5 inline mr-2" />
                 Users
+              </button>
+              <button
+                onClick={() => setActiveTab('orders')}
+                className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'orders'
+                    ? 'border-purple-500 text-purple-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <Package className="w-5 h-5 inline mr-2" />
+                Orders
               </button>
             </nav>
           </div>
@@ -321,9 +419,96 @@ export function AdminDashboard() {
                 </div>
               </div>
             )}
+
+            {/* Orders Tab */}
+            {activeTab === 'orders' && (
+              <div>
+                <div className="mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900">Order Management</h3>
+                  <p className="text-sm text-gray-500 mt-1">As admin you can update any item status including marking as DELIVERED.</p>
+                </div>
+                {isLoadingOrders ? (
+                  <div className="text-center py-8 text-gray-500">Loading orders...</div>
+                ) : orders.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">No orders found.</div>
+                ) : (
+                  <div className="space-y-6">
+                    {orders.map((order) => (
+                      <div key={order.id} className="border border-gray-200 rounded-xl overflow-hidden">
+                        {/* Order header */}
+                        <div className="flex items-center justify-between px-5 py-4 bg-gray-50 border-b border-gray-200">
+                          <div className="flex items-center gap-4">
+                            <span className="font-semibold text-gray-900">Order #{order.id}</span>
+                            <span className="text-sm text-gray-500">{new Date(order.createdAt).toLocaleDateString()}</span>
+                            <span className="text-sm text-gray-500">Buyer #{order.buyerId}</span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <span className="text-sm text-gray-500">Total: <span className="font-medium text-gray-800">${order.totalAmount.toFixed(2)}</span></span>
+                            <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
+                              {order.status.replace(/_/g, ' ')}
+                            </span>
+                            {/* Admin global override */}
+                            <select
+                              value={order.status}
+                              onChange={(e) => handleStatusChange(order.id, e.target.value)}
+                              className="border border-gray-300 rounded px-2 py-1 text-xs text-gray-700 focus:outline-none focus:border-purple-500 bg-white"
+                              title="Global order status override"
+                            >
+                              <option value="PENDING">PENDING</option>
+                              <option value="PROCESSING">PROCESSING</option>
+                              <option value="PARTIALLY_SHIPPED">PARTIALLY_SHIPPED</option>
+                              <option value="SHIPPED">SHIPPED</option>
+                              <option value="DELIVERED">DELIVERED</option>
+                              <option value="CANCELLED">CANCELLED</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        {/* Per-item status with admin controls */}
+                        <div className="divide-y divide-gray-100">
+                          {order.items.map((item) => (
+                            <div key={item.id} className="flex items-center justify-between px-5 py-3">
+                              <div>
+                                <p className="text-sm font-medium text-gray-900">{item.productName}</p>
+                                <p className="text-xs text-gray-500">Qty: {item.quantity} · Seller #{item.sellerId} · ${(item.priceAtPurchase * item.quantity).toFixed(2)}</p>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(item.itemStatus)}`}>
+                                  {item.itemStatus}
+                                </span>
+                                <select
+                                  value={item.itemStatus}
+                                  onChange={(e) => handleItemStatusChange(order.id, item.id, e.target.value)}
+                                  className="border border-gray-300 rounded px-2 py-1 text-xs text-gray-700 focus:outline-none focus:border-purple-500 bg-white"
+                                >
+                                  <option value="PENDING">PENDING</option>
+                                  <option value="PROCESSING">PROCESSING</option>
+                                  <option value="PACKED">PACKED</option>
+                                  <option value="SHIPPED">SHIPPED</option>
+                                  <option value="DELIVERED">DELIVERED</option>
+                                </select>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+        onConfirm={confirmModal.onConfirm}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        isDestructive={confirmModal.isDestructive}
+      />
     </div>
   );
 }

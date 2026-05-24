@@ -96,15 +96,23 @@ export function CartPage() {
 
     setIsCheckingOut(true);
     
-    const address = currentUser.address || window.prompt('Please enter your shipping address:', '');
-    if (!address) {
-      toast.error('Shipping address is required to proceed.');
+    const address = currentUser.address;
+    const phone = currentUser.phone;
+    
+    if (!address || address.trim() === '' || !phone || phone.trim() === '') {
+      toast.error('Please add your shipping address and mobile number in your profile to proceed with checkout.');
       setIsCheckingOut(false);
+      navigate('/edit-profile');
       return;
     }
     
     try {
-      const response = await orderService.placeOrder(address);
+      const checkoutItems = cartItems.map(item => ({
+        productId: Number(item.product.id),
+        quantity: item.quantity
+      }));
+
+      const response = await orderService.placeOrder(address, checkoutItems);
       
       if (response.error) {
         toast.error(response.error);

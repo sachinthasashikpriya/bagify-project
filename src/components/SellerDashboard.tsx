@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, Star, Package, TrendingUp, LogOut, BadgeCheck } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useAuth } from '../hooks/useAuth';
 import { useProducts } from '../hooks/useProduct';
+import { orderService, type OrderResponse, type OrderItemResponse } from '../services/orderService';
 
 export function SellerDashboard() {
   const { currentUser, logout } = useAuth();
@@ -19,6 +20,58 @@ export function SellerDashboard() {
     image: '',
     stock: '',
   });
+
+  const [activeTab, setActiveTab] = useState<'products' | 'orders'>('products');
+  const [orders, setOrders] = useState<OrderResponse[]>([]);
+  const [isLoadingOrders, setIsLoadingOrders] = useState(false);
+
+  useEffect(() => {
+    if (activeTab === 'orders') {
+      const fetchOrders = async () => {
+        setIsLoadingOrders(true);
+        const result = await orderService.getSellerOrders();
+        if (result.ok && result.data) {
+          setOrders(result.data);
+        } else {
+          toast.error(result.error || "Failed to load orders");
+        }
+        setIsLoadingOrders(false);
+      };
+      fetchOrders();
+    }
+  }, [activeTab]);
+
+  const handleItemStatusChange = async (orderId: number, itemId: number, newStatus: string) => {
+    try {
+      const result = await orderService.updateItemStatus(orderId, itemId, newStatus);
+      if (result.ok && result.data) {
+        toast.success(`Item status updated to ${newStatus}`);
+        // Replace the updated order in state (backend returns full updated order)
+        setOrders(prev => prev.map(o => o.id === result.data!.id ? result.data! : o));
+      } else {
+        toast.error(result.error || 'Failed to update item status');
+      }
+    } catch {
+      toast.error('An error occurred');
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status?.toUpperCase()) {
+      case 'DELIVERED': return 'bg-green-100 text-green-800';
+      case 'SHIPPED': return 'bg-blue-100 text-blue-800';
+      case 'PARTIALLY_SHIPPED': return 'bg-indigo-100 text-indigo-800';
+      case 'PACKED': return 'bg-cyan-100 text-cyan-800';
+      case 'PROCESSING': return 'bg-orange-100 text-orange-800';
+      case 'CANCELLED': return 'bg-red-100 text-red-800';
+      case 'PENDING':
+      default: return 'bg-yellow-100 text-yellow-800';
+    }
+  };
+
+  // For seller-owned items: get only items that belong to this seller
+  const getSellerItems = (order: OrderResponse): OrderItemResponse[] =>
+    order.items.filter(item => item.sellerId === currentSellerId);
 
   // Check if user is a seller
   if (!currentUser || currentUser.role !== 'SELLER') {
@@ -228,7 +281,38 @@ export function SellerDashboard() {
           </div>
         </div>
 
+        {/* Tabs */}
+        <div className="bg-white rounded-xl shadow-sm mb-6">
+          <div className="border-b border-gray-200">
+            <nav className="-mb-px flex space-x-8 px-6">
+              <button
+                onClick={() => setActiveTab('products')}
+                className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'products'
+                    ? 'border-purple-500 text-purple-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <Package className="w-5 h-5 inline mr-2" />
+                Products
+              </button>
+              <button
+                onClick={() => setActiveTab('orders')}
+                className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'orders'
+                    ? 'border-purple-500 text-purple-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <TrendingUp className="w-5 h-5 inline mr-2" />
+                Orders
+              </button>
+            </nav>
+          </div>
+        </div>
+
         {/* Products Section */}
+        {activeTab === 'products' && (
         <div className="bg-white rounded-xl shadow-sm p-6">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold text-gray-900">My Products</h2>
@@ -469,6 +553,94 @@ export function SellerDashboard() {
             )}
           </div>
         </div>
+        )}
+
+        {/* Orders Section — Hybrid per-item model */}
+        {activeTab === 'orders' && (
+          <div className="bg-white rounded-xl shadow-sm p-6">
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold text-gray-900">Order Management</h2>
+              <p className="text-sm text-gray-500 mt-1">
+                You can update the status of your own items. The overall order status is derived automatically.
+              </p>
+            </div>
+            {isLoadingOrders ? (
+              <div className="text-center py-8 text-gray-500">Loading orders...</div>
+            ) : orders.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">No orders found.</div>
+            ) : (
+              <div className="space-y-6">
+                {orders.map((order) => {
+                  const myItems = getSellerItems(order);
+                  if (myItems.length === 0) return null;
+                  return (
+                    <div key={order.id} className="border border-gray-200 rounded-xl overflow-hidden">
+                      {/* Order header */}
+                      <div className="flex items-center justify-between px-5 py-4 bg-gray-50 border-b border-gray-200">
+                        <div className="flex items-center gap-4">
+                          <span className="font-semibold text-gray-900">Order #{order.id}</span>
+                          <span className="text-sm text-gray-500">{new Date(order.createdAt).toLocaleDateString()}</span>
+                          <span className="text-sm text-gray-500">Buyer #{order.buyerId}</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className="text-sm text-gray-500">Order total: <span className="font-medium text-gray-800">${order.totalAmount.toFixed(2)}</span></span>
+                          <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
+                            {order.status.replace(/_/g, ' ')}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* My items in this order */}
+                      <div className="divide-y divide-gray-100">
+                        {myItems.map((item) => (
+                          <div key={item.id} className="flex items-center justify-between px-5 py-4">
+                            <div className="flex items-center gap-4">
+                              {item.imageUrl && (
+                                <img
+                                  src={item.imageUrl}
+                                  alt={item.productName}
+                                  className="w-12 h-12 rounded-lg object-cover border border-gray-100"
+                                  onError={(e) => {
+                                    (e.target as HTMLImageElement).style.display = 'none';
+                                  }}
+                                />
+                              )}
+                              <div>
+                                <p className="font-medium text-gray-900">{item.productName}</p>
+                                <p className="text-sm text-gray-500">Qty: {item.quantity} × ${item.priceAtPurchase.toFixed(2)}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(item.itemStatus)}`}>
+                                {item.itemStatus}
+                              </span>
+                              {/* Seller controls: PENDING → PROCESSING → PACKED → SHIPPED */}
+                              {order.status !== 'CANCELLED' && item.itemStatus !== 'DELIVERED' && (
+                                <select
+                                  value={item.itemStatus}
+                                  onChange={(e) => handleItemStatusChange(order.id, item.id, e.target.value)}
+                                  className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm text-gray-700 focus:outline-none focus:border-purple-500 bg-white"
+                                >
+                                  <option value="PENDING">PENDING</option>
+                                  <option value="PROCESSING">PROCESSING</option>
+                                  <option value="PACKED">PACKED</option>
+                                  <option value="SHIPPED">SHIPPED</option>
+                                </select>
+                              )}
+                              {item.itemStatus === 'DELIVERED' && (
+                                <span className="text-xs text-green-600 font-medium">✓ Delivered</span>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

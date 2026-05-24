@@ -16,7 +16,7 @@ export function OrderConfirmationPage() {
       try {
         setLoading(true);
         const result = await orderService.getOrder(orderId);
-        if (result.success && result.data) {
+        if (result.ok && result.data) {
           setOrder(result.data);
         } else {
           setError(result.error?.message || "Failed to load order details");
@@ -67,6 +67,16 @@ export function OrderConfirmationPage() {
   
   const formatDate = (date: Date) => {
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status?.toUpperCase()) {
+      case 'DELIVERED': return 'bg-green-100 text-green-800';
+      case 'SHIPPED': return 'bg-blue-100 text-blue-800';
+      case 'CANCELLED': return 'bg-red-100 text-red-800';
+      case 'PENDING':
+      default: return 'bg-yellow-100 text-yellow-800';
+    }
   };
 
   return (
@@ -129,7 +139,7 @@ export function OrderConfirmationPage() {
               </p>
               <div className="mt-4 pt-4 border-t border-gray-100">
                 <p className="text-sm text-gray-500 mb-1">Status</p>
-                <span className="inline-block px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm font-medium">
+                <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(order.status)}`}>
                   {order.status}
                 </span>
               </div>
