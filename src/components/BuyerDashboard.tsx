@@ -1,4 +1,4 @@
-import { Heart, LogOut, Package, ShoppingBag, Star, User, Loader2, Clock, Truck, CheckCircle2, X } from "lucide-react";
+import { Heart, LogOut, Package, ShoppingBag, Star, User, Loader2, Clock, Truck, CheckCircle2, X, Trash2, ShoppingCart } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -7,11 +7,12 @@ import { useCart } from "../hooks/useCart";
 import { useProducts } from "../hooks/useProduct";
 import { orderService, type OrderResponse } from "../services/orderService";
 import { ConfirmModal } from "./common/ConfirmModal";
+import { useWishlist } from "../hooks/useWishlist";
 
 export function BuyerDashboard() {
   // ✅ Fixed: Changed from SellerDashboard to BuyerDashboard
   const { currentUser, logout } = useAuth();
-  const { cartItems } = useCart();
+  const { cartItems, addToCart } = useCart();
   const { products } = useProducts();
   const navigate = useNavigate();
 
@@ -96,8 +97,7 @@ export function BuyerDashboard() {
     );
   }
 
-  // Mock wishlist (you can implement wishlist context later)
-  const wishlistItems = products.slice(0, 3);
+  const { wishlistProducts: wishlistItems, removeFromWishlist } = useWishlist();
 
   const handleLogout = () => {
     setConfirmModal({
@@ -137,6 +137,15 @@ export function BuyerDashboard() {
 
   const handleNavigate = (path: string) => {
     navigate(path);
+  };
+
+  const handleAddToCart = async (product: any) => {
+    try {
+      await addToCart(product);
+      toast.success("Added to cart");
+    } catch (error) {
+      toast.error("Failed to add to cart");
+    }
   };
 
   const totalOrders = orders.length;
@@ -414,7 +423,7 @@ export function BuyerDashboard() {
                     {wishlistItems.map((product) => (
                       <div
                         key={product.id}
-                        className="border border-gray-200 rounded-lg p-4"
+                        className="border border-gray-200 rounded-lg p-4 flex flex-col"
                       >
                         <img
                           src={product.image}
@@ -427,14 +436,30 @@ export function BuyerDashboard() {
                         <p className="text-purple-600 font-bold mb-3">
                           ${product.price.toFixed(2)}
                         </p>
-                        <button
-                          onClick={() =>
-                            handleNavigate(`/product/${product.id}`)
-                          }
-                          className="w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 transition-colors"
-                        >
-                          View Product
-                        </button>
+                        <div className="mt-auto space-y-2">
+                          <button
+                            onClick={() => handleAddToCart(product)}
+                            className="w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 transition-colors flex items-center justify-center gap-2"
+                          >
+                            <ShoppingCart className="w-4 h-4" />
+                            Add to Cart
+                          </button>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => handleNavigate(`/product/${product.id}`)}
+                              className="flex-1 bg-gray-100 text-gray-700 py-2 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium"
+                            >
+                              View Details
+                            </button>
+                            <button
+                              onClick={() => removeFromWishlist(Number(product.id))}
+                              className="flex-none bg-red-50 text-red-600 px-3 py-2 rounded-lg hover:bg-red-100 transition-colors flex items-center justify-center"
+                              title="Remove from Wishlist"
+                            >
+                              <Trash2 className="w-5 h-5" />
+                            </button>
+                          </div>
+                        </div>
                       </div>
                     ))}
                   </div>

@@ -1,10 +1,11 @@
-import { Loader2, ArrowLeft, Package, ShoppingCart, Star, Store } from "lucide-react";
+import { Loader2, ArrowLeft, Package, ShoppingCart, Star, Store, Heart } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { useAuth } from "../hooks/useAuth";
 import { useCart } from "../hooks/useCart";
 import { useProducts } from "../hooks/useProduct";
+import { useWishlist } from "../hooks/useWishlist";
 import { productService } from "../services/productService";
 import type { Product } from "../types";
 
@@ -14,6 +15,7 @@ export function ProductDetailPage() {
   const { currentUser } = useAuth();
   const { addToCart } = useCart();
   const { products, addReview } = useProducts();
+  const { toggleWishlist, isInWishlist } = useWishlist();
 
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
@@ -272,18 +274,32 @@ export function ProductDetailPage() {
 
             {/* Add to Cart Button */}
             <div className="space-y-3">
-              <button
-                onClick={handleAddToCart}
-                disabled={product.stock <= 0 || !currentUser || currentUser.role !== "BUYER" || isAddingToCart}
-                className="w-full bg-purple-600 text-white py-3 rounded-lg hover:bg-purple-700 transition-colors flex items-center justify-center gap-2 font-medium disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-purple-600"
-              >
-                {isAddingToCart ? (
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                ) : (
-                  <ShoppingCart className="w-5 h-5" />
+              <div className="flex gap-3">
+                <button
+                  onClick={handleAddToCart}
+                  disabled={product.stock <= 0 || !currentUser || currentUser.role !== "BUYER" || isAddingToCart}
+                  className="flex-1 bg-purple-600 text-white py-3 rounded-lg hover:bg-purple-700 transition-colors flex items-center justify-center gap-2 font-medium disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-purple-600"
+                >
+                  {isAddingToCart ? (
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                  ) : (
+                    <ShoppingCart className="w-5 h-5" />
+                  )}
+                  {product.stock <= 0 ? "Out of Stock" : isAddingToCart ? "Adding..." : "Add to Cart"}
+                </button>
+
+                {currentUser?.role === "BUYER" && (
+                  <button
+                    onClick={() => toggleWishlist(Number(product.id))}
+                    className="px-4 border border-gray-200 bg-gray-50 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors flex items-center justify-center"
+                    title={isInWishlist(Number(product.id)) ? "Remove from wishlist" : "Add to wishlist"}
+                  >
+                    <Heart 
+                      className={`w-6 h-6 ${isInWishlist(Number(product.id)) ? "fill-red-500 text-red-500" : "text-gray-400"}`} 
+                    />
+                  </button>
                 )}
-                {product.stock <= 0 ? "Out of Stock" : isAddingToCart ? "Adding..." : "Add to Cart"}
-              </button>
+              </div>
 
               {!currentUser && (
                 <div className="bg-blue-50 border border-blue-200 text-blue-700 p-4 rounded-lg text-center">

@@ -1,7 +1,8 @@
-import { Star, ShoppingCart, Loader2 } from 'lucide-react';
+import { Star, ShoppingCart, Loader2, Heart } from 'lucide-react';
 import { useState } from 'react';
 import type { Product } from '../types';
 import { toast } from 'sonner';
+import { useWishlist } from '../hooks/useWishlist';
 
 interface ProductCardProps {
   product: Product;
@@ -11,7 +12,9 @@ interface ProductCardProps {
 
 export function ProductCard({ product, onViewDetails, onAddToCart }: ProductCardProps) {
   const [isAdding, setIsAdding] = useState(false);
+  const { toggleWishlist, isInWishlist } = useWishlist();
   const isOutOfStock = product.stock <= 0;
+  const inWishlist = isInWishlist(Number(product.id));
 
   const handleAdd = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -27,15 +30,33 @@ export function ProductCard({ product, onViewDetails, onAddToCart }: ProductCard
     }
   };
 
+  const handleWishlistToggle = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      await toggleWishlist(Number(product.id));
+    } catch (error) {
+      // Error is handled in the context
+    }
+  };
+
   return (
-    <div className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-shadow overflow-hidden cursor-pointer">
-      <div onClick={() => onViewDetails(product.id)}>
-        <div className="aspect-square overflow-hidden bg-gray-100">
+    <div className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-shadow overflow-hidden cursor-pointer relative">
+      <div onClick={() => onViewDetails(String(product.id))}>
+        <div className="aspect-square overflow-hidden bg-gray-100 relative">
           <img
             src={product.image}
             alt={product.name}
             className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
           />
+          <button
+            onClick={handleWishlistToggle}
+            className="absolute top-3 right-3 p-2 rounded-full bg-white/80 hover:bg-white backdrop-blur-sm transition-colors shadow-sm"
+            title={inWishlist ? "Remove from wishlist" : "Add to wishlist"}
+          >
+            <Heart 
+              className={`w-5 h-5 ${inWishlist ? "fill-red-500 text-red-500" : "text-gray-600"}`} 
+            />
+          </button>
         </div>
         <div className="p-4">
           <div className="flex items-start justify-between gap-2 mb-2">
