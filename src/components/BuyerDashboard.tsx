@@ -14,7 +14,7 @@ import { type Review } from "../types";
 export function BuyerDashboard() {
   // ✅ Fixed: Changed from SellerDashboard to BuyerDashboard
   const { currentUser, logout } = useAuth();
-  const { cartItems, addToCart } = useCart();
+  const { cartItems, addToCart, isLoadingCart } = useCart();
   const { products } = useProducts();
   const navigate = useNavigate();
 
@@ -26,6 +26,7 @@ export function BuyerDashboard() {
 
   const [orders, setOrders] = useState<OrderResponse[]>([]);
   const [isLoadingOrders, setIsLoadingOrders] = useState(true);
+  const [showAllOrders, setShowAllOrders] = useState(false);
   const [trackingOrder, setTrackingOrder] = useState<OrderResponse | null>(null);
   const [myReviews, setMyReviews] = useState<Review[]>([]);
   const [isLoadingReviews, setIsLoadingReviews] = useState(true);
@@ -119,7 +120,7 @@ export function BuyerDashboard() {
     );
   }
 
-  const { wishlistProducts: wishlistItems, removeFromWishlist } = useWishlist();
+  const { wishlistProducts: wishlistItems, removeFromWishlist, isLoadingWishlist } = useWishlist();
 
   const handleLogout = () => {
     setConfirmModal({
@@ -200,9 +201,13 @@ export function BuyerDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-600 mb-1">Total Orders</p>
-                <p className="text-3xl font-bold text-gray-900">
-                  {totalOrders}
-                </p>
+                {isLoadingOrders ? (
+                  <div className="h-9 w-16 bg-gray-200 animate-pulse rounded-lg mt-1"></div>
+                ) : (
+                  <p className="text-3xl font-bold text-gray-900">
+                    {totalOrders}
+                  </p>
+                )}
               </div>
               <Package className="w-12 h-12 text-purple-600" />
             </div>
@@ -212,9 +217,13 @@ export function BuyerDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-600 mb-1">Total Spent</p>
-                <p className="text-3xl font-bold text-gray-900">
-                  ${totalSpent.toFixed(2)}
-                </p>
+                {isLoadingOrders ? (
+                  <div className="h-9 w-24 bg-gray-200 animate-pulse rounded-lg mt-1"></div>
+                ) : (
+                  <p className="text-3xl font-bold text-gray-900">
+                    ${totalSpent.toFixed(2)}
+                  </p>
+                )}
               </div>
               <ShoppingBag className="w-12 h-12 text-green-600" />
             </div>
@@ -224,9 +233,13 @@ export function BuyerDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-600 mb-1">Cart Items</p>
-                <p className="text-3xl font-bold text-gray-900">
-                  {cartItemsCount}
-                </p>
+                {isLoadingCart ? (
+                  <div className="h-9 w-16 bg-gray-200 animate-pulse rounded-lg mt-1"></div>
+                ) : (
+                  <p className="text-3xl font-bold text-gray-900">
+                    {cartItemsCount}
+                  </p>
+                )}
               </div>
               <ShoppingBag className="w-12 h-12 text-blue-600" />
             </div>
@@ -236,9 +249,13 @@ export function BuyerDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-600 mb-1">Wishlist</p>
-                <p className="text-3xl font-bold text-gray-900">
-                  {wishlistItems.length}
-                </p>
+                {isLoadingWishlist ? (
+                  <div className="h-9 w-16 bg-gray-200 animate-pulse rounded-lg mt-1"></div>
+                ) : (
+                  <p className="text-3xl font-bold text-gray-900">
+                    {wishlistItems.length}
+                  </p>
+                )}
               </div>
               <Heart className="w-12 h-12 text-red-600" />
             </div>
@@ -352,70 +369,94 @@ export function BuyerDashboard() {
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {orders.map((order) => (
-                      <div
-                        key={order.id}
-                        className="border border-gray-200 rounded-lg overflow-hidden"
-                      >
-                        <div className="flex items-center justify-between px-4 py-3 bg-gray-50 border-b border-gray-200">
-                          <div>
-                            <p className="font-medium text-gray-900">
-                              Order #{order.id}
-                            </p>
-                            <p className="text-sm text-gray-500">
-                              {new Date(order.createdAt).toLocaleDateString()}
-                            </p>
-                          </div>
-                          <div className="text-right">
-                            <p className="font-medium text-gray-900">
-                              ${order.totalAmount.toFixed(2)}
-                            </p>
-                            <span
-                              className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}
-                            >
-                              {order.status.replace(/_/g, ' ')}
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Per-item status grouped by seller */}
-                        <div className="divide-y divide-gray-100">
-                          {order.items.map((item, index) => (
+                    {(() => {
+                      const sortedOrders = [...orders].sort(
+                        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+                      );
+                      const displayedOrders = showAllOrders ? sortedOrders : sortedOrders.slice(0, 5);
+                      return (
+                        <>
+                          {displayedOrders.map((order) => (
                             <div
-                              key={index}
-                              className="flex items-center justify-between px-4 py-3"
+                              key={order.id}
+                              className="border border-gray-200 rounded-lg overflow-hidden"
                             >
-                              <span className="text-gray-600">
-                                {item.productName} × {item.quantity}
-                                <span className="text-gray-400 text-xs ml-2">
-                                  ${(item.priceAtPurchase * item.quantity).toFixed(2)}
-                                </span>
-                              </span>
-                              <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(item.itemStatus)}`}>
-                                {item.itemStatus}
-                              </span>
+                              <div className="flex items-center justify-between px-4 py-3 bg-gray-50 border-b border-gray-200">
+                                <div>
+                                  <p className="font-medium text-gray-900">
+                                    Order #{order.id}
+                                  </p>
+                                  <p className="text-sm text-gray-500">
+                                    {new Date(order.createdAt).toLocaleDateString()}
+                                  </p>
+                                </div>
+                                <div className="text-right">
+                                  <p className="font-medium text-gray-900">
+                                    ${order.totalAmount.toFixed(2)}
+                                  </p>
+                                  <span
+                                    className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}
+                                  >
+                                    {order.status.replace(/_/g, ' ')}
+                                  </span>
+                                </div>
+                              </div>
+
+                              {/* Per-item status grouped by seller */}
+                              <div className="divide-y divide-gray-100">
+                                {order.items.map((item, index) => (
+                                  <div
+                                    key={index}
+                                    className="flex items-center justify-between px-4 py-3"
+                                  >
+                                    <span className="text-gray-600">
+                                      {item.productName} × {item.quantity}
+                                      <span className="text-gray-400 text-xs ml-2">
+                                        ${(item.priceAtPurchase * item.quantity).toFixed(2)}
+                                      </span>
+                                    </span>
+                                    <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(item.itemStatus)}`}>
+                                      {item.itemStatus}
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+
+                              <div className="px-4 py-3 border-t border-gray-100 bg-white flex justify-end gap-3">
+                                {order.status === 'PENDING' && (
+                                  <button
+                                    onClick={() => handleCancelOrder(order.id)}
+                                    className="text-sm font-medium text-red-600 hover:text-red-700 bg-red-50 px-4 py-2 rounded-lg transition-colors"
+                                  >
+                                    Cancel Order
+                                  </button>
+                                )}
+                                <button
+                                  onClick={() => setTrackingOrder(order)}
+                                  className="text-sm font-medium text-purple-600 hover:text-purple-700 bg-purple-50 px-4 py-2 rounded-lg transition-colors"
+                                >
+                                  Track Order
+                                </button>
+                              </div>
                             </div>
                           ))}
-                        </div>
-
-                        <div className="px-4 py-3 border-t border-gray-100 bg-white flex justify-end gap-3">
-                          {order.status === 'PENDING' && (
-                            <button
-                              onClick={() => handleCancelOrder(order.id)}
-                              className="text-sm font-medium text-red-600 hover:text-red-700 bg-red-50 px-4 py-2 rounded-lg transition-colors"
-                            >
-                              Cancel Order
-                            </button>
+                          {orders.length > 5 && (
+                            <div className="mt-6 text-center">
+                              <button
+                                onClick={() => setShowAllOrders(!showAllOrders)}
+                                className="inline-flex items-center gap-2 px-4 py-2 border border-purple-200 text-purple-600 rounded-lg hover:bg-purple-50 transition-colors font-medium text-sm"
+                              >
+                                {showAllOrders ? (
+                                  <>Show Less ←</>
+                                ) : (
+                                  <>View All Orders ({orders.length - 5} more) →</>
+                                )}
+                              </button>
+                            </div>
                           )}
-                          <button
-                            onClick={() => setTrackingOrder(order)}
-                            className="text-sm font-medium text-purple-600 hover:text-purple-700 bg-purple-50 px-4 py-2 rounded-lg transition-colors"
-                          >
-                            Track Order
-                          </button>
-                        </div>
-                      </div>
-                    ))}
+                        </>
+                      );
+                    })()}
                   </div>
                 )}
               </div>

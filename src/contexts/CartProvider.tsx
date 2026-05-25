@@ -19,32 +19,44 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   });
 
+  const [isLoadingCart, setIsLoadingCart] = useState(true);
+
   useEffect(() => {
     async function loadCart() {
       if (currentUser?.role === 'BUYER') {
-        const result = await cartService.getCart();
-        if (result.ok && result.data) {
-          const items: CartItem[] = result.data.map((dto) => ({
-            product: {
-              id: String(dto.productId),
-              name: dto.productName || '',
-              description: '', // Backend doesn't send description in DTO yet, or we can use placeholder
-              price: dto.price || 0,
-              category: '',
-              image: dto.productImage || '',
-              sellerId: '',
-              sellerName: '',
-              sellerRating: 0,
-              stock: dto.stock || 0,
-              reviews: [],
-              averageRating: 0,
-            },
-            quantity: dto.quantity,
-          }));
-          setCartItems(items);
+        setIsLoadingCart(true);
+        try {
+          const result = await cartService.getCart();
+          if (result.ok && result.data) {
+            const items: CartItem[] = result.data.map((dto) => ({
+              product: {
+                id: String(dto.productId),
+                name: dto.productName || '',
+                description: '', // Backend doesn't send description in DTO yet, or we can use placeholder
+                price: dto.price || 0,
+                category: '',
+                image: dto.productImage || '',
+                sellerId: '',
+                sellerName: '',
+                sellerRating: 0,
+                stock: dto.stock || 0,
+                reviews: [],
+                averageRating: 0,
+              },
+              quantity: dto.quantity,
+            }));
+            setCartItems(items);
+          }
+        } catch (error) {
+          console.error('Failed to load cart:', error);
+        } finally {
+          setIsLoadingCart(false);
         }
-      } else if (!currentUser) {
-        setCartItems([]);
+      } else {
+        setIsLoadingCart(false);
+        if (!currentUser) {
+          setCartItems([]);
+        }
       }
     }
     loadCart();
@@ -130,7 +142,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   return (
     <CartContext.Provider
-      value={{ cartItems, addToCart, updateQuantity, removeFromCart, clearCart }}
+      value={{ cartItems, isLoadingCart, addToCart, updateQuantity, removeFromCart, clearCart }}
     >
       {children}
     </CartContext.Provider>
