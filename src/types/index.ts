@@ -88,6 +88,8 @@ export interface Product {
 export interface Review {
   id: string;
   productId: string;
+  productName?: string;
+  productImage?: string;
   buyerId: string;
   buyerName: string;
   rating: number;

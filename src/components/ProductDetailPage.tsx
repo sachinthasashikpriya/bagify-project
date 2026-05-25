@@ -7,21 +7,24 @@ import { useCart } from "../hooks/useCart";
 import { useProducts } from "../hooks/useProduct";
 import { useWishlist } from "../hooks/useWishlist";
 import { productService } from "../services/productService";
-import type { Product } from "../types";
+import { reviewService } from "../services/reviewService";
+import type { Product, Review } from "../types";
 
 export function ProductDetailPage() {
   const { productId } = useParams<{ productId: string }>();
   const navigate = useNavigate();
   const { currentUser } = useAuth();
   const { addToCart } = useCart();
-  const { products, addReview } = useProducts();
+  const { products, addReview, refreshProducts } = useProducts();
   const { toggleWishlist, isInWishlist } = useWishlist();
 
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [fetchedProduct, setFetchedProduct] = useState<Product | null>(null);
+  const [reviews, setReviews] = useState<Review[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingReviews, setIsLoadingReviews] = useState(false);
   const [fetchError, setFetchError] = useState(false);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
 
@@ -47,6 +50,16 @@ export function ProductDetailPage() {
         });
     }
   }, [productId, products]);
+
+  useEffect(() => {
+    if (productId) {
+      setIsLoadingReviews(true);
+      reviewService.getReviews(Number(productId))
+        .then(data => setReviews(data))
+        .catch(err => console.error("Failed to fetch reviews:", err))
+        .finally(() => setIsLoadingReviews(false));
+    }
+  }, [productId]);
 
   if (isLoading) {
     return (
@@ -132,7 +145,7 @@ export function ProductDetailPage() {
     }
   };
 
-  const handleSubmitReview = () => {
+  const handleSubmitReview = async () => {
     if (!currentUser) {
       toast.error("Please login to submit a review");
       navigate("/login");
@@ -149,24 +162,38 @@ export function ProductDetailPage() {
       return;
     }
 
-    addReview(product.id, {
-      id: crypto.randomUUID(),
-      productId: product.id,
-      buyerId: String(currentUser.id),
-      buyerName: currentUser.name,
-      rating,
-      comment: comment.trim(),
-      date: new Date().toISOString().split("T")[0],
-    });
-    toast.success("Review submitted successfully!");
-    setComment("");
-    setRating(5);
-    setShowReviewForm(false);
+    try {
+      await reviewService.submitReview({
+        productId: Number(product.id),
+        rating,
+        comment: comment.trim(),
+      });
+      toast.success("Review submitted successfully!");
+      setComment("");
+      setRating(5);
+      setShowReviewForm(false);
+      
+      // Refresh the product's review list from the backend
+      const reviewData = await reviewService.getReviews(Number(product.id));
+      setReviews(reviewData);
+      
+      const res = await productService.getProductById(String(product.id));
+      if (res.data) {
+        setFetchedProduct(res.data);
+      }
+      
+      // Also refresh the global products list
+      await refreshProducts();
+    } catch (error: any) {
+      toast.error(error.message || "Failed to submit review");
+    }
   };
 
-  const averageRating = product.reviews.length > 0 
-    ? product.reviews.reduce((sum, review) => sum + review.rating, 0) / product.reviews.length 
-    : 0;
+  const hasAlreadyReviewed = currentUser ? reviews.some(r => r.buyerId === String(currentUser.id)) : false;
+
+  const averageRating = product.averageRating || (reviews.length > 0 
+    ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length 
+    : 0);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -218,7 +245,7 @@ export function ProductDetailPage() {
                     : "No ratings yet"}
                 </span>
                 <span className="text-gray-500">
-                  ({product.reviews.length} reviews)
+                  ({reviews.length} reviews)
                 </span>
               </div>
             </div>
@@ -329,13 +356,18 @@ export function ProductDetailPage() {
         <div className="bg-white rounded-xl p-8 shadow-sm">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold text-gray-900">Customer Reviews</h2>
-            {currentUser?.role === "BUYER" && !showReviewForm && (
+            {currentUser?.role === "BUYER" && !showReviewForm && !hasAlreadyReviewed && (
               <button
                 onClick={() => setShowReviewForm(true)}
                 className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
               >
                 Write a Review
               </button>
+            )}
+            {currentUser?.role === "BUYER" && hasAlreadyReviewed && (
+              <span className="text-sm font-medium text-purple-600 bg-purple-50 px-3 py-1 rounded-full border border-purple-100">
+                You have already reviewed this product
+              </span>
             )}
           </div>
 
@@ -413,7 +445,11 @@ export function ProductDetailPage() {
           )}
 
           {/* Reviews List */}
-          {product.reviews.length === 0 ? (
+          {isLoadingReviews ? (
+            <div className="flex justify-center py-8">
+              <Loader2 className="w-8 h-8 animate-spin text-purple-600" />
+            </div>
+          ) : reviews.length === 0 ? (
             <div className="text-center py-8">
               <Star className="w-16 h-16 text-gray-300 mx-auto mb-4" />
               <p className="text-gray-500 text-lg mb-2">No reviews yet</p>
@@ -421,7 +457,7 @@ export function ProductDetailPage() {
             </div>
           ) : (
             <div className="space-y-6">
-              {product.reviews.map((review) => (
+              {reviews.map((review) => (
                 <div
                   key={review.id}
                   className="border-b border-gray-200 pb-6 last:border-0"

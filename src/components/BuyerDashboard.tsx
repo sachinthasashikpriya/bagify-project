@@ -8,6 +8,8 @@ import { useProducts } from "../hooks/useProduct";
 import { orderService, type OrderResponse } from "../services/orderService";
 import { ConfirmModal } from "./common/ConfirmModal";
 import { useWishlist } from "../hooks/useWishlist";
+import { reviewService } from "../services/reviewService";
+import { type Review } from "../types";
 
 export function BuyerDashboard() {
   // ✅ Fixed: Changed from SellerDashboard to BuyerDashboard
@@ -25,6 +27,8 @@ export function BuyerDashboard() {
   const [orders, setOrders] = useState<OrderResponse[]>([]);
   const [isLoadingOrders, setIsLoadingOrders] = useState(true);
   const [trackingOrder, setTrackingOrder] = useState<OrderResponse | null>(null);
+  const [myReviews, setMyReviews] = useState<Review[]>([]);
+  const [isLoadingReviews, setIsLoadingReviews] = useState(true);
   const [confirmModal, setConfirmModal] = useState<{
     isOpen: boolean;
     title: string;
@@ -73,6 +77,24 @@ export function BuyerDashboard() {
       fetchOrders();
     }
   }, [currentUser]);
+
+  useEffect(() => {
+    const fetchReviews = async () => {
+      try {
+        setIsLoadingReviews(true);
+        const data = await reviewService.getMyReviews();
+        setMyReviews(data);
+      } catch (error: any) {
+        toast.error(error.message || "Failed to fetch reviews");
+      } finally {
+        setIsLoadingReviews(false);
+      }
+    };
+
+    if (currentUser?.role === "BUYER" && activeTab === "reviews") {
+      fetchReviews();
+    }
+  }, [currentUser, activeTab]);
 
   // Check if user is a buyer (✅ Fixed: Changed from seller to buyer)
   if (!currentUser || currentUser.role !== "BUYER") {
@@ -250,7 +272,10 @@ export function BuyerDashboard() {
               <User className="w-5 h-5" />
               Edit Profile
             </button>
-            <button className="flex items-center gap-2 p-4 bg-yellow-50 text-yellow-700 rounded-lg hover:bg-yellow-100 transition-colors">
+            <button
+              onClick={() => setActiveTab("reviews")}
+              className="flex items-center gap-2 p-4 bg-yellow-50 text-yellow-700 rounded-lg hover:bg-yellow-100 transition-colors"
+            >
               <Star className="w-5 h-5" />
               My Reviews
             </button>
@@ -473,21 +498,99 @@ export function BuyerDashboard() {
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">
                   My Reviews
                 </h3>
-                <div className="text-center py-8">
-                  <Star className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                  <h4 className="text-lg font-medium text-gray-900 mb-2">
-                    No reviews yet
-                  </h4>
-                  <p className="text-gray-500 mb-4">
-                    Purchase products to leave reviews!
-                  </p>
-                  <button
-                    onClick={() => handleNavigate("/")}
-                    className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
-                  >
-                    Start Shopping
-                  </button>
-                </div>
+                {isLoadingReviews ? (
+                  <div className="text-center py-12">
+                    <Loader2 className="w-8 h-8 animate-spin text-purple-600 mx-auto mb-4" />
+                    <p className="text-gray-500">Loading your reviews...</p>
+                  </div>
+                ) : myReviews.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Star className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                    <h4 className="text-lg font-medium text-gray-900 mb-2">
+                      No reviews yet
+                    </h4>
+                    <p className="text-gray-500 mb-4">
+                      Purchase products to leave reviews!
+                    </p>
+                    <button
+                      onClick={() => handleNavigate("/")}
+                      className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
+                    >
+                      Start Shopping
+                    </button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {myReviews.map((review) => (
+                      <div
+                        key={review.id}
+                        className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex flex-col md:flex-row gap-4 hover:shadow-md hover:border-purple-200 transition-all duration-300 group"
+                      >
+                        {/* Thumbnail image link */}
+                        <div
+                          className="w-20 h-20 md:w-24 md:h-24 flex-shrink-0 rounded-lg overflow-hidden border border-gray-100 bg-gray-50 cursor-pointer"
+                          onClick={() => handleNavigate(`/product/${review.productId}`)}
+                        >
+                          <img
+                            src={review.productImage || "https://images.unsplash.com/photo-1574365569389-a10d488ca3fb?q=80"}
+                            alt={review.productName || "Product image"}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
+                        </div>
+
+                        {/* Content */}
+                        <div className="flex-1 flex flex-col justify-between">
+                          <div>
+                            {/* Product name with link */}
+                            <h4
+                              onClick={() => handleNavigate(`/product/${review.productId}`)}
+                              className="font-semibold text-gray-900 hover:text-purple-600 transition-colors duration-200 cursor-pointer text-lg mb-1 leading-snug"
+                            >
+                              {review.productName || "Product"}
+                            </h4>
+
+                            {/* Star Rating */}
+                            <div className="flex items-center gap-0.5 mb-2.5">
+                              {Array.from({ length: 5 }).map((_, i) => (
+                                <Star
+                                  key={i}
+                                  className={`w-4 h-4 ${
+                                    i < review.rating
+                                      ? "text-yellow-400 fill-yellow-400"
+                                      : "text-gray-200"
+                                  }`}
+                                />
+                              ))}
+                            </div>
+
+                            {/* Comment */}
+                            <p className="text-gray-600 text-sm mb-3 italic leading-relaxed break-words bg-gray-50 p-3 rounded-lg border border-gray-50">
+                              "{review.comment}"
+                            </p>
+                          </div>
+
+                          {/* Date and actions */}
+                          <div className="flex items-center justify-between text-xs text-gray-400 mt-auto pt-2 border-t border-gray-50">
+                            <span>
+                              Reviewed on{" "}
+                              {new Date(review.date).toLocaleDateString(undefined, {
+                                year: "numeric",
+                                month: "long",
+                                day: "numeric",
+                              })}
+                            </span>
+                            <span
+                              onClick={() => handleNavigate(`/product/${review.productId}`)}
+                              className="text-purple-600 hover:text-purple-700 font-medium hover:underline cursor-pointer flex items-center gap-1 group-hover:translate-x-1 transition-transform duration-200"
+                            >
+                              View Product &rarr;
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </div>
