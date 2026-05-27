@@ -19,6 +19,8 @@ export interface OrderResponse {
   status: string; // Consolidated: PENDING | PROCESSING | PARTIALLY_SHIPPED | SHIPPED | DELIVERED | CANCELLED
   totalAmount: number;
   shippingAddress: string;
+  paymentStatus: string; // UNPAID | PAID | FAILED
+  paymentId?: string;
   createdAt: string;
 }
 
@@ -121,6 +123,23 @@ export const orderService = {
    */
   async cancelOrder(orderId: number | string): Promise<Result<OrderResponse>> {
     return httpClient.put<OrderResponse>(`/api/v1/orders/${orderId}/cancel`, undefined, {
+      service: 'order-service',
+      auth: true,
+    });
+  },
+
+  /**
+   * Get PayHere sandbox parameters and signature for an order
+   */
+  async getPaymentParams(orderId: number | string): Promise<Result<{
+    merchantId: string;
+    orderId: string;
+    amount: string;
+    currency: string;
+    hash: string;
+    sandbox: boolean;
+  }>> {
+    return httpClient.get(`/api/v1/orders/${orderId}/payment-params`, {
       service: 'order-service',
       auth: true,
     });

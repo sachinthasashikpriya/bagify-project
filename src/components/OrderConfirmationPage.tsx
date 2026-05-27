@@ -2,6 +2,8 @@ import { CheckCircle2, ChevronRight, Package, MapPin, Loader2, AlertCircle } fro
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { orderService, type OrderResponse } from "../services/orderService";
+import { useAuth } from "../hooks/useAuth";
+import { toast } from "sonner";
 
 export function OrderConfirmationPage() {
   const { orderId } = useParams<{ orderId: string }>();
@@ -9,6 +11,82 @@ export function OrderConfirmationPage() {
   const [order, setOrder] = useState<OrderResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { currentUser } = useAuth();
+  const [isPaying, setIsPaying] = useState(false);
+
+  async function fetchOrderDetails() {
+    if (!orderId) return;
+    try {
+      const result = await orderService.getOrder(orderId);
+      if (result.ok && result.data) {
+        setOrder(result.data);
+      }
+    } catch (err) {
+      console.error("Failed to refresh order details:", err);
+    }
+  }
+
+  const handlePay = async () => {
+    if (!orderId || !currentUser || !order) return;
+    setIsPaying(true);
+    try {
+      const result = await orderService.getPaymentParams(orderId);
+      if (!result.ok || !result.data) {
+        toast.error(result.error?.message || "Failed to fetch payment parameters");
+        setIsPaying(false);
+        return;
+      }
+
+      const payhereParams = result.data;
+      const payhere = (window as any).payhere;
+
+      if (!payhere) {
+        toast.error("PayHere SDK is not loaded yet. Please wait a few seconds and try again.");
+        setIsPaying(false);
+        return;
+      }
+
+      // Prepare standard PayHere checkout payload
+      const payment = {
+        sandbox: payhereParams.sandbox,
+        merchant_id: payhereParams.merchantId,
+        return_url: `${window.location.origin}/orders/${orderId}/confirmation`,
+        cancel_url: window.location.href,
+        notify_url: "https://deduct-divisibly-itinerary.ngrok-free.dev/api/v1/orders/payment/notify", // Tunneled via Ngrok
+        order_id: payhereParams.orderId,
+        items: `Purchase Order #${payhereParams.orderId}`,
+        amount: payhereParams.amount,
+        currency: payhereParams.currency,
+        hash: payhereParams.hash,
+        first_name: currentUser.name || "Customer",
+        last_name: "",
+        email: currentUser.email || "",
+        phone: currentUser.phone || "0771234567",
+        address: order.shippingAddress || currentUser.address || "",
+        city: currentUser.city || "Colombo",
+        country: "Sri Lanka"
+      };
+
+      payhere.onCompleted = function (completedOrderId: string) {
+        toast.success("Payment successful! Thank you.");
+        fetchOrderDetails();
+      };
+
+      payhere.onDismissed = function () {
+        toast.warning("Payment dismissed.");
+      };
+
+      payhere.onError = function (error: string) {
+        toast.error("Payment error: " + error);
+      };
+
+      payhere.startPayment(payment);
+    } catch (err: any) {
+      toast.error(err.message || "Checkout failed");
+    } finally {
+      setIsPaying(false);
+    }
+  };
 
   useEffect(() => {
     async function fetchOrder() {
@@ -127,6 +205,59 @@ export function OrderConfirmationPage() {
 
           {/* Shipping & Delivery Info */}
           <div className="space-y-8">
+            {/* PayHere Checkout Card */}
+            {order.paymentStatus === 'UNPAID' && (
+              <div className="bg-white rounded-2xl shadow-sm p-6 border-2 border-purple-200">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-purple-100 text-purple-600 rounded-lg">
+                      <span className="font-semibold text-lg">💳</span>
+                    </div>
+                    <h2 className="text-xl font-bold text-gray-900">Payment Required</h2>
+                  </div>
+                  <span className="px-3 py-1 bg-red-100 text-red-800 rounded-full text-xs font-bold">
+                    UNPAID
+                  </span>
+                </div>
+                <p className="text-gray-600 text-sm mb-5 leading-relaxed">
+                  Please complete the payment of <span className="font-bold text-purple-600">${order.totalAmount.toFixed(2)}</span> to complete your checkout and begin order processing.
+                </p>
+                <button
+                  onClick={handlePay}
+                  disabled={isPaying}
+                  className="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-xl transition-all font-semibold flex items-center justify-center gap-2 shadow-lg shadow-purple-200 disabled:opacity-50"
+                >
+                  {isPaying ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      Loading PayHere Sandbox...
+                    </>
+                  ) : (
+                    "Pay Now with PayHere"
+                  )}
+                </button>
+              </div>
+            )}
+
+            {order.paymentStatus === 'PAID' && (
+              <div className="bg-white rounded-2xl shadow-sm p-6 border-2 border-green-200">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-green-100 text-green-600 rounded-lg">
+                      <CheckCircle2 className="w-5 h-5" />
+                    </div>
+                    <h2 className="text-xl font-bold text-gray-900">Payment Received</h2>
+                  </div>
+                  <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-bold">
+                    PAID
+                  </span>
+                </div>
+                <p className="text-gray-600 text-sm mt-4">
+                  Thank you! Your payment was verified successfully. Reference ID: <span className="font-mono text-xs bg-gray-100 p-1 rounded select-all">{order.paymentId || "PAYHERE_REF"}</span>
+                </p>
+              </div>
+            )}
+
             <div className="bg-white rounded-2xl shadow-sm p-6">
               <div className="flex items-center gap-3 mb-4">
                 <div className="p-2 bg-purple-100 text-purple-600 rounded-lg">
