@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { useAuth } from '../hooks/useAuth';
 import { useCart } from '../hooks/useCart';
 import { orderService } from '../services/orderService';
+import { ConfirmModal } from './common/ConfirmModal';
 
 export function CartPage() {
   const { currentUser } = useAuth();
@@ -12,6 +13,19 @@ export function CartPage() {
   const navigate = useNavigate();
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [updatingItems, setUpdatingItems] = useState<Set<string>>(new Set());
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    confirmText?: string;
+    isDestructive?: boolean;
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+  });
 
   // Check if user is logged in
   if (!currentUser) {
@@ -51,36 +65,52 @@ export function CartPage() {
     }
   };
 
-  const handleRemoveItem = async (productId: string) => {
+  const handleRemoveItem = (productId: string) => {
     const item = cartItems.find(item => item.product.id === productId);
-    if (item && window.confirm(`Remove "${item.product.name}" from cart?`)) {
-      try {
-        setUpdatingItems(prev => new Set(prev).add(productId));
-        await removeFromCart(productId);
-        toast.success('Item removed from cart');
-      } catch (error) {
-        toast.error('Failed to remove item');
-      } finally {
-        setUpdatingItems(prev => {
-          const next = new Set(prev);
-          next.delete(productId);
-          return next;
-        });
+    if (!item) return;
+
+    setConfirmModal({
+      isOpen: true,
+      title: 'Remove Item',
+      message: `Are you sure you want to remove "${item.product.name}" from your cart?`,
+      confirmText: 'Remove',
+      isDestructive: true,
+      onConfirm: async () => {
+        try {
+          setUpdatingItems(prev => new Set(prev).add(productId));
+          await removeFromCart(productId);
+          toast.success('Item removed from cart');
+        } catch (error) {
+          toast.error('Failed to remove item');
+        } finally {
+          setUpdatingItems(prev => {
+            const next = new Set(prev);
+            next.delete(productId);
+            return next;
+          });
+        }
       }
-    }
+    });
   };
 
-  const handleClearCart = async () => {
+  const handleClearCart = () => {
     if (cartItems.length === 0) return;
     
-    if (window.confirm('Are you sure you want to clear your entire cart?')) {
-      try {
-        await clearCart();
-        toast.success('Cart cleared');
-      } catch (error) {
-        toast.error('Failed to clear cart');
+    setConfirmModal({
+      isOpen: true,
+      title: 'Clear Cart',
+      message: 'Are you sure you want to clear your entire cart? This action cannot be undone.',
+      confirmText: 'Clear Cart',
+      isDestructive: true,
+      onConfirm: async () => {
+        try {
+          await clearCart();
+          toast.success('Cart cleared');
+        } catch (error) {
+          toast.error('Failed to clear cart');
+        }
       }
-    }
+    });
   };
 
   const handleCheckout = async () => {
@@ -311,6 +341,16 @@ export function CartPage() {
           </div>
         </div>
       </div>
+      
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+        onConfirm={confirmModal.onConfirm}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        confirmText={confirmModal.confirmText}
+        isDestructive={confirmModal.isDestructive}
+      />
     </div>
   );
 }

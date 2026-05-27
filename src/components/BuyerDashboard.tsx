@@ -57,6 +57,15 @@ export function BuyerDashboard() {
     }
   };
 
+  const getPaymentStatusColor = (status: string) => {
+    switch (status?.toUpperCase()) {
+      case 'PAID': return 'bg-green-100 text-green-800';
+      case 'FAILED': return 'bg-red-100 text-red-800';
+      case 'UNPAID':
+      default: return 'bg-rose-100 text-rose-800';
+    }
+  };
+
   useEffect(() => {
     const fetchOrders = async () => {
       try {
@@ -383,7 +392,11 @@ export function BuyerDashboard() {
                             >
                               <div className="flex items-center justify-between px-4 py-3 bg-gray-50 border-b border-gray-200">
                                 <div>
-                                  <p className="font-medium text-gray-900">
+                                  <p 
+                                    onClick={() => navigate(`/orders/${order.id}/confirmation`)}
+                                    className="font-semibold text-purple-600 hover:text-purple-800 hover:underline cursor-pointer transition-colors"
+                                    title="View order details"
+                                  >
                                     Order #{order.id}
                                   </p>
                                   <p className="text-sm text-gray-500">
@@ -391,33 +404,90 @@ export function BuyerDashboard() {
                                   </p>
                                 </div>
                                 <div className="text-right">
-                                  <p className="font-medium text-gray-900">
+                                  <p className="font-medium text-gray-900 mb-1">
                                     ${order.totalAmount.toFixed(2)}
                                   </p>
-                                  <span
-                                    className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}
-                                  >
-                                    {order.status.replace(/_/g, ' ')}
-                                  </span>
+                                  <div className="flex gap-1.5 justify-end">
+                                    <span
+                                      className={`inline-block px-2 py-0.5 rounded-full text-[11px] font-medium ${getStatusColor(order.status)}`}
+                                    >
+                                      {order.status.replace(/_/g, ' ')}
+                                    </span>
+                                    <span
+                                      className={`inline-block px-2 py-0.5 rounded-full text-[11px] font-medium ${getPaymentStatusColor(order.paymentStatus)}`}
+                                    >
+                                      {order.paymentStatus}
+                                    </span>
+                                  </div>
                                 </div>
                               </div>
 
                               {/* Per-item status grouped by seller */}
-                              <div className="divide-y divide-gray-100">
+                              <div className="divide-y divide-gray-100 bg-white">
                                 {order.items.map((item, index) => (
                                   <div
                                     key={index}
-                                    className="flex items-center justify-between px-4 py-3"
+                                    className="flex flex-col sm:flex-row sm:items-center justify-between p-4 gap-4 hover:bg-gray-50/30 transition-colors duration-200"
                                   >
-                                    <span className="text-gray-600">
-                                      {item.productName} × {item.quantity}
-                                      <span className="text-gray-400 text-xs ml-2">
-                                        ${(item.priceAtPurchase * item.quantity).toFixed(2)}
-                                      </span>
-                                    </span>
-                                    <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(item.itemStatus)}`}>
-                                      {item.itemStatus}
-                                    </span>
+                                    {/* Left section: Thumbnail + Details */}
+                                    <div className="flex items-center gap-4 min-w-0">
+                                      {/* Thumbnail image wrapper */}
+                                      <div
+                                        onClick={() => navigate(`/product/${item.productId}`)}
+                                        className="w-16 h-16 sm:w-20 sm:h-20 flex-shrink-0 rounded-lg overflow-hidden border border-gray-200 bg-gray-50 cursor-pointer shadow-sm group/thumb relative"
+                                        title="View Product"
+                                      >
+                                        <img
+                                          src={item.imageUrl || "https://images.unsplash.com/photo-1584917865442-de89df76afd3?q=80"}
+                                          alt={item.productName}
+                                          className="w-full h-full object-cover group-hover/thumb:scale-105 transition-transform duration-300"
+                                          onError={(e) => {
+                                            const target = e.target as HTMLImageElement;
+                                            target.src = 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?q=80';
+                                          }}
+                                        />
+                                      </div>
+
+                                      {/* Details */}
+                                      <div className="min-w-0">
+                                        <h4
+                                          onClick={() => navigate(`/product/${item.productId}`)}
+                                          className="font-semibold text-gray-900 hover:text-purple-600 transition-colors duration-200 cursor-pointer truncate text-base mb-1"
+                                          title="View Product"
+                                        >
+                                          {item.productName}
+                                        </h4>
+                                        <div className="flex items-center gap-3 text-sm text-gray-500 flex-wrap">
+                                          <span className="flex items-center gap-1">
+                                            Qty: <span className="font-semibold text-gray-800">{item.quantity}</span>
+                                          </span>
+                                          <span className="text-gray-300">•</span>
+                                          <span className="flex items-center gap-1">
+                                            Price: <span className="font-semibold text-gray-800">${item.priceAtPurchase.toFixed(2)}</span>
+                                          </span>
+                                        </div>
+                                      </div>
+                                    </div>
+
+                                    {/* Right section: Pricing & Actions */}
+                                    <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-2.5 flex-shrink-0 pt-3 sm:pt-0 border-t sm:border-t-0 border-gray-100">
+                                      <div className="text-left sm:text-right">
+                                        <p className="text-xs text-gray-400 sm:hidden">Item Total</p>
+                                        <span className="font-bold text-gray-900 text-lg">
+                                          ${(item.priceAtPurchase * item.quantity).toFixed(2)}
+                                        </span>
+                                      </div>
+                                      
+                                      {item.itemStatus?.toUpperCase() === 'DELIVERED' && (
+                                        <button
+                                          onClick={() => navigate(`/product/${item.productId}`)}
+                                          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 transition-colors duration-200 shadow-sm"
+                                        >
+                                          <Star className="w-3.5 h-3.5 fill-purple-600 text-purple-600" />
+                                          Leave Review
+                                        </button>
+                                      )}
+                                    </div>
                                   </div>
                                 ))}
                               </div>
@@ -429,6 +499,14 @@ export function BuyerDashboard() {
                                     className="text-sm font-medium text-red-600 hover:text-red-700 bg-red-50 px-4 py-2 rounded-lg transition-colors"
                                   >
                                     Cancel Order
+                                  </button>
+                                )}
+                                {order.status === 'PENDING' && order.paymentStatus === 'UNPAID' && (
+                                  <button
+                                    onClick={() => navigate(`/orders/${order.id}/confirmation`)}
+                                    className="text-sm font-medium text-white hover:bg-purple-700 bg-purple-600 px-4 py-2 rounded-lg transition-colors shadow-sm"
+                                  >
+                                    Pay Now
                                   </button>
                                 )}
                                 <button
