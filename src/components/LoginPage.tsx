@@ -1,4 +1,4 @@
-import { Loader, Lock, Mail, ShoppingCart, User } from "lucide-react";
+import { AlertTriangle, Loader, Lock, Mail, ShoppingCart, User } from "lucide-react";
 import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
@@ -62,13 +62,19 @@ export function LoginPage() {
       [name]: type === "checkbox" ? checked : value,
     }));
 
-    if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: "" }));
-    }
+    setErrors((prev) => {
+      const updated = { ...prev };
+      if (updated[name]) updated[name] = "";
+      if (updated.form) updated.form = "";
+      delete updated[name];
+      delete updated.form;
+      return updated;
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrors({});
 
     if (!validateForm()) {
       toast.error("Please fix the errors in the form");
@@ -87,7 +93,17 @@ export function LoginPage() {
       console.log("📡 Login response:", loginResponse);
 
       if (!loginResponse.ok || !loginResponse.data) {
-        toast.error(loginResponse.error || "Login failed. Please try again.");
+        if (loginResponse.error?.toLowerCase().includes("disabled")) {
+          setErrors((prev) => ({
+            ...prev,
+            form: "Your account has been disabled by an administrator. Please contact support."
+          }));
+        } else {
+          setErrors((prev) => ({
+            ...prev,
+            form: loginResponse.error || "Login failed. Please try again."
+          }));
+        }
         return;
       }
 
@@ -153,6 +169,13 @@ export function LoginPage() {
           <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">
             Login
           </h2>
+
+          {errors.form && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-2.5 text-sm text-red-800">
+              <AlertTriangle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+              <div className="flex-1 font-medium">{errors.form}</div>
+            </div>
+          )}
 
           {/* Login Form */}
           <form onSubmit={handleSubmit}>

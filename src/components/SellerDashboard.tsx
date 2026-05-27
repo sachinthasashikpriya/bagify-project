@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, Star, Package, TrendingUp, LogOut, BadgeCheck } from 'lucide-react';
+import { Plus, Edit, Trash2, Star, Package, TrendingUp, LogOut, BadgeCheck, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useAuth } from '../hooks/useAuth';
@@ -8,7 +8,7 @@ import { orderService, type OrderResponse, type OrderItemResponse } from '../ser
 
 export function SellerDashboard() {
   const { currentUser, logout } = useAuth();
-  const { products, addProduct, deleteProduct } = useProducts();
+  const { products, addProduct, deleteProduct, updateProduct } = useProducts();
   const navigate = useNavigate();
   
   const [showAddForm, setShowAddForm] = useState(false);
@@ -21,9 +21,33 @@ export function SellerDashboard() {
     stock: '',
   });
 
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<any>(null);
+  const [editFormData, setEditFormData] = useState({
+    name: '',
+    description: '',
+    price: '',
+    category: '',
+    image: '',
+    stock: '',
+  });
+
   const [activeTab, setActiveTab] = useState<'products' | 'orders'>('products');
   const [orders, setOrders] = useState<OrderResponse[]>([]);
   const [isLoadingOrders, setIsLoadingOrders] = useState(false);
+  const [sellerStats, setSellerStats] = useState<{ totalRevenue: number; totalItemsSold: number } | null>(null);
+
+  useEffect(() => {
+    const fetchSellerStats = async () => {
+      const result = await orderService.getSellerStats();
+      if (result.ok && result.data) {
+        setSellerStats(result.data);
+      } else {
+        toast.error(result.error || "Failed to load seller stats");
+      }
+    };
+    fetchSellerStats();
+  }, []);
 
   useEffect(() => {
     if (activeTab === 'orders') {
@@ -97,17 +121,6 @@ export function SellerDashboard() {
 
   // ✅ FIX 2: Define sellerProducts - filter products for current seller
   const sellerProducts = products.filter(p => p.sellerId === currentSellerId);
-  
-  // Calculate seller stats
-  const totalRevenue = sellerProducts.reduce((sum, p) => {
-    const soldQuantity = Math.max(0, 30 - p.stock); // Assuming initial stock was 30
-    return sum + (p.price * soldQuantity);
-  }, 0);
-  
-  const totalSold = sellerProducts.reduce((sum, p) => {
-    const soldQuantity = Math.max(0, 30 - p.stock);
-    return sum + soldQuantity;
-  }, 0);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -164,6 +177,53 @@ export function SellerDashboard() {
     toast.success('Product added successfully!');
   };
 
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingProduct) return;
+
+    // Validation
+    if (!editFormData.name.trim()) {
+      toast.error('Product name is required');
+      return;
+    }
+    if (!editFormData.description.trim()) {
+      toast.error('Product description is required');
+      return;
+    }
+    if (!editFormData.category.trim()) {
+      toast.error('Product category is required');
+      return;
+    }
+    const priceNum = parseFloat(editFormData.price);
+    if (isNaN(priceNum) || priceNum <= 0) {
+      toast.error('Price must be greater than 0');
+      return;
+    }
+    const stockNum = parseInt(editFormData.stock);
+    if (isNaN(stockNum) || stockNum < 0) {
+      toast.error('Stock cannot be negative');
+      return;
+    }
+    if (!editFormData.image.trim()) {
+      toast.error('Product image URL is required');
+      return;
+    }
+
+    const success = await updateProduct(editingProduct.id, {
+      name: editFormData.name.trim(),
+      description: editFormData.description.trim(),
+      price: priceNum,
+      category: editFormData.category.trim(),
+      image: editFormData.image.trim(),
+      stock: stockNum,
+    });
+
+    if (success) {
+      setShowEditModal(false);
+      setEditingProduct(null);
+    }
+  };
+
   const handleDeleteProduct = (productId: string, productName: string) => {
     if (window.confirm(`Are you sure you want to delete "${productName}"? This action cannot be undone.`)) {
       deleteProduct(productId);
@@ -183,9 +243,12 @@ export function SellerDashboard() {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  // Mock seller rating
-  const sellerRating = 4.5;
-  const totalReviews = sellerProducts.reduce((sum, p) => sum + p.reviews.length, 0);
+  // Dynamically compute seller rating from real review data
+  const allReviews = sellerProducts.flatMap(p => p.reviews || []);
+  const sellerRating = allReviews.length > 0
+    ? allReviews.reduce((sum, r) => sum + r.rating, 0) / allReviews.length
+    : 0;
+  const totalReviews = allReviews.length;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -196,13 +259,21 @@ export function SellerDashboard() {
             <h1 className="text-3xl font-bold text-gray-900 mb-2 flex items-center gap-2">
               {currentUser.name}'s Store
               {currentUser.verification?.status === 'APPROVED' && (
-                <BadgeCheck className="w-8 h-8 text-green-500" title="Verified Seller" />
+                <span title="Verified Seller">
+                  <BadgeCheck className="w-8 h-8 text-green-500" />
+                </span>
               )}
             </h1>
             <div className="flex items-center gap-2">
               <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
-              <span className="text-gray-700">{sellerRating.toFixed(1)} rating</span>
-              <span className="text-gray-500">({totalReviews} reviews)</span>
+              {totalReviews === 0 ? (
+                <span className="text-gray-500">No reviews yet</span>
+              ) : (
+                <>
+                  <span className="text-gray-700">{sellerRating.toFixed(1)} rating</span>
+                  <span className="text-gray-500">({totalReviews} reviews)</span>
+                </>
+              )}
             </div>
           </div>
           <button
@@ -230,7 +301,11 @@ export function SellerDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-600 mb-1">Items Sold</p>
-                <p className="text-3xl font-bold text-gray-900">{totalSold}</p>
+                {sellerStats === null ? (
+                  <div className="h-9 w-16 bg-gray-200 rounded animate-pulse mt-1" />
+                ) : (
+                  <p className="text-3xl font-bold text-gray-900">{sellerStats.totalItemsSold}</p>
+                )}
               </div>
               <TrendingUp className="w-12 h-12 text-green-600" />
             </div>
@@ -240,7 +315,11 @@ export function SellerDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-600 mb-1">Total Revenue</p>
-                <p className="text-3xl font-bold text-gray-900">${totalRevenue.toFixed(2)}</p>
+                {sellerStats === null ? (
+                  <div className="h-9 w-24 bg-gray-200 rounded animate-pulse mt-1" />
+                ) : (
+                  <p className="text-3xl font-bold text-gray-900">${sellerStats.totalRevenue.toFixed(2)}</p>
+                )}
               </div>
               <Star className="w-12 h-12 text-yellow-400" />
             </div>
@@ -518,9 +597,20 @@ export function SellerDashboard() {
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-2">
                         <button 
-                          onClick={() => navigate(`/product/${product.id}`)}
+                          onClick={() => {
+                            setEditingProduct(product);
+                            setEditFormData({
+                              name: product.name,
+                              description: product.description,
+                              price: String(product.price),
+                              category: product.category,
+                              image: product.image,
+                              stock: String(product.stock),
+                            });
+                            setShowEditModal(true);
+                          }}
                           className="p-2 hover:bg-gray-100 rounded transition-colors"
-                          title="View Product"
+                          title="Edit Product"
                         >
                           <Edit className="w-4 h-4 text-blue-600" />
                         </button>
@@ -642,6 +732,161 @@ export function SellerDashboard() {
           </div>
         )}
       </div>
+      
+      {/* Edit Product Modal */}
+      {showEditModal && editingProduct && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto px-4 py-6">
+          {/* Backdrop with blur */}
+          <div 
+            className="fixed inset-0 bg-black/55 backdrop-blur-sm transition-opacity"
+            onClick={() => {
+              setShowEditModal(false);
+              setEditingProduct(null);
+            }}
+          />
+          
+          {/* Modal Container */}
+          <div className="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden transform transition-all z-10 my-8">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+              <h3 className="text-xl font-bold text-gray-900">Edit Product: {editingProduct.name}</h3>
+              <button
+                onClick={() => {
+                  setShowEditModal(false);
+                  setEditingProduct(null);
+                }}
+                className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Body / Form */}
+            <form onSubmit={handleEditSubmit} className="px-6 py-4 space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                    Product Name *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={editFormData.name}
+                    onChange={(e) => setEditFormData(prev => ({ ...prev, name: e.target.value }))}
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                    placeholder="Enter product name"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                    Category *
+                  </label>
+                  <select
+                    required
+                    value={editFormData.category}
+                    onChange={(e) => setEditFormData(prev => ({ ...prev, category: e.target.value }))}
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                  >
+                    <option value="">Select category</option>
+                    <option value="Tote Bags">Tote Bags</option>
+                    <option value="Backpacks">Backpacks</option>
+                    <option value="Crossbody Bags">Crossbody Bags</option>
+                    <option value="Briefcases">Briefcases</option>
+                    <option value="Duffle Bags">Duffle Bags</option>
+                    <option value="Clutches">Clutches</option>
+                    <option value="Messenger Bags">Messenger Bags</option>
+                    <option value="Gym Bags">Gym Bags</option>
+                    <option value="Handbags">Handbags</option>
+                    <option value="Laptop Bags">Laptop Bags</option>
+                    <option value="Travel Bags">Travel Bags</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                    Price ($) *
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0.01"
+                    required
+                    value={editFormData.price}
+                    onChange={(e) => setEditFormData(prev => ({ ...prev, price: e.target.value }))}
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                    placeholder="0.00"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                    Stock *
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    required
+                    value={editFormData.stock}
+                    onChange={(e) => setEditFormData(prev => ({ ...prev, stock: e.target.value }))}
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                    placeholder="Enter stock quantity"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                  Image URL *
+                </label>
+                <input
+                  type="url"
+                  required
+                  value={editFormData.image}
+                  onChange={(e) => setEditFormData(prev => ({ ...prev, image: e.target.value }))}
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                  placeholder="https://example.com/image.jpg"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                  Description *
+                </label>
+                <textarea
+                  required
+                  value={editFormData.description}
+                  onChange={(e) => setEditFormData(prev => ({ ...prev, description: e.target.value }))}
+                  rows={4}
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none transition-all"
+                  placeholder="Describe your product..."
+                />
+              </div>
+
+              {/* Modal Footer */}
+              <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowEditModal(false);
+                    setEditingProduct(null);
+                  }}
+                  className="px-5 py-2.5 bg-gray-100 text-gray-700 font-semibold rounded-xl hover:bg-gray-200 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-6 py-2.5 bg-purple-600 text-white font-semibold rounded-xl hover:bg-purple-700 transition-colors shadow-sm shadow-purple-200"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

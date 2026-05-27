@@ -77,6 +77,40 @@ export function ProductProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const updateProduct = async (
+    productId: string,
+    updates: Partial<Omit<Product, 'id' | 'sellerId' | 'sellerName' | 'sellerRating' | 'reviews' | 'averageRating'>>
+  ): Promise<boolean> => {
+    try {
+      const result = await productService.updateProduct(productId, updates);
+      if (result.ok && result.data) {
+        setProducts((prev) =>
+          prev.map((p) => (p.id === productId ? result.data! : p))
+        );
+        toast.success('Product updated successfully!');
+        return true;
+      } else {
+        // Fallback to local state if request fails or backend offline
+        setProducts((prev) =>
+          prev.map((p) =>
+            p.id === productId
+              ? {
+                  ...p,
+                  ...updates,
+                }
+              : p
+          )
+        );
+        toast.info('Updated locally (backend offline or unauthorized)');
+        return true;
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to update product');
+      return false;
+    }
+  };
+
   const addReview = async (
     productId: string,
     rating: number,
@@ -130,6 +164,7 @@ export function ProductProvider({ children }: { children: ReactNode }) {
         isLoading,
         error,
         addProduct,
+        updateProduct,
         deleteProduct,
         addReview,
         refreshProducts: fetchProducts,

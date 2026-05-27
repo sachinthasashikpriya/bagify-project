@@ -1,6 +1,6 @@
 import { endpoints } from "../api/endpoints";
 import { httpClient } from "../api/httpClient";
-import type { Result, User } from "../types";
+import type { Result, User, UserProfileResponse } from "../types";
 
 export interface UpdateProfileRequest {
   name?: string;
@@ -140,6 +140,36 @@ export const userService = {
    */
   async deleteAccount(): Promise<Result<void>> {
     return httpClient.delete<void>(endpoints.users.me, {
+      service: 'user-service',
+      auth: true,
+    });
+  },
+
+  /**
+   * Get all registered users (Admin only)
+   */
+  async getAllUsers(): Promise<Result<UserProfileResponse[]>> {
+    return httpClient.get<UserProfileResponse[]>(endpoints.users.getAll, {
+      service: 'user-service',
+      auth: true,
+    });
+  },
+
+  /**
+   * Disable user account (Admin only)
+   */
+  async disableUser(id: number | string): Promise<Result<string>> {
+    return httpClient.put<string>(endpoints.users.disable(id), {}, {
+      service: 'user-service',
+      auth: true,
+    });
+  },
+
+  /**
+   * Enable user account (Admin only)
+   */
+  async enableUser(id: number | string): Promise<Result<string>> {
+    return httpClient.put<string>(endpoints.users.enable(id), {}, {
       service: 'user-service',
       auth: true,
     });

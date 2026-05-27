@@ -62,6 +62,38 @@ export interface User {
   verification?: BusinessVerification;
 }
 
+export interface UserProfileResponse {
+  id: number | string;
+  name: string;
+  email: string;
+  phone?: string;
+  address?: string;
+  profileImageUrl?: string | null;
+  role: 'BUYER' | 'SELLER' | 'ADMIN';
+  enabled: boolean;
+  createdAt: string;
+}
+
+export interface SellerVerificationResponse {
+  id: number;
+  name: string;
+  email: string;
+  phone?: string;
+  address?: string;
+  role: 'SELLER';
+  profileImageUrl?: string | null;
+  createdAt?: string;
+  verificationStatus: VerificationStatus;
+  businessName: string;
+  registrationNumber: string;
+  nicImageUrl: string;
+  brCertificateUrl: string;
+  rejectionReason?: string | null;
+  submittedAt: string;
+  reviewedAt?: string | null;
+}
+
+
 export interface Seller extends User {
   role: 'SELLER';
   storeName: string;

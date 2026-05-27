@@ -13,6 +13,7 @@ export function useProducts() {
     isLoading,
     error,
     addProduct: contextAddProduct,
+    updateProduct: contextUpdateProduct,
     deleteProduct: contextDeleteProduct,
     addReview: contextAddReview,
     refreshProducts,
@@ -42,10 +43,13 @@ export function useProducts() {
     await contextAddProduct(product);
   }, [contextAddProduct]);
 
-  // Update a product (placeholder / local update if needed, not strictly in context yet)
-  const updateProduct = useCallback((productId: string, updates: Partial<Product>): void => {
-    console.log('Update product local fallback', productId, updates);
-  }, []);
+  // Update a product (for sellers)
+  const updateProduct = useCallback(async (
+    productId: string,
+    updates: Partial<Omit<Product, 'id' | 'sellerId' | 'sellerName' | 'sellerRating' | 'reviews' | 'averageRating'>>
+  ): Promise<boolean> => {
+    return await contextUpdateProduct(productId, updates);
+  }, [contextUpdateProduct]);
 
   // Delete a product
   const deleteProduct = useCallback(async (productId: string): Promise<void> => {

@@ -6,6 +6,10 @@ export interface ProductContextType {
   isLoading: boolean;
   error: string | null;
   addProduct: (product: Omit<Product, 'id' | 'sellerId' | 'sellerName' | 'sellerRating' | 'reviews' | 'averageRating'>) => void;
+  updateProduct: (
+    productId: string,
+    updates: Partial<Omit<Product, 'id' | 'sellerId' | 'sellerName' | 'sellerRating' | 'reviews' | 'averageRating'>>
+  ) => Promise<boolean>;
   deleteProduct: (productId: string) => void;
   addReview: (productId: string, rating: number, comment: string, buyerId: string, buyerName: string) => void;
   refreshProducts: () => Promise<void>;

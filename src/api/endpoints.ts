@@ -12,5 +12,12 @@ export const endpoints = {
       updateProfile: '/api/v1/users/profile', // PUT
       changePassword: '/api/v1/users/change-password', // POST
       verification: '/api/v1/users/profile/verification', // POST
+      getAll: '/api/v1/users',              // GET - returns all users (Admin only)
+      disable: (id: number | string) => `/api/v1/users/${id}/disable`,
+      enable: (id: number | string) => `/api/v1/users/${id}/enable`,
+    },
+    admin: {
+      verifications: '/api/v1/admin/verifications',
+      reviewVerification: (sellerId: number | string) => `/api/v1/admin/verifications/${sellerId}`,
     },
   } as const;

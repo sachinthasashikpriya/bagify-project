@@ -50,6 +50,19 @@ export const productService = {
   },
 
   /**
+   * Update a product (for sellers/admins)
+   */
+  async updateProduct(
+    productId: string,
+    updates: Partial<Omit<Product, 'id' | 'sellerId' | 'sellerName' | 'sellerRating' | 'reviews' | 'averageRating'>>
+  ): Promise<Result<Product>> {
+    return httpClient.put<Product>(`/api/v1/products/${productId}`, updates, {
+      service: 'product-service',
+      auth: true,
+    });
+  },
+
+  /**
    * Add a review to a product (for buyers)
    */
   async addReview(
