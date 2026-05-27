@@ -5,6 +5,7 @@ import { orderService, type OrderResponse } from "../services/orderService";
 import { useAuth } from "../hooks/useAuth";
 import { useProducts } from "../hooks/useProduct";
 import { toast } from "sonner";
+import { env } from "../config/env";
 
 export function OrderConfirmationPage() {
   const { orderId } = useParams<{ orderId: string }>();
@@ -54,7 +55,7 @@ export function OrderConfirmationPage() {
         merchant_id: payhereParams.merchantId,
         return_url: `${window.location.origin}/orders/${orderId}/confirmation`,
         cancel_url: window.location.href,
-        notify_url: "https://deduct-divisibly-itinerary.ngrok-free.dev/api/v1/orders/payment/notify", // Tunneled via Ngrok
+        notify_url: env.PAYHERE_NOTIFY_URL,
         order_id: payhereParams.orderId,
         items: `Purchase Order #${payhereParams.orderId}`,
         amount: payhereParams.amount,
@@ -213,7 +214,7 @@ export function OrderConfirmationPage() {
                     <p className="text-sm text-gray-500">Qty: {item.quantity}</p>
                   </div>
                   <p className="font-medium text-gray-900">
-                    ${(item.priceAtPurchase * item.quantity).toFixed(2)}
+                    Rs. {(item.priceAtPurchase * item.quantity).toFixed(2)}
                   </p>
                 </div>
               ))}
@@ -222,7 +223,7 @@ export function OrderConfirmationPage() {
             <div className="border-t border-gray-100 pt-4 space-y-2">
               <div className="flex justify-between text-lg font-bold text-gray-900">
                 <span>Total Amount</span>
-                <span>${order.totalAmount.toFixed(2)}</span>
+                <span>Rs. {order.totalAmount.toFixed(2)}</span>
               </div>
             </div>
           </div>
@@ -244,7 +245,7 @@ export function OrderConfirmationPage() {
                   </span>
                 </div>
                 <p className="text-gray-600 text-sm mb-5 leading-relaxed">
-                  Please complete the payment of <span className="font-bold text-purple-600">${order.totalAmount.toFixed(2)}</span> to complete your checkout and begin order processing.
+                  Please complete the payment of <span className="font-bold text-purple-600">Rs. {order.totalAmount.toFixed(2)}</span> to complete your checkout and begin order processing.
                 </p>
                 <button
                   onClick={handlePay}

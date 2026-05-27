@@ -241,7 +241,7 @@ export function CartPage() {
                     <div className="flex-1">
                       <h3 className="font-medium text-gray-900 mb-1">{item.product.name}</h3>
                       <p className="text-gray-600 text-sm mb-2 line-clamp-2">{item.product.description}</p>
-                      <p className="text-purple-600 font-semibold">${item.product.price.toFixed(2)}</p>
+                      <p className="text-purple-600 font-semibold">Rs. {item.product.price.toFixed(2)}</p>
                     </div>
 
                     <div className="flex items-center gap-3">
@@ -266,7 +266,7 @@ export function CartPage() {
 
                     <div className="text-right min-w-[80px]">
                       <p className="font-semibold text-gray-900">
-                        ${(item.product.price * item.quantity).toFixed(2)}
+                        Rs. {(item.product.price * item.quantity).toFixed(2)}
                       </p>
                     </div>
 
@@ -291,29 +291,29 @@ export function CartPage() {
               <div className="space-y-4 mb-6">
                 <div className="flex justify-between text-gray-600">
                   <span>Subtotal</span>
-                  <span>${subtotal.toFixed(2)}</span>
+                  <span>Rs. {subtotal.toFixed(2)}</span>
                 </div>
                 
                 <div className="flex justify-between text-gray-600">
                   <span>Shipping</span>
-                  <span>{shipping === 0 ? 'Free' : `$${shipping.toFixed(2)}`}</span>
+                  <span>{shipping === 0 ? 'Free' : `Rs. ${shipping.toFixed(2)}`}</span>
                 </div>
                 
                 <div className="flex justify-between text-gray-600">
                   <span>Tax</span>
-                  <span>${tax.toFixed(2)}</span>
+                  <span>Rs. {tax.toFixed(2)}</span>
                 </div>
                 
                 {shipping === 0 && (
                   <p className="text-sm text-green-600 font-medium">
-                    🎉 Free shipping on orders over $100!
+                    🎉 Free shipping on orders over Rs. 100!
                   </p>
                 )}
                 
                 <div className="border-t pt-4">
                   <div className="flex justify-between text-lg font-bold text-gray-900">
                     <span>Total</span>
-                    <span>${total.toFixed(2)}</span>
+                    <span>Rs. {total.toFixed(2)}</span>
                   </div>
                 </div>
               </div>

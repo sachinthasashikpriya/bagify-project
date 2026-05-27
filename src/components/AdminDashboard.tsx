@@ -399,7 +399,7 @@ export function AdminDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-600 mb-1">Total Revenue</p>
-                <p className="text-3xl font-bold text-gray-900">${totalRevenue.toFixed(2)}</p>
+                <p className="text-3xl font-bold text-gray-900">Rs. {totalRevenue.toFixed(2)}</p>
               </div>
               <TrendingUp className="w-12 h-12 text-green-600" />
             </div>
@@ -574,7 +574,7 @@ export function AdminDashboard() {
                             <span className="capitalize text-gray-700">{product.category}</span>
                           </td>
                           <td className="py-3 px-4">
-                            <span className="font-medium text-gray-900">${product.price.toFixed(2)}</span>
+                            <span className="font-medium text-gray-900">Rs. {product.price.toFixed(2)}</span>
                           </td>
                           <td className="py-3 px-4">
                             <span className={`font-medium ${
@@ -783,7 +783,7 @@ export function AdminDashboard() {
                             <span className="text-sm text-gray-500">Buyer #{order.buyerId}</span>
                           </div>
                           <div className="flex items-center gap-3">
-                            <span className="text-sm text-gray-500">Total: <span className="font-medium text-gray-800">${order.totalAmount.toFixed(2)}</span></span>
+                            <span className="text-sm text-gray-500">Total: <span className="font-medium text-gray-800">Rs. {order.totalAmount.toFixed(2)}</span></span>
                             <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
                               {order.status.replace(/_/g, ' ')}
                             </span>
@@ -810,7 +810,7 @@ export function AdminDashboard() {
                             <div key={item.id} className="flex items-center justify-between px-5 py-3">
                               <div>
                                 <p className="text-sm font-medium text-gray-900">{item.productName}</p>
-                                <p className="text-xs text-gray-500">Qty: {item.quantity} · Seller #{item.sellerId} · ${(item.priceAtPurchase * item.quantity).toFixed(2)}</p>
+                                <p className="text-xs text-gray-500">Qty: {item.quantity} · Seller #{item.sellerId} · Rs. {(item.priceAtPurchase * item.quantity).toFixed(2)}</p>
                               </div>
                               <div className="flex items-center gap-2">
                                 <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(item.itemStatus)}`}>

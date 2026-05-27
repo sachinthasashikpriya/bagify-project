@@ -61,7 +61,7 @@ export function ProductCard({ product, onViewDetails, onAddToCart }: ProductCard
         <div className="p-4">
           <div className="flex items-start justify-between gap-2 mb-2">
             <h3 className="text-gray-900 line-clamp-1">{product.name}</h3>
-            <span className="text-purple-600">${product.price}</span>
+            <span className="text-purple-600">Rs. {product.price}</span>
           </div>
           
           <p className="text-sm text-gray-600 line-clamp-2 mb-3">

@@ -9,4 +9,7 @@ export const env = {
   
   // API Configuration
   API_TIMEOUT_MS: Number(import.meta.env.VITE_API_TIMEOUT_MS ?? 15000),
+
+  // PayHere Webhook Notification URL
+  PAYHERE_NOTIFY_URL: import.meta.env.VITE_PAYHERE_NOTIFY_URL ?? 'https://deduct-divisibly-itinerary.ngrok-free.dev/api/v1/orders/payment/notify',
 };

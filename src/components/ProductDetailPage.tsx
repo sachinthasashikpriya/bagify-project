@@ -254,7 +254,7 @@ export function ProductDetailPage() {
             </div>
 
             <div className="text-3xl font-bold text-purple-600 mb-6">
-              ${product.price.toFixed(2)}
+              Rs. {product.price.toFixed(2)}
             </div>
 
             <p className="text-gray-700 mb-6 leading-relaxed">{product.description}</p>

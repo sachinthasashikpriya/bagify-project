@@ -1,4 +1,4 @@
-import { Heart, LogOut, Package, ShoppingBag, Star, User, Loader2, Clock, Truck, CheckCircle2, X, Trash2, ShoppingCart } from "lucide-react";
+import { Heart, LogOut, Package, ShoppingBag, Star, User, Loader2, Clock, Truck, CheckCircle2, X, Trash2, ShoppingCart, DollarSign, TrendingUp, ArrowUpRight } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -205,70 +205,130 @@ export function BuyerDashboard() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-xl p-6 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-600 mb-1">Total Orders</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+          
+          {/* Total Orders Card */}
+          <div 
+            onClick={() => setActiveTab("orders")}
+            className="group relative bg-gradient-to-br from-white via-white to-purple-50/10 border border-purple-100/80 rounded-2xl p-6 shadow-[0_4px_20px_-4px_rgba(147,51,234,0.04)] hover:shadow-[0_12px_24px_-4px_rgba(147,51,234,0.1)] hover:-translate-y-1 hover:border-purple-300 cursor-pointer transition-all duration-300 select-none overflow-hidden"
+          >
+            {/* Background Accent Glow */}
+            <div className="absolute top-0 right-0 w-32 h-32 bg-purple-100/30 rounded-full blur-3xl group-hover:bg-purple-200/40 transition-colors duration-300" />
+            
+            <div className="relative flex items-center justify-between">
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-gray-500 tracking-wide uppercase">Total Orders</p>
                 {isLoadingOrders ? (
-                  <div className="h-9 w-16 bg-gray-200 animate-pulse rounded-lg mt-1"></div>
+                  <div className="h-10 w-16 bg-gray-100 animate-pulse rounded-xl" />
                 ) : (
-                  <p className="text-3xl font-bold text-gray-900">
-                    {totalOrders}
-                  </p>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-3xl font-extrabold text-gray-900 tracking-tight">{totalOrders}</span>
+                    <span className="text-xs font-semibold text-purple-600 bg-purple-50 px-2 py-0.5 rounded-full">orders</span>
+                  </div>
                 )}
               </div>
-              <Package className="w-12 h-12 text-purple-600" />
+              <div className="p-3 bg-gradient-to-tr from-purple-500 to-indigo-600 text-white rounded-2xl shadow-lg shadow-purple-500/20 group-hover:scale-110 transition-transform duration-300">
+                <Package className="w-6 h-6" />
+              </div>
+            </div>
+            
+            <div className="mt-4 flex items-center gap-1 text-xs text-purple-600 font-semibold group-hover:translate-x-1 transition-transform duration-300">
+              <span>View order history</span>
+              <ArrowUpRight className="w-3.5 h-3.5" />
             </div>
           </div>
 
-          <div className="bg-white rounded-xl p-6 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-600 mb-1">Total Spent</p>
+          {/* Total Spent Card */}
+          <div className="group relative bg-gradient-to-br from-white via-white to-emerald-50/10 border border-emerald-100/80 rounded-2xl p-6 shadow-[0_4px_20px_-4px_rgba(16,185,129,0.04)] hover:shadow-[0_12px_24px_-4px_rgba(16,185,129,0.1)] hover:-translate-y-1 hover:border-emerald-300 transition-all duration-300 select-none overflow-hidden">
+            {/* Background Accent Glow */}
+            <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-100/30 rounded-full blur-3xl transition-colors duration-300" />
+            
+            <div className="relative flex items-center justify-between">
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-gray-500 tracking-wide uppercase">Total Spent</p>
                 {isLoadingOrders ? (
-                  <div className="h-9 w-24 bg-gray-200 animate-pulse rounded-lg mt-1"></div>
+                  <div className="h-10 w-24 bg-gray-100 animate-pulse rounded-xl" />
                 ) : (
-                  <p className="text-3xl font-bold text-gray-900">
-                    ${totalSpent.toFixed(2)}
-                  </p>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-3xl font-extrabold text-gray-900 tracking-tight">Rs. {totalSpent.toFixed(2)}</span>
+                  </div>
                 )}
               </div>
-              <ShoppingBag className="w-12 h-12 text-green-600" />
+              <div className="p-3 bg-gradient-to-tr from-emerald-500 to-teal-600 text-white rounded-2xl shadow-lg shadow-emerald-500/20 group-hover:scale-110 transition-transform duration-300">
+                <DollarSign className="w-6 h-6" />
+              </div>
+            </div>
+            
+            <div className="mt-4 flex items-center gap-1.5 text-xs text-emerald-600 font-semibold">
+              <TrendingUp className="w-3.5 h-3.5" />
+              <span>All-time lifetime investment</span>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl p-6 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-600 mb-1">Cart Items</p>
+          {/* Cart Items Card */}
+          <div 
+            onClick={() => navigate("/cart")}
+            className="group relative bg-gradient-to-br from-white via-white to-blue-50/10 border border-blue-100/80 rounded-2xl p-6 shadow-[0_4px_20px_-4px_rgba(59,130,246,0.04)] hover:shadow-[0_12px_24px_-4px_rgba(59,130,246,0.1)] hover:-translate-y-1 hover:border-blue-300 cursor-pointer transition-all duration-300 select-none overflow-hidden"
+          >
+            {/* Background Accent Glow */}
+            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-100/30 rounded-full blur-3xl group-hover:bg-blue-200/40 transition-colors duration-300" />
+            
+            <div className="relative flex items-center justify-between">
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-gray-500 tracking-wide uppercase">Cart Items</p>
                 {isLoadingCart ? (
-                  <div className="h-9 w-16 bg-gray-200 animate-pulse rounded-lg mt-1"></div>
+                  <div className="h-10 w-16 bg-gray-100 animate-pulse rounded-xl" />
                 ) : (
-                  <p className="text-3xl font-bold text-gray-900">
-                    {cartItemsCount}
-                  </p>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-3xl font-extrabold text-gray-900 tracking-tight">{cartItemsCount}</span>
+                    {cartItemsCount > 0 && (
+                      <span className="text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">active</span>
+                    )}
+                  </div>
                 )}
               </div>
-              <ShoppingBag className="w-12 h-12 text-blue-600" />
+              <div className="p-3 bg-gradient-to-tr from-blue-500 to-indigo-600 text-white rounded-2xl shadow-lg shadow-blue-500/20 group-hover:scale-110 transition-transform duration-300">
+                <ShoppingCart className="w-6 h-6" />
+              </div>
+            </div>
+            
+            <div className="mt-4 flex items-center gap-1 text-xs text-blue-600 font-semibold group-hover:translate-x-1 transition-transform duration-300">
+              <span>Go to shopping cart</span>
+              <ArrowUpRight className="w-3.5 h-3.5" />
             </div>
           </div>
 
-          <div className="bg-white rounded-xl p-6 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-600 mb-1">Wishlist</p>
+          {/* Wishlist Card */}
+          <div 
+            onClick={() => setActiveTab("wishlist")}
+            className="group relative bg-gradient-to-br from-white via-white to-rose-50/10 border border-rose-100/80 rounded-2xl p-6 shadow-[0_4px_20px_-4px_rgba(244,63,94,0.04)] hover:shadow-[0_12px_24px_-4px_rgba(244,63,94,0.1)] hover:-translate-y-1 hover:border-rose-300 cursor-pointer transition-all duration-300 select-none overflow-hidden"
+          >
+            {/* Background Accent Glow */}
+            <div className="absolute top-0 right-0 w-32 h-32 bg-rose-100/30 rounded-full blur-3xl group-hover:bg-rose-200/40 transition-colors duration-300" />
+            
+            <div className="relative flex items-center justify-between">
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-gray-500 tracking-wide uppercase">Wishlist</p>
                 {isLoadingWishlist ? (
-                  <div className="h-9 w-16 bg-gray-200 animate-pulse rounded-lg mt-1"></div>
+                  <div className="h-10 w-16 bg-gray-100 animate-pulse rounded-xl" />
                 ) : (
-                  <p className="text-3xl font-bold text-gray-900">
-                    {wishlistItems.length}
-                  </p>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-3xl font-extrabold text-gray-900 tracking-tight">{wishlistItems.length}</span>
+                    <span className="text-xs font-semibold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-full">saved</span>
+                  </div>
                 )}
               </div>
-              <Heart className="w-12 h-12 text-red-600" />
+              <div className="p-3 bg-gradient-to-tr from-rose-500 to-pink-600 text-white rounded-2xl shadow-lg shadow-rose-500/20 group-hover:scale-110 transition-transform duration-300">
+                <Heart className="w-6 h-6" />
+              </div>
+            </div>
+            
+            <div className="mt-4 flex items-center gap-1 text-xs text-rose-600 font-semibold group-hover:translate-x-1 transition-transform duration-300">
+              <span>View saved items</span>
+              <ArrowUpRight className="w-3.5 h-3.5" />
             </div>
           </div>
+
         </div>
 
         {/* Quick Actions */}
@@ -405,7 +465,7 @@ export function BuyerDashboard() {
                                 </div>
                                 <div className="text-right">
                                   <p className="font-medium text-gray-900 mb-1">
-                                    ${order.totalAmount.toFixed(2)}
+                                    Rs. {order.totalAmount.toFixed(2)}
                                   </p>
                                   <div className="flex gap-1.5 justify-end">
                                     <span
@@ -463,7 +523,7 @@ export function BuyerDashboard() {
                                           </span>
                                           <span className="text-gray-300">•</span>
                                           <span className="flex items-center gap-1">
-                                            Price: <span className="font-semibold text-gray-800">${item.priceAtPurchase.toFixed(2)}</span>
+                                            Price: <span className="font-semibold text-gray-800">Rs. {item.priceAtPurchase.toFixed(2)}</span>
                                           </span>
                                         </div>
                                       </div>
@@ -474,7 +534,7 @@ export function BuyerDashboard() {
                                       <div className="text-left sm:text-right">
                                         <p className="text-xs text-gray-400 sm:hidden">Item Total</p>
                                         <span className="font-bold text-gray-900 text-lg">
-                                          ${(item.priceAtPurchase * item.quantity).toFixed(2)}
+                                          Rs. {(item.priceAtPurchase * item.quantity).toFixed(2)}
                                         </span>
                                       </div>
                                       
@@ -578,7 +638,7 @@ export function BuyerDashboard() {
                           {product.name}
                         </h4>
                         <p className="text-purple-600 font-bold mb-3">
-                          ${product.price.toFixed(2)}
+                          Rs. {product.price.toFixed(2)}
                         </p>
                         <div className="mt-auto space-y-2">
                           <button
