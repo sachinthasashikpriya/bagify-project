@@ -3,7 +3,7 @@ import { serviceRegistry } from './serviceRegistry';
 import type { ServiceName } from './serviceRegistry';
 import type { Result } from '../types/index';
 import { getAuthToken, onUnauthorized } from '../state/authToken';
-import { refreshAccessToken } from './tokenRefresher';
+import { attemptTokenRefresh } from './tokenRefresher';
 
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
@@ -225,20 +225,14 @@ async function executeRequest<T>(
     if (!response.ok) {
       const errorMessage = extractErrorMessage(payload, response, isJson);
 
-      // Handle 401 Unauthorized OR 403 Forbidden when a token was sent.
-      // The backend returns 401 when the token is expired (after the fix),
-      // but we also guard against 403 as a defensive fallback.
-      const isTokenError =
-        response.status === 401 ||
-        (response.status === 403 && !!getAuthToken());
-
-      if (isTokenError && options.auth) {
-        const newToken = await refreshAccessToken();
-        if (newToken) {
+      // Handle 401 Unauthorized response
+      if (response.status === 401 && options.auth) {
+        const refreshSuccess = await attemptTokenRefresh();
+        if (refreshSuccess) {
           // Re-build headers with the new token
           const retryHeaders = buildHeaders(options);
 
-          // Retry the exact same request
+          // Retry the exact same request once
           const retryResponse = await fetchWithTimeout(
             url,
             {
@@ -266,8 +260,7 @@ async function executeRequest<T>(
             };
           }
 
-          // Retry itself failed — token is truly invalid, log out
-          onUnauthorized();
+          // Retry itself failed
           const retryPayload = await parseResponse<T>(retryResponse);
           return {
             ok: false,
@@ -276,7 +269,14 @@ async function executeRequest<T>(
             details: retryPayload,
           };
         }
-        // refreshAccessToken already called onUnauthorized internally
+
+        // Refresh failed: abort retry and return error
+        return {
+          ok: false,
+          error: errorMessage,
+          status: response.status,
+          details: payload,
+        };
       } else if (response.status === 401 && !options.auth) {
         // Non-auth request got a 401 — unexpected, log out
         onUnauthorized();

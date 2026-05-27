@@ -1,91 +1,83 @@
 import { endpoints } from './endpoints';
 import { serviceRegistry } from './serviceRegistry';
-import { 
-  getRefreshToken, 
-  setAuthToken, 
-  setRefreshToken, 
-  onUnauthorized 
-} from '../state/authToken';
+import { toast } from 'sonner';
 
-let isRefreshing = false;
-let refreshSubscribers: ((token: string) => void)[] = [];
+let logoutFn: (() => void) | null = null;
 
 /**
- * Subscribe to token refresh events
+ * Register the logout function from AuthContext to allow triggering
+ * a graceful React-level logout state change on session expiration.
  */
-function subscribeTokenRefresh(cb: (token: string) => void) {
-  refreshSubscribers.push(cb);
+export function registerLogout(fn: () => void) {
+  logoutFn = fn;
 }
 
-/**
- * Notify all subscribers when token is refreshed
- */
-function onRefreshed(token: string) {
-  refreshSubscribers.forEach((cb) => cb(token));
-  refreshSubscribers = [];
-}
+let refreshPromise: Promise<boolean> | null = null;
 
 /**
- * Attempt to refresh the access token using the refresh token.
- * Handles multiple concurrent 401s by queuing requests.
+ * Attempt to refresh the access token using the stored refresh token.
+ * Prevents concurrent redundant HTTP requests by caching/re-using the in-progress promise.
  */
-export async function refreshAccessToken(): Promise<string | null> {
-  const currentRefreshToken = getRefreshToken();
-  
-  if (!currentRefreshToken) {
-    console.warn('No refresh token found, logging out');
-    onUnauthorized();
-    return null;
+export async function attemptTokenRefresh(): Promise<boolean> {
+  if (refreshPromise) {
+    return refreshPromise;
   }
 
-  // If already refreshing, wait for the result
-  if (isRefreshing) {
-    return new Promise((resolve) => {
-      subscribeTokenRefresh((token) => {
-        resolve(token);
+  refreshPromise = (async () => {
+    const refreshToken = localStorage.getItem('refresh_token');
+    if (!refreshToken) {
+      return false;
+    }
+
+    try {
+      const authServiceUrl = serviceRegistry['auth-service'];
+      const response = await fetch(`${authServiceUrl}${endpoints.auth.refresh}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ refreshToken }),
       });
-    });
-  }
 
-  isRefreshing = true;
+      if (!response.ok) {
+        throw new Error(`Token refresh endpoint responded with status ${response.status}`);
+      }
+
+      const payload = await response.json();
+      const data = payload.data || payload;
+      const { token: newAccessToken, refreshToken: newRefreshToken } = data;
+
+      if (newAccessToken && newRefreshToken) {
+        localStorage.setItem('auth_token', newAccessToken);
+        localStorage.setItem('refresh_token', newRefreshToken);
+        return true;
+      }
+
+      throw new Error('Invalid token response format from server');
+    } catch (error) {
+      console.error('Silent token refresh failed:', error);
+      
+      // Clear auth tokens and user session details from localStorage
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('refresh_token');
+      localStorage.removeItem('auth_user');
+
+      if (logoutFn) {
+        try {
+          logoutFn();
+        } catch (logoutError) {
+          console.error('Error invoking registered logout function:', logoutError);
+        }
+      }
+      
+      toast.error('Your session has expired. Please log in again.');
+      return false;
+    }
+  })();
 
   try {
-    const authServiceUrl = serviceRegistry['auth-service'];
-    const response = await fetch(`${authServiceUrl}${endpoints.auth.refresh}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ refreshToken: currentRefreshToken }),
-    });
-
-    if (!response.ok) {
-      console.error('Refresh token expired or invalid');
-      onUnauthorized();
-      return null;
-    }
-
-    const payload = await response.json();
-    
-    // Support both direct object and { data: ... } wrapper
-    const data = payload.data || payload;
-    const { token, refreshToken: newRefreshToken } = data;
-
-    if (token && newRefreshToken) {
-      setAuthToken(token);
-      setRefreshToken(newRefreshToken);
-      onRefreshed(token);
-      return token;
-    }
-
-    console.error('Invalid token refresh response format');
-    onUnauthorized();
-    return null;
-  } catch (error) {
-    console.error('Token refresh network error:', error);
-    onUnauthorized();
-    return null;
+    return await refreshPromise;
   } finally {
-    isRefreshing = false;
+    refreshPromise = null;
   }
 }

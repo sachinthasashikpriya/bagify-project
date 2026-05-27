@@ -4,6 +4,7 @@ import { AuthContext } from "./AuthContext";
 import type { AuthContextType } from "./AuthContext";
 import { authService } from "../services/authservice";
 import { LoadingSpinner } from "../components/common/LoadingSpinner";
+import { registerLogout } from "../api/tokenRefresher";
 
 const USER_STORAGE_KEY = "auth_user";
 const TOKEN_STORAGE_KEY = "auth_token";
@@ -83,6 +84,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.error("Failed to remove user from localStorage:", error);
     }
   };
+
+  // Register logout callback for silent token refresher
+  registerLogout(logout);
 
   
 
