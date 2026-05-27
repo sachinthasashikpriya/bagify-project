@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { orderService, type OrderResponse } from "../services/orderService";
 import { useAuth } from "../hooks/useAuth";
+import { useProducts } from "../hooks/useProduct";
 import { toast } from "sonner";
 
 export function OrderConfirmationPage() {
@@ -12,6 +13,7 @@ export function OrderConfirmationPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { currentUser } = useAuth();
+  const { refreshProducts } = useProducts();
   const [isPaying, setIsPaying] = useState(false);
 
   async function fetchOrderDetails() {
@@ -69,7 +71,29 @@ export function OrderConfirmationPage() {
 
       payhere.onCompleted = function (completedOrderId: string) {
         toast.success("Payment successful! Thank you.");
-        fetchOrderDetails();
+        
+        // 1. Optimistic UI update for immediate visual satisfaction
+        setOrder(prev => {
+          if (!prev) return null;
+          return {
+            ...prev,
+            paymentStatus: "PAID",
+            status: "PROCESSING"
+          };
+        });
+
+        // 2. Immediately trigger refreshing global products stock cache
+        refreshProducts().catch(err => console.error("Failed to refresh stock:", err));
+
+        // 3. Poll the backend details a few times in case webhook is slightly delayed
+        let attempts = 0;
+        const pollInterval = setInterval(async () => {
+          attempts++;
+          await fetchOrderDetails();
+          if (attempts >= 6) {
+            clearInterval(pollInterval);
+          }
+        }, 1500);
       };
 
       payhere.onDismissed = function () {

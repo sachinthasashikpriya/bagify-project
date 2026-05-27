@@ -28,22 +28,25 @@ export function ProductDetailPage() {
   const [fetchError, setFetchError] = useState(false);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
 
-  const product = products.find((p) => String(p.id) === String(productId)) || fetchedProduct;
+  const product = fetchedProduct || products.find((p) => String(p.id) === String(productId));
 
   useEffect(() => {
-    if (productId && !products.find((p) => String(p.id) === String(productId))) {
-      setIsLoading(true);
+    if (productId) {
+      const hasCached = products.some((p) => String(p.id) === String(productId));
+      if (!hasCached) {
+        setIsLoading(true);
+      }
       setFetchError(false);
       productService.getProductById(productId)
         .then((res) => {
           if (res.data) {
             setFetchedProduct(res.data);
           } else {
-            setFetchError(true);
+            if (!hasCached) setFetchError(true);
           }
         })
         .catch(() => {
-          setFetchError(true);
+          if (!hasCached) setFetchError(true);
         })
         .finally(() => {
           setIsLoading(false);
