@@ -1,4 +1,4 @@
-import { Star, ShoppingCart, Loader2, Heart } from 'lucide-react';
+import { Star, ShoppingCart, Loader2, Heart, BadgeCheck } from 'lucide-react';
 import { useState } from 'react';
 import type { Product } from '../types';
 import { toast } from 'sonner';
@@ -65,7 +65,7 @@ export function ProductCard({ product, onViewDetails, onAddToCart }: ProductCard
           </div>
           
           <p className="text-sm text-gray-600 line-clamp-2 mb-3">
-            {product.description}
+             {product.description}
           </p>
 
           <div className="flex items-center justify-between">
@@ -76,7 +76,12 @@ export function ProductCard({ product, onViewDetails, onAddToCart }: ProductCard
                   {product.averageRating > 0 ? product.averageRating.toFixed(1) : 'New'}
                 </span>
               </div>
-              <div className="text-xs text-gray-500">{product.sellerName}</div>
+              <div className="text-xs text-gray-500 flex items-center gap-1">
+                <span>{product.sellerName}</span>
+                {product.sellerVerified && (
+                  <BadgeCheck className="w-4 h-4 fill-blue-500 text-white" title="Verified Seller" />
+                )}
+              </div>
             </div>
             
             <div className="text-xs text-gray-500">

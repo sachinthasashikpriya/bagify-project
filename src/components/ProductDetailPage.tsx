@@ -1,4 +1,4 @@
-import { Loader2, ArrowLeft, Package, ShoppingCart, Star, Store, Heart } from "lucide-react";
+import { Loader2, ArrowLeft, Package, ShoppingCart, Star, Store, Heart, BadgeCheck } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
@@ -289,8 +289,11 @@ export function ProductDetailPage() {
                   <Store className="w-5 h-5 text-purple-600" />
                 </div>
                 <div>
-                  <p className="font-medium text-gray-900">
-                    {product.sellerName || "BagMarket Store"}
+                  <p className="font-medium text-gray-900 flex items-center gap-1">
+                    <span>{product.sellerName || "BagMarket Store"}</span>
+                    {product.sellerVerified && (
+                      <BadgeCheck className="w-5 h-5 fill-blue-500 text-white" title="Verified Seller" />
+                    )}
                   </p>
                   <div className="flex items-center gap-1">
                     <Star className="w-4 h-4 text-yellow-400 fill-current" />

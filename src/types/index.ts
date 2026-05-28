@@ -113,6 +113,7 @@ export interface Product {
   sellerId: string;
   sellerName: string;
   sellerRating: number;
+  sellerVerified?: boolean;
   stock: number;
   reviews: Review[];
   averageRating: number;
