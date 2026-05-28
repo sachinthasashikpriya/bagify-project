@@ -189,3 +189,64 @@
 html {
   font-size: var(--font-size);
 }
+
+/* Admin Panel Font Scaling & Legibility Optimization */
+.admin-panel {
+  --text-xs: 0.8125rem;    /* 13px instead of 12px */
+  --text-sm: 0.9375rem;    /* 15px instead of 14px */
+  --text-base: 1.0625rem;  /* 17px instead of 16px */
+  --text-lg: 1.1875rem;   /* 19px instead of 18px */
+  --text-xl: 1.375rem;     /* 22px instead of 20px */
+  --text-2xl: 1.625rem;    /* 26px instead of 24px */
+}
+
+/* Force override standard utility font-sizes in admin panel to make everything highly readable */
+.admin-panel .text-xs,
+.admin-panel th.text-xs,
+.admin-panel td.text-xs,
+.admin-panel span.text-xs,
+.admin-panel p.text-xs,
+.admin-panel div.text-xs {
+  font-size: 0.85rem !important; /* ~13.6px - highly readable for captions & labels */
+}
+
+.admin-panel .text-sm,
+.admin-panel button.text-sm,
+.admin-panel select.text-sm,
+.admin-panel input.text-sm,
+.admin-panel p.text-sm,
+.admin-panel div.text-sm {
+  font-size: 0.95rem !important; /* ~15.2px - crisp secondary text */
+}
+
+.admin-panel .text-base,
+.admin-panel h3.text-base,
+.admin-panel p.text-base {
+  font-size: 1.075rem !important; /* ~17.2px - comfortable primary body text */
+}
+
+.admin-panel .text-lg,
+.admin-panel h2.text-lg {
+  font-size: 1.2rem !important; /* ~19px */
+}
+
+.admin-panel .text-xl,
+.admin-panel h2.text-xl,
+.admin-panel h1.text-xl {
+  font-size: 1.35rem !important; /* ~21.6px */
+}
+
+.admin-panel .text-2xl,
+.admin-panel h1.text-2xl {
+  font-size: 1.6rem !important; /* ~25.6px */
+}
+
+/* Scale custom inline arbitrary text classes */
+.admin-panel .text-\[10px\],
+.admin-panel .text-\[9px\] {
+  font-size: 0.775rem !important; /* ~12.4px - makes the super tiny badges readable but still compact! */
+}
+
+.admin-panel .text-\[11px\] {
+  font-size: 0.825rem !important; /* ~13.2px */
+}

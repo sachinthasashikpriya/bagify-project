@@ -174,4 +174,24 @@ export const userService = {
       auth: true,
     });
   },
+
+  /**
+   * Get minimal buyer info by ID (Admin/Service use)
+   */
+  async getBuyerById(id: number | string): Promise<Result<{ id: number, name: string, email: string, address: string }>> {
+    return httpClient.get(`/api/v1/users/buyers/${id}`, {
+      service: 'user-service',
+      auth: true,
+    });
+  },
+
+  /**
+   * Get minimal seller info by ID (Admin/Service use)
+   */
+  async getSellerById(id: number | string): Promise<Result<{ id: number, name: string, email: string, businessName: string, rating: number }>> {
+    return httpClient.get(`/api/v1/users/sellers/${id}`, {
+      service: 'user-service',
+      auth: true,
+    });
+  },
 };

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Shield, Users, Package, TrendingUp, LogOut, AlertTriangle, Search, X, FileText, CheckCircle2 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Shield, Users, Package, TrendingUp, LogOut, AlertTriangle, Search, X, FileText, CheckCircle2, ShoppingBag, ArrowUpRight, ChevronDown } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useAuth } from '../hooks/useAuth';
 import { useProducts } from '../hooks/useProduct';
@@ -10,13 +10,15 @@ import { orderService, type OrderResponse } from '../services/orderService';
 import { ConfirmModal } from './common/ConfirmModal';
 import { adminService } from '../services/adminService';
 
-
 export function AdminDashboard() {
   const { currentUser, logout } = useAuth();
   const { products, deleteProduct } = useProducts();
   const navigate = useNavigate();
+  const location = useLocation();
   
-  const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'users' | 'orders' | 'verifications'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'users' | 'orders' | 'verifications'>(
+    (location.state?.activeTab as any) || 'overview'
+  );
   const [orders, setOrders] = useState<OrderResponse[]>([]);
   const [isLoadingOrders, setIsLoadingOrders] = useState(false);
   const [verifications, setVerifications] = useState<SellerVerificationResponse[]>([]);
@@ -211,35 +213,16 @@ export function AdminDashboard() {
 
   const getStatusColor = (status: string) => {
     switch (status?.toUpperCase()) {
-      case 'DELIVERED': return 'bg-green-100 text-green-800';
-      case 'SHIPPED': return 'bg-blue-100 text-blue-800';
-      case 'PARTIALLY_SHIPPED': return 'bg-indigo-100 text-indigo-800';
-      case 'PACKED': return 'bg-cyan-100 text-cyan-800';
-      case 'PROCESSING': return 'bg-orange-100 text-orange-800';
-      case 'CANCELLED': return 'bg-red-100 text-red-800';
+      case 'DELIVERED': return 'bg-green-50 text-green-700 border border-green-200';
+      case 'SHIPPED': return 'bg-blue-50 text-blue-700 border border-blue-200';
+      case 'PARTIALLY_SHIPPED': return 'bg-indigo-50 text-indigo-700 border border-indigo-200';
+      case 'PACKED': return 'bg-cyan-50 text-cyan-700 border border-cyan-200';
+      case 'PROCESSING': return 'bg-orange-50 text-orange-700 border border-orange-200';
+      case 'CANCELLED': return 'bg-rose-50 text-rose-700 border border-rose-200';
       case 'PENDING':
-      default: return 'bg-yellow-100 text-yellow-800';
+      default: return 'bg-yellow-50 text-yellow-700 border border-yellow-200';
     }
   };
-
-  // Check if user is an admin
-  if (!currentUser || currentUser.role !== 'ADMIN') {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="bg-white rounded-xl p-8 shadow-sm text-center max-w-md">
-          <Shield className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Access Denied</h2>
-          <p className="text-gray-600 mb-4">You need to be logged in as an admin to access this page.</p>
-          <button
-            onClick={() => navigate('/login')}
-            className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700"
-          >
-            Go to Login
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   const handleLogout = () => {
     setConfirmModal({
@@ -272,7 +255,6 @@ export function AdminDashboard() {
     const isEnabling = !user.enabled;
 
     if (isEnabling) {
-      // Toggle locally (optimistic update)
       setUsers((prev) =>
         prev.map((u) => (u.id === user.id ? { ...u, enabled: true } : u))
       );
@@ -281,28 +263,24 @@ export function AdminDashboard() {
         if (result.ok) {
           toast.success(`User ${user.name} has been enabled`);
         } else {
-          // Rollback on failure
           setUsers((prev) =>
             prev.map((u) => (u.id === user.id ? { ...u, enabled: false } : u))
           );
           toast.error(result.error || `Failed to enable user ${user.name}`);
         }
       }).catch(() => {
-        // Rollback on failure
         setUsers((prev) =>
           prev.map((u) => (u.id === user.id ? { ...u, enabled: false } : u))
         );
         toast.error(`An error occurred while enabling ${user.name}`);
       });
     } else {
-      // Disable opens a ConfirmModal
       setConfirmModal({
         isOpen: true,
         title: 'Disable User Account',
         message: 'Are you sure? This user will lose access immediately.',
         isDestructive: true,
         onConfirm: () => {
-          // Toggle locally (optimistic update)
           setUsers((prev) =>
             prev.map((u) => (u.id === user.id ? { ...u, enabled: false } : u))
           );
@@ -312,14 +290,12 @@ export function AdminDashboard() {
             if (result.ok) {
               toast.success(`User ${user.name} has been disabled`);
             } else {
-              // Rollback on failure
               setUsers((prev) =>
                 prev.map((u) => (u.id === user.id ? { ...u, enabled: true } : u))
               );
               toast.error(result.error || `Failed to disable user ${user.name}`);
             }
           }).catch(() => {
-            // Rollback on failure
             setUsers((prev) =>
               prev.map((u) => (u.id === user.id ? { ...u, enabled: true } : u))
             );
@@ -330,13 +306,30 @@ export function AdminDashboard() {
     }
   };
 
+  // Check if user is an admin
+  if (!currentUser || currentUser.role !== 'ADMIN') {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="bg-white rounded-xl p-8 shadow-sm text-center max-w-md">
+          <Shield className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Access Denied</h2>
+          <p className="text-gray-600 mb-4">You need to be logged in as an admin to access this page.</p>
+          <button
+            onClick={() => navigate('/login')}
+            className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700"
+          >
+            Go to Login
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   // Client-side filtering logic
   const filteredUsers = users.filter((user) => {
-    // Role filter
     if (roleFilter !== 'ALL' && user.role !== roleFilter) {
       return false;
     }
-    // Search query filter (by name or email)
     if (debouncedSearchQuery.trim() !== '') {
       const query = debouncedSearchQuery.toLowerCase();
       const matchesName = user.name?.toLowerCase().includes(query);
@@ -356,181 +349,259 @@ export function AdminDashboard() {
   const lowStockProducts = products.filter(p => p.stock < 5);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin Dashboard</h1>
-            <p className="text-gray-600">Welcome back, {currentUser.name}</p>
+    <div className="min-h-screen bg-[#f8fafc] flex admin-panel">
+      {/* Sidebar Navigation */}
+      <aside className="w-64 bg-slate-900 text-slate-300 flex flex-col justify-between border-r border-slate-800 shadow-xl fixed h-screen z-20">
+        <div>
+          {/* Logo Brand */}
+          <div className="p-6 flex items-center gap-3 border-b border-slate-800 bg-slate-950/40">
+            <div className="p-2 bg-purple-500/10 rounded-xl border border-purple-500/20 text-purple-400 shadow-inner">
+              <Shield className="w-6 h-6 animate-pulse" />
+            </div>
+            <div>
+              <span className="font-extrabold text-white tracking-wider text-lg">BAGIFY</span>
+              <span className="text-[10px] block text-purple-400 font-bold uppercase tracking-widest mt-0.5">Admin Central</span>
+            </div>
           </div>
+
+          {/* User Profile Summary */}
+          <div className="p-5 border-b border-slate-800 bg-slate-900/50">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-purple-500 to-indigo-600 flex items-center justify-center font-extrabold text-white text-sm shadow-md shadow-purple-500/20">
+                {currentUser.name.charAt(0).toUpperCase()}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="font-bold text-white text-sm truncate">{currentUser.name}</p>
+                <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-purple-500/10 text-purple-400 border border-purple-500/20 mt-1 uppercase">
+                  Super Admin
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Navigation Links */}
+          <nav className="p-4 space-y-1.5">
+            {[
+              { id: 'overview', label: 'Overview', icon: TrendingUp },
+              { id: 'products', label: 'Products', icon: Package },
+              { id: 'users', label: 'Users', icon: Users },
+              { id: 'orders', label: 'Orders', icon: ShoppingBag },
+              { id: 'verifications', label: 'Verifications', icon: Shield }
+            ].map((tab) => {
+              const Icon = tab.icon;
+              const isActive = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id as any)}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 ${
+                    isActive
+                      ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg shadow-purple-500/20 translate-x-1'
+                      : 'hover:bg-slate-800/60 hover:text-white hover:translate-x-1 text-slate-400'
+                  }`}
+                >
+                  <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-slate-400'}`} />
+                  {tab.label}
+                  {tab.id === 'verifications' && verifications.length > 0 && (
+                    <span className="ml-auto px-2 py-0.5 text-[10px] font-extrabold bg-rose-500 text-white rounded-full animate-bounce">
+                      {verifications.length}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </nav>
+        </div>
+
+        {/* Footer Logout */}
+        <div className="p-4 border-t border-slate-800 bg-slate-950/20">
           <button
             onClick={handleLogout}
-            className="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-slate-400 hover:bg-rose-500/10 hover:text-rose-400 transition-all duration-200"
           >
-            <LogOut className="w-5 h-5" />
-            Logout
+            <LogOut className="w-4 h-4" />
+            Sign Out
           </button>
         </div>
+      </aside>
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-xl p-6 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-600 mb-1">Total Products</p>
-                <p className="text-3xl font-bold text-gray-900">{totalProducts}</p>
+      {/* Main Workspace */}
+      <main className="flex-1 min-w-0 pl-64 flex flex-col min-h-screen">
+        {/* Top Navbar */}
+        <header className="bg-white/80 backdrop-blur-md border-b border-slate-100 px-8 py-5 sticky top-0 z-10 flex items-center justify-between shadow-sm">
+          <div>
+            <div className="flex items-center gap-2 text-xs font-semibold text-slate-400 uppercase tracking-widest mb-1">
+              <span>Admin Console</span>
+              <span>/</span>
+              <span className="text-purple-600 capitalize">{activeTab}</span>
+            </div>
+            <h2 className="text-xl font-black text-slate-800">
+              {activeTab === 'overview' && 'System Analytics Overview'}
+              {activeTab === 'products' && 'Product Inventory Hub'}
+              {activeTab === 'users' && 'Account Directory & Security'}
+              {activeTab === 'orders' && 'Global Transaction Board'}
+              {activeTab === 'verifications' && 'Seller Document Desk'}
+            </h2>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="text-right hidden md:block">
+              <p className="text-xs text-slate-400 font-semibold">Active Session</p>
+              <p className="text-sm font-bold text-slate-700">{currentUser.email}</p>
+            </div>
+            <div className="h-8 w-[1px] bg-slate-200 hidden md:block"></div>
+            <div className="px-3.5 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-600 shadow-sm flex items-center gap-2">
+              <span className="w-2 h-2 bg-green-500 rounded-full animate-ping"></span>
+              Live Sandbox
+            </div>
+          </div>
+        </header>
+
+        {/* Content Body */}
+        <div className="p-8 flex-1">
+          {/* Dashboard Metrics */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            {/* Card 1 */}
+            <div className="group bg-white rounded-2xl p-6 border border-slate-100 hover:border-purple-200 hover:shadow-xl hover:shadow-purple-500/5 transition-all duration-300 relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-full h-[3px] bg-purple-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Total Products</p>
+                  <p className="text-3xl font-black text-slate-800 tracking-tight">{totalProducts}</p>
+                </div>
+                <div className="p-3 bg-purple-50 rounded-2xl text-purple-600 group-hover:scale-110 transition-transform">
+                  <Package className="w-6 h-6" />
+                </div>
               </div>
-              <Package className="w-12 h-12 text-purple-600" />
             </div>
-          </div>
 
-          <div className="bg-white rounded-xl p-6 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-600 mb-1">Total Users</p>
-                <p className="text-3xl font-bold text-gray-900">{totalUsers}</p>
+            {/* Card 2 */}
+            <div className="group bg-white rounded-2xl p-6 border border-slate-100 hover:border-blue-200 hover:shadow-xl hover:shadow-blue-500/5 transition-all duration-300 relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-full h-[3px] bg-blue-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Registered Users</p>
+                  <p className="text-3xl font-black text-slate-800 tracking-tight">{totalUsers}</p>
+                </div>
+                <div className="p-3 bg-blue-50 rounded-2xl text-blue-600 group-hover:scale-110 transition-transform">
+                  <Users className="w-6 h-6" />
+                </div>
               </div>
-              <Users className="w-12 h-12 text-blue-600" />
             </div>
-          </div>
 
-          <div className="bg-white rounded-xl p-6 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-600 mb-1">Total Revenue</p>
-                <p className="text-3xl font-bold text-gray-900">Rs. {totalRevenue.toFixed(2)}</p>
+            {/* Card 3 */}
+            <div className="group bg-white rounded-2xl p-6 border border-slate-100 hover:border-emerald-200 hover:shadow-xl hover:shadow-emerald-500/5 transition-all duration-300 relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-full h-[3px] bg-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Gross Revenue</p>
+                  <p className="text-3xl font-black text-emerald-600 tracking-tight">Rs. {totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                </div>
+                <div className="p-3 bg-emerald-50 rounded-2xl text-emerald-600 group-hover:scale-110 transition-transform">
+                  <TrendingUp className="w-6 h-6" />
+                </div>
               </div>
-              <TrendingUp className="w-12 h-12 text-green-600" />
             </div>
-          </div>
 
-          <div className="bg-white rounded-xl p-6 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-600 mb-1">Low Stock Alert</p>
-                <p className="text-3xl font-bold text-gray-900">{lowStockProducts.length}</p>
+            {/* Card 4 */}
+            <div className="group bg-white rounded-2xl p-6 border border-slate-100 hover:border-rose-200 hover:shadow-xl hover:shadow-rose-500/5 transition-all duration-300 relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-full h-[3px] bg-rose-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Low Stock Alerts</p>
+                  <p className="text-3xl font-black text-slate-800 tracking-tight">
+                    <span className={lowStockProducts.length > 0 ? 'text-rose-600 animate-pulse' : 'text-slate-800'}>
+                      {lowStockProducts.length}
+                    </span>
+                  </p>
+                </div>
+                <div className={`p-3 rounded-2xl group-hover:scale-110 transition-transform ${lowStockProducts.length > 0 ? 'bg-rose-50 text-rose-600' : 'bg-slate-50 text-slate-500'}`}>
+                  <AlertTriangle className="w-6 h-6" />
+                </div>
               </div>
-              <AlertTriangle className="w-12 h-12 text-red-600" />
             </div>
           </div>
-        </div>
 
-        {/* Alerts */}
-        {lowStockProducts.length > 0 && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-            <div className="flex items-center gap-2 mb-2">
-              <AlertTriangle className="w-5 h-5 text-red-600" />
-              <h3 className="font-medium text-red-800">Low Stock Alert</h3>
-            </div>
-            <p className="text-red-700 text-sm">
-              {lowStockProducts.length} product{lowStockProducts.length > 1 ? 's' : ''} running low on stock (less than 5 items).
-            </p>
-          </div>
-        )}
-
-        {/* Tabs */}
-        <div className="bg-white rounded-xl shadow-sm">
-          <div className="border-b border-gray-200">
-            <nav className="-mb-px flex space-x-8 px-6">
-              <button
-                onClick={() => setActiveTab('overview')}
-                className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === 'overview'
-                    ? 'border-purple-500 text-purple-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                <TrendingUp className="w-5 h-5 inline mr-2" />
-                Overview
-              </button>
-              <button
+          {/* Alerts Banner */}
+          {lowStockProducts.length > 0 && (
+            <div className="bg-gradient-to-r from-red-50 to-rose-50 border border-red-100 rounded-2xl p-4 mb-8 flex items-center justify-between shadow-sm shadow-red-500/5 animate-in slide-in-from-top-4 duration-300">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-red-100 rounded-xl text-red-600 shadow-inner">
+                  <AlertTriangle className="w-5 h-5 animate-bounce" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-red-950 text-sm">Low Stock Alert</h3>
+                  <p className="text-red-700 text-xs mt-0.5 font-medium">
+                    {lowStockProducts.length} critical inventory items have fallen below 5 units.
+                  </p>
+                </div>
+              </div>
+              <button 
                 onClick={() => setActiveTab('products')}
-                className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === 'products'
-                    ? 'border-purple-500 text-purple-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
+                className="px-3.5 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold transition-all shadow shadow-red-600/10 flex items-center gap-1.5"
               >
-                <Package className="w-5 h-5 inline mr-2" />
-                Products
+                Restock Inventory
+                <ArrowUpRight className="w-3.5 h-3.5" />
               </button>
-              <button
-                onClick={() => setActiveTab('users')}
-                className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === 'users'
-                    ? 'border-purple-500 text-purple-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                <Users className="w-5 h-5 inline mr-2" />
-                Users
-              </button>
-              <button
-                onClick={() => setActiveTab('orders')}
-                className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === 'orders'
-                    ? 'border-purple-500 text-purple-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                <Package className="w-5 h-5 inline mr-2" />
-                Orders
-              </button>
-              <button
-                onClick={() => setActiveTab('verifications')}
-                className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === 'verifications'
-                    ? 'border-purple-500 text-purple-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                <Shield className="w-5 h-5 inline mr-2" />
-                Verifications
-              </button>
-            </nav>
-          </div>
+            </div>
+          )}
 
-          <div className="p-6">
+          {/* Main workspace section */}
+          <div className="space-y-6">
             {/* Overview Tab */}
             {activeTab === 'overview' && (
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Platform Overview</h3>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {/* Recent Activity */}
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <h4 className="font-medium text-gray-900 mb-3">Recent Activity</h4>
-                    <div className="space-y-2 text-sm">
-                      <p className="text-gray-600">• 5 new products added today</p>
-                      <p className="text-gray-600">• 12 new user registrations</p>
-                      <p className="text-gray-600">• 8 orders completed</p>
-                      <p className="text-gray-600">• {lowStockProducts.length} products need restocking</p>
-                    </div>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* Visual Category Distribution */}
+                <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm">
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-base font-extrabold text-slate-800">Popular Categories</h3>
+                    <span className="text-[10px] font-bold bg-slate-50 border border-slate-200 text-slate-500 px-2 py-0.5 rounded-md uppercase">
+                      Stock Count
+                    </span>
                   </div>
+                  <div className="space-y-5">
+                    {['handbags', 'backpacks', 'clutches'].map((cat) => {
+                      const count = products.filter(p => p.category === cat).length;
+                      const percentage = totalProducts > 0 ? (count / totalProducts) * 100 : 0;
+                      let barColor = 'from-purple-500 to-indigo-500 bg-purple-500';
+                      if (cat === 'backpacks') barColor = 'from-blue-500 to-cyan-500 bg-blue-500';
+                      if (cat === 'clutches') barColor = 'from-emerald-500 to-teal-500 bg-emerald-500';
 
-                  {/* Top Categories */}
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <h4 className="font-medium text-gray-900 mb-3">Popular Categories</h4>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Handbags</span>
-                        <span className="font-medium">
-                          {products.filter(p => p.category === 'handbags').length}
-                        </span>
+                      return (
+                        <div key={cat} className="space-y-2">
+                          <div className="flex justify-between text-xs font-bold">
+                            <span className="capitalize text-slate-700">{cat}</span>
+                            <span className="text-slate-500">{count} products ({percentage.toFixed(0)}%)</span>
+                          </div>
+                          <div className="w-full h-2 bg-slate-50 rounded-full overflow-hidden border border-slate-100">
+                            <div 
+                              className={`h-full bg-gradient-to-r ${barColor} rounded-full transition-all duration-1000`} 
+                              style={{ width: `${percentage}%` }}
+                            ></div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Timeline activity list */}
+                <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm">
+                  <h3 className="text-base font-extrabold text-slate-800 mb-6">Platform Activity Timeline</h3>
+                  <div className="space-y-5 relative before:absolute before:left-3 before:top-2 before:bottom-2 before:w-[2px] before:bg-slate-100">
+                    {[
+                      { text: 'New products added to marketplace listings', count: '5 items', dot: 'bg-purple-500' },
+                      { text: 'New buyer and seller profiles created', count: '12 accounts', dot: 'bg-blue-500' },
+                      { text: 'Completed buyer checkouts recorded', count: '8 checkouts', dot: 'bg-emerald-500' },
+                      { text: 'Products flagged for stock restock', count: `${lowStockProducts.length} warnings`, dot: 'bg-rose-500' }
+                    ].map((act, i) => (
+                      <div key={i} className="flex gap-4 relative pl-8 text-xs font-bold">
+                        <span className={`absolute left-[9px] top-1.5 w-2 h-2 rounded-full ring-4 ring-white ${act.dot}`}></span>
+                        <div className="flex-1 bg-slate-50/50 hover:bg-slate-50 border border-slate-100 p-3 rounded-xl transition-all flex items-center justify-between">
+                          <span className="text-slate-600 font-semibold">{act.text}</span>
+                          <span className="px-2 py-0.5 bg-white border border-slate-200 text-slate-700 rounded-md text-[10px]">{act.count}</span>
+                        </div>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Backpacks</span>
-                        <span className="font-medium">
-                          {products.filter(p => p.category === 'backpacks').length}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Clutches</span>
-                        <span className="font-medium">
-                          {products.filter(p => p.category === 'clutches').length}
-                        </span>
-                      </div>
-                    </div>
+                    ))}
                   </div>
                 </div>
               </div>
@@ -538,65 +609,91 @@ export function AdminDashboard() {
 
             {/* Products Tab */}
             {activeTab === 'products' && (
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Product Management</h3>
+              <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden animate-in fade-in duration-300">
+                <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+                  <h3 className="text-base font-extrabold text-slate-800">Inventory Catalog</h3>
+                  <span className="text-xs font-bold text-slate-500">{totalProducts} active items</span>
+                </div>
                 <div className="overflow-x-auto">
-                  <table className="w-full">
+                  <table className="w-full border-collapse text-left">
                     <thead>
-                      <tr className="border-b border-gray-200">
-                        <th className="text-left py-3 px-4 font-medium text-gray-700">Product</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-700">Category</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-700">Price</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-700">Stock</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-700">Seller</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-700">Actions</th>
+                      <tr className="bg-slate-50/70 border-b border-slate-100 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                        <th className="py-3.5 px-6">Product Details</th>
+                        <th className="py-3.5 px-6">Category</th>
+                        <th className="py-3.5 px-6">Price</th>
+                        <th className="py-3.5 px-6">Stock Status</th>
+                        <th className="py-3.5 px-6">Merchant</th>
+                        <th className="py-3.5 px-6 text-right">Actions</th>
                       </tr>
                     </thead>
-                    <tbody>
-                      {products.map((product) => (
-                        <tr key={product.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                          <td className="py-3 px-4">
-                            <div className="flex items-center gap-3">
-                              <img
-                                src={product.image}
-                                alt={product.name}
-                                className="w-12 h-12 rounded object-cover"
-                              />
-                              <div>
-                                <p className="font-medium text-gray-900">{product.name}</p>
-                                <p className="text-sm text-gray-500 truncate max-w-xs">
-                                  {product.description}
-                                </p>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="py-3 px-4">
-                            <span className="capitalize text-gray-700">{product.category}</span>
-                          </td>
-                          <td className="py-3 px-4">
-                            <span className="font-medium text-gray-900">Rs. {product.price.toFixed(2)}</span>
-                          </td>
-                          <td className="py-3 px-4">
-                            <span className={`font-medium ${
-                              product.stock < 5 ? 'text-red-600' : 
-                              product.stock < 10 ? 'text-yellow-600' : 'text-green-600'
-                            }`}>
-                              {product.stock}
-                            </span>
-                          </td>
-                          <td className="py-3 px-4">
-                            <span className="text-gray-700">{product.sellerName || 'Unknown'}</span>
-                          </td>
-                          <td className="py-3 px-4">
-                            <button
-                              onClick={() => handleDeleteProduct(product.id, product.name)}
-                              className="text-red-600 hover:text-red-800 text-sm font-medium"
-                            >
-                              Delete
-                            </button>
+                    <tbody className="divide-y divide-slate-100 text-xs font-semibold">
+                      {products.length === 0 ? (
+                        <tr>
+                          <td colSpan={6} className="py-16 text-center text-slate-400 font-medium">
+                            No products available in database.
                           </td>
                         </tr>
-                      ))}
+                      ) : (
+                        products.map((product) => {
+                          const isLowStock = product.stock < 5;
+                          const isOutOfStock = product.stock <= 0;
+                          return (
+                            <tr key={product.id} className="hover:bg-slate-50/30 transition-colors">
+                              <td className="py-4 px-6">
+                                <div className="flex items-center gap-3">
+                                  <img
+                                    src={product.image}
+                                    alt={product.name}
+                                    className="w-12 h-12 rounded-xl object-cover border border-slate-100 shadow-sm"
+                                    onError={(e) => {
+                                      (e.target as HTMLImageElement).src = 'https://via.placeholder.com/80?text=No+Image';
+                                    }}
+                                  />
+                                  <div className="max-w-xs">
+                                    <p className="font-extrabold text-slate-800 text-sm leading-tight mb-1">{product.name}</p>
+                                    <p className="text-slate-400 font-medium truncate text-xs" title={product.description}>
+                                      {product.description}
+                                    </p>
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="py-4 px-6">
+                                <span className="capitalize px-2.5 py-0.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-600 font-bold text-[10px]">
+                                  {product.category}
+                                </span>
+                              </td>
+                              <td className="py-4 px-6 font-extrabold text-slate-800 text-sm">
+                                Rs. {product.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                              </td>
+                              <td className="py-4 px-6">
+                                <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg font-bold text-[10px] ${
+                                  isOutOfStock
+                                    ? 'bg-rose-50 text-rose-700 border border-rose-100'
+                                    : isLowStock
+                                    ? 'bg-amber-50 text-amber-700 border border-amber-100'
+                                    : 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+                                }`}>
+                                  <span className={`w-1.5 h-1.5 rounded-full ${
+                                    isOutOfStock ? 'bg-rose-500' : isLowStock ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'
+                                  }`}></span>
+                                  {product.stock} units
+                                </span>
+                              </td>
+                              <td className="py-4 px-6 text-slate-700 font-bold">
+                                {product.sellerName || 'Unknown Merchant'}
+                              </td>
+                              <td className="py-4 px-6 text-right">
+                                <button
+                                  onClick={() => handleDeleteProduct(product.id, product.name)}
+                                  className="px-3 py-1.5 bg-rose-50 hover:bg-rose-500 hover:text-white rounded-lg text-rose-600 text-xs font-bold transition-all border border-rose-100"
+                                >
+                                  Delete
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -605,266 +702,265 @@ export function AdminDashboard() {
 
             {/* Users Tab */}
             {activeTab === 'users' && (
-              <div>
-                {/* Header Controls */}
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-                  <div>
-                    <h3 className="text-xl font-bold text-gray-900">User Management</h3>
-                    <p className="text-sm text-gray-500 mt-1">
-                      Monitor and manage registered buyers and sellers on the platform.
-                    </p>
+              <div className="space-y-6 animate-in fade-in duration-300">
+                {/* Control bar */}
+                <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div className="relative flex-1 max-w-md">
+                    <input
+                      type="text"
+                      placeholder="Search by username or email..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white transition-all shadow-inner"
+                    />
+                    <Search className="absolute left-3.5 top-3.5 w-4 h-4 text-slate-400" />
                   </div>
-                  <div className="flex flex-col sm:flex-row gap-3">
-                    {/* Search Field */}
-                    <div className="relative">
-                      <input
-                        type="text"
-                        placeholder="Search by name or email..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full sm:w-64 pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all shadow-sm"
-                      />
-                      <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
-                    </div>
-                    {/* Role Filter */}
+                  <div className="flex gap-3">
                     <select
                       value={roleFilter}
                       onChange={(e) => setRoleFilter(e.target.value as any)}
-                      className="border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white shadow-sm"
+                      className="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white transition-all shadow-sm"
                     >
-                      <option value="ALL">All Roles</option>
+                      <option value="ALL">All Accounts</option>
                       <option value="BUYER">Buyers Only</option>
                       <option value="SELLER">Sellers Only</option>
                     </select>
                   </div>
                 </div>
 
-                {isLoadingUsers ? (
-                  <div className="flex flex-col items-center justify-center py-16 gap-3">
-                    <div className="w-10 h-10 border-4 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
-                    <p className="text-gray-500 text-sm font-medium">Fetching registered users...</p>
-                  </div>
-                ) : (
-                  <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
-                    <div className="overflow-x-auto">
-                      <table className="w-full border-collapse text-left">
-                        <thead>
-                          <tr className="bg-gray-50 border-b border-gray-200">
-                            <th className="py-3.5 px-6 font-semibold text-xs text-gray-700 uppercase tracking-wider">Name</th>
-                            <th className="py-3.5 px-6 font-semibold text-xs text-gray-700 uppercase tracking-wider">Email</th>
-                            <th className="py-3.5 px-6 font-semibold text-xs text-gray-700 uppercase tracking-wider">Role</th>
-                            <th className="py-3.5 px-6 font-semibold text-xs text-gray-700 uppercase tracking-wider">Status</th>
-                            <th className="py-3.5 px-6 font-semibold text-xs text-gray-700 uppercase tracking-wider">Verification</th>
-                            <th className="py-3.5 px-6 font-semibold text-xs text-gray-700 uppercase tracking-wider">Joined Date</th>
-                            <th className="py-3.5 px-6 font-semibold text-xs text-gray-700 uppercase tracking-wider">Actions</th>
+                {/* Table */}
+                <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="w-full border-collapse text-left">
+                      <thead>
+                        <tr className="bg-slate-50/70 border-b border-slate-100 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                          <th className="py-3.5 px-6">User Account</th>
+                          <th className="py-3.5 px-6">Email Address</th>
+                          <th className="py-3.5 px-6">Platform Role</th>
+                          <th className="py-3.5 px-6">Account Status</th>
+                          <th className="py-3.5 px-6">Verification</th>
+                          <th className="py-3.5 px-6 text-right">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 text-xs font-semibold">
+                        {isLoadingUsers ? (
+                          <tr>
+                            <td colSpan={6} className="py-16 text-center">
+                              <div className="flex flex-col items-center gap-2">
+                                <div className="w-6 h-6 border-2 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+                                <span className="text-slate-400 font-medium">Fetching accounts database...</span>
+                              </div>
+                            </td>
                           </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100">
-                          {filteredUsers.length === 0 ? (
-                            <tr>
-                              <td colSpan={7} className="py-16 text-center text-gray-500">
-                                <div className="flex flex-col items-center justify-center gap-2 max-w-sm mx-auto">
-                                  <Users className="w-12 h-12 text-gray-300" />
-                                  <p className="text-base font-semibold text-gray-700">No users found</p>
-                                  <p className="text-sm text-gray-500">
-                                    {debouncedSearchQuery || roleFilter !== 'ALL'
-                                      ? "We couldn't find any users matching your filter criteria. Try adjusting your search term."
-                                      : 'There are currently no registered users on the platform.'}
-                                  </p>
+                        ) : filteredUsers.length === 0 ? (
+                          <tr>
+                            <td colSpan={6} className="py-16 text-center text-slate-400 font-medium">
+                              No matching user records discovered.
+                            </td>
+                          </tr>
+                        ) : (
+                          filteredUsers.map((user) => (
+                            <tr key={user.id} className="hover:bg-slate-50/30 transition-colors">
+                              <td className="py-4 px-6">
+                                <div className="flex items-center gap-3">
+                                  {user.profileImageUrl ? (
+                                    <img
+                                      src={user.profileImageUrl}
+                                      alt={user.name}
+                                      className="w-9 h-9 rounded-xl object-cover border border-slate-100 shadow-inner"
+                                    />
+                                  ) : (
+                                    <div className="w-9 h-9 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center font-black text-xs border border-purple-100 shadow-sm">
+                                      {user.name.charAt(0).toUpperCase()}
+                                    </div>
+                                  )}
+                                  <span className="font-extrabold text-slate-800 text-sm">{user.name}</span>
                                 </div>
                               </td>
+                              <td className="py-4 px-6 text-slate-500 font-bold">{user.email}</td>
+                              <td className="py-4 px-6">
+                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-lg text-[10px] font-bold uppercase tracking-wider ${
+                                  user.role === 'ADMIN'
+                                    ? 'bg-amber-50 text-amber-700 border border-amber-100'
+                                    : user.role === 'SELLER'
+                                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+                                    : 'bg-blue-50 text-blue-700 border border-blue-100'
+                                }`}>
+                                  {user.role}
+                                </span>
+                              </td>
+                              <td className="py-4 px-6">
+                                <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg font-bold text-[10px] ${
+                                  user.enabled
+                                    ? 'bg-green-50 text-green-700 border border-green-100'
+                                    : 'bg-rose-50 text-rose-700 border border-rose-100'
+                                }`}>
+                                  <span className={`w-1.5 h-1.5 rounded-full ${user.enabled ? 'bg-green-500 animate-pulse' : 'bg-rose-500'}`}></span>
+                                  {user.enabled ? 'Active' : 'Disabled'}
+                                </span>
+                              </td>
+                              <td className="py-4 px-6">
+                                {user.role !== 'SELLER' ? (
+                                  <span className="text-slate-300 font-bold">-</span>
+                                ) : (
+                                  (() => {
+                                    const status = user.verificationStatus || 'NONE';
+                                    switch (status) {
+                                      case 'APPROVED':
+                                        return (
+                                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-100">
+                                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                                            Verified
+                                          </span>
+                                        );
+                                      case 'PENDING':
+                                        return (
+                                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-100 animate-pulse">
+                                            Pending Approval
+                                          </span>
+                                        );
+                                      case 'REJECTED':
+                                        return (
+                                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-100">
+                                            Rejected
+                                          </span>
+                                        );
+                                      case 'NONE':
+                                      default:
+                                        return (
+                                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[10px] font-bold bg-slate-50 text-slate-400 border border-slate-200">
+                                            Unverified
+                                          </span>
+                                        );
+                                    }
+                                  })()
+                                )}
+                              </td>
+                              <td className="py-4 px-6 text-right">
+                                {String(user.id) === String(currentUser.id) ? (
+                                  <span className="px-2.5 py-1 rounded bg-slate-50 border border-slate-200 text-slate-400 text-xs font-bold">
+                                    You
+                                  </span>
+                                ) : user.enabled ? (
+                                  <button
+                                    onClick={() => handleToggleUserStatus(user)}
+                                    className="px-3 py-1.5 bg-rose-50 hover:bg-rose-500 hover:text-white rounded-lg text-rose-600 text-xs font-bold transition-all border border-rose-100"
+                                  >
+                                    Disable
+                                  </button>
+                                ) : (
+                                  <button
+                                    onClick={() => handleToggleUserStatus(user)}
+                                    className="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-500 hover:text-white rounded-lg text-emerald-600 text-xs font-bold transition-all border border-emerald-100"
+                                  >
+                                    Enable
+                                  </button>
+                                )}
+                              </td>
                             </tr>
-                          ) : (
-                            filteredUsers.map((user) => (
-                              <tr key={user.id} className="hover:bg-gray-50/50 transition-colors">
-                                <td className="py-4 px-6">
-                                  <div className="flex items-center gap-3">
-                                    {user.profileImageUrl ? (
-                                      <img
-                                        src={user.profileImageUrl}
-                                        alt={user.name}
-                                        className="w-9 h-9 rounded-full object-cover border border-gray-200"
-                                      />
-                                    ) : (
-                                      <div className="w-9 h-9 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center font-bold text-xs border border-purple-100 shadow-sm">
-                                        {user.name
-                                          .split(' ')
-                                          .map((n) => n[0])
-                                          .join('')
-                                          .toUpperCase()
-                                          .slice(0, 2)}
-                                      </div>
-                                    )}
-                                    <span className="font-semibold text-gray-900 text-sm">{user.name}</span>
-                                  </div>
-                                </td>
-                                <td className="py-4 px-6 text-sm text-gray-600 font-medium">
-                                  {user.email}
-                                </td>
-                                <td className="py-4 px-6">
-                                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold tracking-wide ${
-                                    user.role === 'ADMIN'
-                                      ? 'bg-amber-100 text-amber-800 border border-amber-200'
-                                      : user.role === 'SELLER'
-                                      ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
-                                      : 'bg-blue-100 text-blue-800 border border-blue-200'
-                                  }`}>
-                                    {user.role}
-                                  </span>
-                                </td>
-                                <td className="py-4 px-6">
-                                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold ${
-                                    user.enabled
-                                      ? 'bg-green-50 text-green-700 border border-green-200'
-                                      : 'bg-red-50 text-red-700 border border-red-200'
-                                  }`}>
-                                    <span className={`w-1.5 h-1.5 rounded-full ${user.enabled ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></span>
-                                    {user.enabled ? 'Enabled' : 'Disabled'}
-                                  </span>
-                                </td>
-                                <td className="py-4 px-6 text-sm font-medium">
-                                  {user.role !== 'SELLER' ? (
-                                    <span className="text-gray-400 text-xs">-</span>
-                                  ) : (
-                                    (() => {
-                                      const status = user.verificationStatus || 'NONE';
-                                      switch (status) {
-                                        case 'APPROVED':
-                                          return (
-                                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                                              Verified
-                                            </span>
-                                          );
-                                        case 'PENDING':
-                                          return (
-                                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-yellow-50 text-yellow-700 border border-yellow-200 animate-pulse">
-                                              Pending
-                                            </span>
-                                          );
-                                        case 'REJECTED':
-                                          return (
-                                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200">
-                                              Rejected
-                                            </span>
-                                          );
-                                        case 'NONE':
-                                        default:
-                                          return (
-                                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-500 border border-gray-200">
-                                              Unverified
-                                            </span>
-                                          );
-                                      }
-                                    })()
-                                  )}
-                                </td>
-                                <td className="py-4 px-6 text-sm text-gray-500 font-medium">
-                                  {user.createdAt ? new Date(user.createdAt).toLocaleDateString(undefined, {
-                                    year: 'numeric',
-                                    month: 'short',
-                                    day: 'numeric'
-                                  }) : 'N/A'}
-                                </td>
-                                <td className="py-4 px-6 text-sm font-medium">
-                                  {String(user.id) === String(currentUser.id) ? (
-                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed">
-                                      You
-                                    </span>
-                                  ) : user.enabled ? (
-                                    <button
-                                      onClick={() => handleToggleUserStatus(user)}
-                                      className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 shadow-sm hover:shadow transition-all duration-200"
-                                    >
-                                      Disable
-                                    </button>
-                                  ) : (
-                                    <button
-                                      onClick={() => handleToggleUserStatus(user)}
-                                      className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 shadow-sm hover:shadow transition-all duration-200"
-                                    >
-                                      Enable
-                                    </button>
-                                  )}
-                                </td>
-                              </tr>
-                            ))
-                          )}
-                        </tbody>
-                      </table>
-                    </div>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
                   </div>
-                )}
+                </div>
               </div>
             )}
 
             {/* Orders Tab */}
             {activeTab === 'orders' && (
-              <div>
-                <div className="mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900">Order Management</h3>
-                  <p className="text-sm text-gray-500 mt-1">As admin you can update any item status including marking as DELIVERED.</p>
+              <div className="space-y-6 animate-in fade-in duration-300">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-base font-extrabold text-slate-800">Global Customer Transactions</h3>
+                  <span className="text-xs font-bold text-slate-500">{orders.length} order entries</span>
                 </div>
                 {isLoadingOrders ? (
-                  <div className="text-center py-8 text-gray-500">Loading orders...</div>
+                  <div className="flex flex-col items-center justify-center py-16 gap-2">
+                    <div className="w-6 h-6 border-2 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+                    <span className="text-slate-400 font-medium">Fetching transactions database...</span>
+                  </div>
                 ) : orders.length === 0 ? (
-                  <div className="text-center py-8 text-gray-500">No orders found.</div>
+                  <div className="py-16 text-center text-slate-400 font-medium bg-white rounded-2xl border border-slate-100 shadow-sm">
+                    No order records found.
+                  </div>
                 ) : (
                   <div className="space-y-6">
                     {orders.map((order) => (
-                      <div key={order.id} className="border border-gray-200 rounded-xl overflow-hidden">
-                        {/* Order header */}
-                        <div className="flex items-center justify-between px-5 py-4 bg-gray-50 border-b border-gray-200">
-                          <div className="flex items-center gap-4">
-                            <span className="font-semibold text-gray-900">Order #{order.id}</span>
-                            <span className="text-sm text-gray-500">{new Date(order.createdAt).toLocaleDateString()}</span>
-                            <span className="text-sm text-gray-500">Buyer #{order.buyerId}</span>
+                      <div key={order.id} className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                        {/* Header banner */}
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 px-6 py-4 bg-slate-50/50 border-b border-slate-100 text-xs font-bold">
+                          <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+                            <span className="text-slate-800 text-sm font-black">Order #{order.id}</span>
+                            <span className="text-slate-400">{new Date(order.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}</span>
+                            <span className="text-slate-400">Buyer ID: #{order.buyerId}</span>
                           </div>
-                          <div className="flex items-center gap-3">
-                            <span className="text-sm text-gray-500">Total: <span className="font-medium text-gray-800">Rs. {order.totalAmount.toFixed(2)}</span></span>
-                            <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
-                              {order.status.replace(/_/g, ' ')}
-                            </span>
-                            {/* Admin global override */}
-                            <select
-                              value={order.status}
-                              onChange={(e) => handleStatusChange(order.id, e.target.value)}
-                              className="border border-gray-300 rounded px-2 py-1 text-xs text-gray-700 focus:outline-none focus:border-purple-500 bg-white"
-                              title="Global order status override"
+                          <div className="flex flex-wrap items-center gap-3">
+                            <span className="text-slate-500 font-bold">Gross Total: <span className="font-extrabold text-slate-800">Rs. {order.totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></span>
+                            <div className="relative inline-block">
+                              <select
+                                value={order.status}
+                                onChange={(e) => handleStatusChange(order.id, e.target.value)}
+                                className={`appearance-none pl-2.5 pr-7 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider focus:outline-none focus:ring-2 focus:ring-purple-500 shadow-sm cursor-pointer transition-all ${getStatusColor(order.status)}`}
+                                title="Override entire order status"
+                              >
+                                <option value="PENDING" className="bg-white text-slate-800">PENDING</option>
+                                <option value="PROCESSING" className="bg-white text-slate-800">PROCESSING</option>
+                                <option value="PARTIALLY_SHIPPED" className="bg-white text-slate-800">PARTIALLY SHIPPED</option>
+                                <option value="SHIPPED" className="bg-white text-slate-800">SHIPPED</option>
+                                <option value="DELIVERED" className="bg-white text-slate-800">DELIVERED</option>
+                                <option value="CANCELLED" className="bg-white text-slate-800">CANCELLED</option>
+                              </select>
+                              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2 text-current opacity-70">
+                                <ChevronDown className="w-3.5 h-3.5" />
+                              </div>
+                            </div>
+                            <button
+                              onClick={() => navigate(`/admin/orders/${order.id}`)}
+                              className="px-3 py-1 bg-purple-50 hover:bg-purple-600 hover:text-white text-purple-700 rounded-lg text-[10px] font-extrabold transition-all border border-purple-100 flex items-center gap-1 cursor-pointer"
                             >
-                              <option value="PENDING">PENDING</option>
-                              <option value="PROCESSING">PROCESSING</option>
-                              <option value="PARTIALLY_SHIPPED">PARTIALLY_SHIPPED</option>
-                              <option value="SHIPPED">SHIPPED</option>
-                              <option value="DELIVERED">DELIVERED</option>
-                              <option value="CANCELLED">CANCELLED</option>
-                            </select>
+                              <span>View Details</span>
+                              <ArrowUpRight className="w-3 h-3" />
+                            </button>
                           </div>
                         </div>
 
-                        {/* Per-item status with admin controls */}
-                        <div className="divide-y divide-gray-100">
+                        {/* Order Items */}
+                        <div className="divide-y divide-slate-100">
                           {order.items.map((item) => (
-                            <div key={item.id} className="flex items-center justify-between px-5 py-3">
-                              <div>
-                                <p className="text-sm font-medium text-gray-900">{item.productName}</p>
-                                <p className="text-xs text-gray-500">Qty: {item.quantity} · Seller #{item.sellerId} · Rs. {(item.priceAtPurchase * item.quantity).toFixed(2)}</p>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(item.itemStatus)}`}>
-                                  {item.itemStatus}
-                                </span>
-                                <select
-                                  value={item.itemStatus}
-                                  onChange={(e) => handleItemStatusChange(order.id, item.id, e.target.value)}
-                                  className="border border-gray-300 rounded px-2 py-1 text-xs text-gray-700 focus:outline-none focus:border-purple-500 bg-white"
-                                >
-                                  <option value="PENDING">PENDING</option>
-                                  <option value="PROCESSING">PROCESSING</option>
-                                  <option value="PACKED">PACKED</option>
-                                  <option value="SHIPPED">SHIPPED</option>
-                                  <option value="DELIVERED">DELIVERED</option>
-                                </select>
+                             <div key={item.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-6 py-4 text-xs font-bold">
+                               <div className="flex items-center gap-3">
+                                 <img
+                                   src={item.imageUrl || products.find(p => String(p.id) === String(item.productId))?.image || 'https://via.placeholder.com/80?text=No+Image'}
+                                   alt={item.productName}
+                                   className="w-12 h-12 rounded-xl object-cover border border-slate-100 shadow-sm flex-shrink-0"
+                                   onError={(e) => {
+                                     (e.target as HTMLImageElement).src = 'https://via.placeholder.com/80?text=No+Image';
+                                   }}
+                                 />
+                                 <div>
+                                   <p className="font-extrabold text-slate-800 text-sm mb-1">{item.productName}</p>
+                                   <p className="text-slate-400 font-medium text-xs">
+                                     Qty: {item.quantity} · Merchant: #{item.sellerId} · Unit: Rs. {item.priceAtPurchase.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                   </p>
+                                 </div>
+                               </div>
+                              <div className="flex items-center gap-3 self-end sm:self-auto">
+                                <div className="relative inline-block">
+                                  <select
+                                    value={item.itemStatus}
+                                    onChange={(e) => handleItemStatusChange(order.id, item.id, e.target.value)}
+                                    className={`appearance-none pl-2.5 pr-7 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider focus:outline-none focus:ring-2 focus:ring-purple-500 shadow-sm cursor-pointer transition-all ${getStatusColor(item.itemStatus)}`}
+                                  >
+                                    <option value="PENDING" className="bg-white text-slate-800">PENDING</option>
+                                    <option value="PROCESSING" className="bg-white text-slate-800">PROCESSING</option>
+                                    <option value="PACKED" className="bg-white text-slate-800">PACKED</option>
+                                    <option value="SHIPPED" className="bg-white text-slate-800">SHIPPED</option>
+                                    <option value="DELIVERED" className="bg-white text-slate-800">DELIVERED</option>
+                                  </select>
+                                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2 text-current opacity-70">
+                                    <ChevronDown className="w-3.5 h-3.5" />
+                                  </div>
+                                </div>
                               </div>
                             </div>
                           ))}
@@ -878,67 +974,63 @@ export function AdminDashboard() {
 
             {/* Verifications Tab */}
             {activeTab === 'verifications' && (
-              <div>
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-                  <div>
-                    <h3 className="text-xl font-bold text-gray-900">Seller Verifications</h3>
-                    <p className="text-sm text-gray-500 mt-1">
-                      Review business documents and details for sellers requesting verification.
-                    </p>
-                  </div>
+              <div className="space-y-6 animate-in fade-in duration-300">
+                <div className="mb-4">
+                  <h3 className="text-base font-extrabold text-slate-800">Merchant Credentials & Verifications</h3>
+                  <p className="text-slate-400 text-xs mt-0.5 font-medium">Verify documents, credentials, and legal details submitted by marketplace vendors.</p>
                 </div>
 
                 {isLoadingVerifications ? (
-                  <div className="flex flex-col items-center justify-center py-16 gap-3">
-                    <div className="w-10 h-10 border-4 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
-                    <p className="text-gray-500 text-sm font-medium">Fetching pending verification requests...</p>
+                  <div className="flex flex-col items-center justify-center py-16 gap-2">
+                    <div className="w-6 h-6 border-2 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+                    <span className="text-slate-400 font-medium">Loading credentials queue...</span>
                   </div>
                 ) : verifications.length === 0 ? (
-                  <div className="py-16 text-center text-gray-500 bg-white rounded-xl border border-gray-200">
-                    <div className="flex flex-col items-center justify-center gap-2 max-w-sm mx-auto p-6">
-                      <Shield className="w-12 h-12 text-gray-300 animate-pulse" />
-                      <p className="text-base font-semibold text-gray-700">No pending verification requests.</p>
-                      <p className="text-sm text-gray-500">
-                        All registered sellers are either fully verified or reviewed.
-                      </p>
+                  <div className="py-16 text-center text-slate-400 font-medium bg-white rounded-2xl border border-slate-100 shadow-sm flex flex-col items-center gap-3">
+                    <div className="p-3 bg-purple-50 rounded-full text-purple-400 border border-purple-100 shadow-inner">
+                      <Shield className="w-8 h-8" />
+                    </div>
+                    <div>
+                      <p className="text-slate-800 font-bold text-sm">Verification Queue Empty</p>
+                      <p className="text-slate-400 text-xs mt-0.5 max-w-xs font-semibold">All vendor credentials are fully evaluated. No outstanding requests.</p>
                     </div>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     {verifications.map((seller) => (
                       <div 
                         key={seller.id} 
-                        className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200 flex flex-col justify-between"
+                        className="bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all duration-200 flex flex-col justify-between overflow-hidden"
                       >
                         {/* Body */}
-                        <div className="p-5 space-y-4">
+                        <div className="p-6 space-y-5 text-xs font-bold">
                           {/* Header */}
                           <div className="flex items-start justify-between">
                             <div>
-                              <h4 className="font-semibold text-gray-900 text-base">{seller.name}</h4>
-                              <p className="text-xs text-gray-500">{seller.email}</p>
+                              <h4 className="font-extrabold text-slate-800 text-sm leading-tight mb-0.5">{seller.name}</h4>
+                              <p className="text-slate-400 font-bold text-xs">{seller.email}</p>
                             </div>
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-yellow-50 text-yellow-700 border border-yellow-200">
-                              PENDING
+                            <span className="inline-flex px-2.5 py-0.5 rounded-lg text-[10px] font-black bg-amber-50 text-amber-700 border border-amber-100 animate-pulse">
+                              Awaiting Review
                             </span>
                           </div>
 
-                          {/* Business Info */}
-                          <div className="grid grid-cols-2 gap-4 bg-gray-50/50 p-3 rounded-lg border border-gray-100">
+                          {/* Business Info Grid */}
+                          <div className="grid grid-cols-2 gap-4 bg-slate-50 border border-slate-100 p-4 rounded-xl">
                             <div>
-                              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Business Name</p>
-                              <p className="text-sm font-medium text-gray-800 truncate" title={seller.businessName}>{seller.businessName}</p>
+                              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Company Name</p>
+                              <p className="text-xs font-extrabold text-slate-700 truncate" title={seller.businessName}>{seller.businessName}</p>
                             </div>
                             <div>
-                              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Reg Number</p>
-                              <p className="text-sm font-medium text-gray-800 truncate" title={seller.registrationNumber}>{seller.registrationNumber}</p>
+                              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Registration No.</p>
+                              <p className="text-xs font-extrabold text-slate-700 truncate" title={seller.registrationNumber}>{seller.registrationNumber}</p>
                             </div>
                           </div>
 
-                          {/* Submitted Date */}
-                          <div className="flex items-center gap-2 text-xs text-gray-500 font-medium">
-                            <span>Submitted:</span>
-                            <span className="text-gray-700">
+                          {/* Submission Date */}
+                          <div className="text-slate-400 font-bold text-xs flex items-center gap-1.5">
+                            <span>Request Submitted:</span>
+                            <span className="text-slate-700 font-extrabold">
                               {seller.submittedAt ? new Date(seller.submittedAt).toLocaleDateString(undefined, {
                                 year: 'numeric',
                                 month: 'short',
@@ -949,19 +1041,19 @@ export function AdminDashboard() {
                             </span>
                           </div>
 
-                          {/* Documents */}
-                          <div>
-                            <p className="text-xs font-semibold text-gray-700 mb-2">Submitted Documents</p>
+                          {/* Document Attachments */}
+                          <div className="space-y-2">
+                            <p className="text-slate-700 font-bold text-xs">Credential Proofs</p>
                             <div className="flex gap-4">
                               {seller.brCertificateUrl && (
                                 <a 
                                   href={seller.brCertificateUrl} 
                                   target="_blank" 
                                   rel="noopener noreferrer" 
-                                  className="group relative flex flex-col items-center justify-center w-32 h-20 rounded-lg overflow-hidden border border-gray-200 bg-gray-50 hover:shadow-md hover:border-purple-300 transition-all duration-200"
+                                  className="group relative flex flex-col items-center justify-center w-32 h-20 rounded-xl overflow-hidden border border-slate-200 bg-slate-50 hover:shadow-md hover:border-purple-300 transition-all duration-200"
                                 >
-                                  <FileText className="w-6 h-6 text-gray-400 mb-1 group-hover:text-purple-500 transition-colors" />
-                                  <span className="text-[10px] text-gray-500 font-semibold group-hover:text-purple-600">BR Certificate</span>
+                                  <FileText className="w-6 h-6 text-slate-400 mb-1 group-hover:text-purple-500 transition-colors" />
+                                  <span className="text-[10px] text-slate-500 font-semibold group-hover:text-purple-600">BR Certificate</span>
                                   <img 
                                     src={seller.brCertificateUrl} 
                                     alt="BR Certificate" 
@@ -970,8 +1062,8 @@ export function AdminDashboard() {
                                       (e.target as HTMLImageElement).remove();
                                     }}
                                   />
-                                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-200">
-                                    <span className="text-white text-[10px] font-semibold px-1.5 py-0.5 bg-black/60 rounded">View BR</span>
+                                  <div className="absolute inset-0 bg-slate-900/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-200">
+                                    <span className="text-white text-[10px] font-bold px-2 py-0.5 bg-black/40 border border-white/10 rounded-md">Expand Proof</span>
                                   </div>
                                 </a>
                               )}
@@ -981,10 +1073,10 @@ export function AdminDashboard() {
                                   href={seller.nicImageUrl} 
                                   target="_blank" 
                                   rel="noopener noreferrer" 
-                                  className="group relative flex flex-col items-center justify-center w-32 h-20 rounded-lg overflow-hidden border border-gray-200 bg-gray-50 hover:shadow-md hover:border-purple-300 transition-all duration-200"
+                                  className="group relative flex flex-col items-center justify-center w-32 h-20 rounded-xl overflow-hidden border border-slate-200 bg-slate-50 hover:shadow-md hover:border-purple-300 transition-all duration-200"
                                 >
-                                  <FileText className="w-6 h-6 text-gray-400 mb-1 group-hover:text-purple-500 transition-colors" />
-                                  <span className="text-[10px] text-gray-500 font-semibold group-hover:text-purple-600">NIC Image</span>
+                                  <FileText className="w-6 h-6 text-slate-400 mb-1 group-hover:text-purple-500 transition-colors" />
+                                  <span className="text-[10px] text-slate-500 font-semibold group-hover:text-purple-600">NIC Proof</span>
                                   <img 
                                     src={seller.nicImageUrl} 
                                     alt="NIC Image" 
@@ -993,8 +1085,8 @@ export function AdminDashboard() {
                                       (e.target as HTMLImageElement).remove();
                                     }}
                                   />
-                                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-200">
-                                    <span className="text-white text-[10px] font-semibold px-1.5 py-0.5 bg-black/60 rounded">View NIC</span>
+                                  <div className="absolute inset-0 bg-slate-900/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-200">
+                                    <span className="text-white text-[10px] font-bold px-2 py-0.5 bg-black/40 border border-white/10 rounded-md">Expand Proof</span>
                                   </div>
                                 </a>
                               )}
@@ -1002,28 +1094,28 @@ export function AdminDashboard() {
                           </div>
                         </div>
 
-                        {/* Footer Actions */}
-                        <div className="px-5 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-end gap-3">
+                        {/* Footer Action buttons */}
+                        <div className="px-6 py-4 bg-slate-50/50 border-t border-slate-100 flex items-center justify-end gap-3">
                           <button
                             type="button"
                             disabled={processingSellerId === Number(seller.id)}
                             onClick={() => openRejectionModal(Number(seller.id), seller.businessName, seller.name)}
-                            className="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-white bg-gradient-to-r from-rose-500 to-red-600 hover:from-rose-600 hover:to-red-700 shadow-sm hover:shadow transition-all duration-150 flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="px-4 py-2 text-xs font-bold rounded-xl text-rose-600 hover:text-white bg-rose-50 hover:bg-rose-600 border border-rose-100 transition-all flex items-center gap-1.5 disabled:opacity-50"
                           >
                             {processingSellerId === Number(seller.id) && processingAction === 'reject' ? (
                               <>
-                                <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                                <span className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin"></span>
                                 Rejecting...
                               </>
                             ) : (
-                              'Reject'
+                              'Reject Request'
                             )}
                           </button>
                           <button
                             type="button"
                             disabled={processingSellerId === Number(seller.id)}
                             onClick={() => handleApproveVerification(Number(seller.id), seller.name)}
-                            className="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-white bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 shadow-sm hover:shadow transition-all duration-150 flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="px-4 py-2 text-xs font-bold rounded-xl text-white bg-gradient-to-r from-emerald-50 to-green-600 hover:from-emerald-600 hover:to-green-700 transition-all flex items-center gap-1.5 disabled:opacity-50 shadow-md shadow-emerald-500/10"
                           >
                             {processingSellerId === Number(seller.id) && processingAction === 'approve' ? (
                               <>
@@ -1031,7 +1123,7 @@ export function AdminDashboard() {
                                 Approving...
                               </>
                             ) : (
-                              'Approve'
+                              'Approve Credentials'
                             )}
                           </button>
                         </div>
@@ -1043,41 +1135,37 @@ export function AdminDashboard() {
             )}
           </div>
         </div>
-      </div>
+      </main>
 
       {/* Rejection Modal */}
       {rejectionModal.isOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-200">
           <div 
-            className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200"
+            className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200 border border-slate-100"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-              <h3 className="text-lg font-semibold text-gray-900">Reject Seller Verification</h3>
+            <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 bg-slate-50/50">
+              <h3 className="text-base font-extrabold text-slate-800">Reject Verification Request</h3>
               <button 
                 onClick={() => setRejectionModal(prev => ({ ...prev, isOpen: false }))}
                 disabled={processingSellerId === rejectionModal.sellerId && processingAction === 'reject'}
-                className="p-1 hover:bg-gray-100 rounded-full transition-colors disabled:opacity-50"
+                className="p-1.5 hover:bg-slate-200/50 rounded-full transition-colors disabled:opacity-50"
               >
-                <X className="w-5 h-5 text-gray-400" />
+                <X className="w-4 h-4 text-slate-400 hover:text-slate-600" />
               </button>
             </div>
 
             {/* Content */}
-            <div className="p-6 space-y-4">
-              <div>
-                <p className="text-sm text-gray-600">
-                  Rejecting verification request for <span className="font-semibold text-gray-900">{rejectionModal.name}</span> (<span className="font-medium text-gray-700">{rejectionModal.businessName}</span>).
-                </p>
-                <p className="text-xs text-gray-400 mt-1">
-                  Please provide a detailed reason. This reason will be shown to the seller.
-                </p>
+            <div className="p-6 space-y-4 text-xs font-bold">
+              <div className="bg-rose-50 border border-rose-100 p-4 rounded-2xl text-rose-700 leading-relaxed font-semibold">
+                Rejecting request for <span className="font-extrabold text-slate-900">{rejectionModal.name}</span> of <span className="font-extrabold text-slate-900">{rejectionModal.businessName}</span>.
+                <p className="text-[10px] text-rose-500 font-bold mt-1">Sellers will receive this description in their workspace to corrective re-upload docs.</p>
               </div>
 
-              <div>
-                <label htmlFor="rejectionReason" className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2">
-                  Rejection Reason
+              <div className="space-y-2">
+                <label htmlFor="rejectionReason" className="block text-slate-700 font-bold uppercase tracking-wider text-[10px]">
+                  Reason for rejection
                 </label>
                 <textarea
                   id="rejectionReason"
@@ -1086,26 +1174,26 @@ export function AdminDashboard() {
                   value={rejectionModal.rejectionReason}
                   onChange={(e) => setRejectionModal(prev => ({ ...prev, rejectionReason: e.target.value }))}
                   placeholder="e.g., BR Certificate document is expired, or NIC image is too blurry to read."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all shadow-sm disabled:bg-gray-100 disabled:text-gray-500"
+                  className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 placeholder-slate-400 bg-white focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent transition-all shadow-inner disabled:bg-slate-50"
                 />
               </div>
             </div>
 
             {/* Footer */}
-            <div className="px-6 py-4 bg-gray-50 flex flex-col-reverse sm:flex-row sm:justify-end gap-3">
+            <div className="px-6 py-5 bg-slate-50 border-t border-slate-100 flex flex-col-reverse sm:flex-row sm:justify-end gap-3">
               <button
                 type="button"
                 disabled={processingSellerId === rejectionModal.sellerId && processingAction === 'reject'}
                 onClick={() => setRejectionModal(prev => ({ ...prev, isOpen: false }))}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+                className="px-4.5 py-2 text-xs font-bold text-slate-500 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors disabled:opacity-50"
               >
-                Cancel
+                Cancel Review
               </button>
               <button
                 type="button"
                 disabled={rejectionModal.rejectionReason.trim().length < 10 || (processingSellerId === rejectionModal.sellerId && processingAction === 'reject')}
                 onClick={handleRejectVerification}
-                className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors shadow-sm hover:shadow disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+                className="px-4.5 py-2 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-xl transition-all shadow-md shadow-rose-600/10 disabled:opacity-50 flex items-center gap-1.5"
               >
                 {processingSellerId === rejectionModal.sellerId && processingAction === 'reject' ? (
                   <>
@@ -1113,7 +1201,7 @@ export function AdminDashboard() {
                     Rejecting...
                   </>
                 ) : (
-                  'Reject Request'
+                  'Confirm Rejection'
                 )}
               </button>
             </div>

@@ -14,6 +14,8 @@ import { MainLayout } from "../layouts/MainLayout";
 import { ProtectedRoute } from "./ProtectedRoute";
 import { OrderConfirmationPage } from "../components/OrderConfirmationPage";
 
+import { AdminOrderDetails } from "../components/AdminOrderDetails";
+
 export function AppRoutes() {
   return (
     <Routes>
@@ -48,6 +50,15 @@ export function AppRoutes() {
           element={
             <ProtectedRoute allowedroles={["ADMIN"]}>
               <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/orders/:orderId"
+          element={
+            <ProtectedRoute allowedroles={["ADMIN"]}>
+              <AdminOrderDetails />
             </ProtectedRoute>
           }
         />
