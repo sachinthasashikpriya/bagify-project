@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, Star, Package, TrendingUp, LogOut, BadgeCheck, X, ShoppingBag, DollarSign, ArrowUpRight, BarChart3, Settings, ShieldCheck } from 'lucide-react';
+import { Plus, Edit, Trash2, Star, Package, TrendingUp, LogOut, BadgeCheck, X, ShoppingBag, DollarSign, ArrowUpRight, BarChart3, Settings, ShieldCheck, Upload, Loader, Image } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useAuth } from '../hooks/useAuth';
 import { useProducts } from '../hooks/useProduct';
 import { orderService, type OrderResponse, type OrderItemResponse } from '../services/orderService';
+import { cloudinaryService } from '../services/cloudinaryservice';
 
 export function SellerDashboard() {
   const { currentUser, logout } = useAuth();
@@ -21,6 +22,10 @@ export function SellerDashboard() {
     stock: '',
   });
 
+  // Local file upload states for Add Form
+  const [addFile, setAddFile] = useState<File | null>(null);
+  const [addPreview, setAddPreview] = useState<string>('');
+
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [editFormData, setEditFormData] = useState({
@@ -31,6 +36,13 @@ export function SellerDashboard() {
     image: '',
     stock: '',
   });
+
+  // Local file upload states for Edit Form
+  const [editFile, setEditFile] = useState<File | null>(null);
+  const [editPreview, setEditPreview] = useState<string>('');
+  
+  // Overall upload loading state
+  const [isUploading, setIsUploading] = useState(false);
 
   const [activeTab, setActiveTab] = useState<'products' | 'orders'>('products');
   const [orders, setOrders] = useState<OrderResponse[]>([]);
@@ -122,7 +134,78 @@ export function SellerDashboard() {
   // ✅ FIX 2: Define sellerProducts - filter products for current seller
   const sellerProducts = products.filter(p => p.sellerId === currentSellerId);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleAddFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate type and size
+    const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error("Invalid file type. Please upload a JPEG, PNG, GIF, or WebP image.");
+      return;
+    }
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSize) {
+      toast.error("File is too large. Maximum size is 5MB.");
+      return;
+    }
+
+    setAddFile(file);
+    const preview = URL.createObjectURL(file);
+    setAddPreview(preview);
+    setFormData(prev => ({ ...prev, image: preview }));
+  };
+
+  const handleEditFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate type and size
+    const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error("Invalid file type. Please upload a JPEG, PNG, GIF, or WebP image.");
+      return;
+    }
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSize) {
+      toast.error("File is too large. Maximum size is 5MB.");
+      return;
+    }
+
+    setEditFile(file);
+    const preview = URL.createObjectURL(file);
+    setEditPreview(preview);
+    setEditFormData(prev => ({ ...prev, image: preview }));
+  };
+
+  const resetAddForm = () => {
+    setFormData({ 
+      name: '', 
+      description: '', 
+      price: '', 
+      category: '', 
+      image: '', 
+      stock: '' 
+    });
+    if (addPreview) {
+      URL.revokeObjectURL(addPreview);
+    }
+    setAddFile(null);
+    setAddPreview('');
+    setShowAddForm(false);
+  };
+
+  const resetEditForm = () => {
+    if (editPreview) {
+      URL.revokeObjectURL(editPreview);
+    }
+    setEditFile(null);
+    setEditPreview('');
+    setEditingProduct(null);
+    setShowEditModal(false);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Validation
@@ -146,35 +229,45 @@ export function SellerDashboard() {
       toast.error('Stock cannot be negative');
       return;
     }
-    if (!formData.image.trim()) {
-      toast.error('Product image URL is required');
+    if (!addFile) {
+      toast.error('Product image is required. Please upload a local image file.');
       return;
     }
 
-    // ✅ FIX 3: Add product with ALL required seller info
-    addProduct({
-      name: formData.name.trim(),
-      description: formData.description.trim(),
-      price: parseFloat(formData.price),
-      category: formData.category.trim(),
-      image: formData.image.trim(),
-      stock: parseInt(formData.stock),
-      sellerId: currentSellerId,
-      sellerName: currentUser.name,
-      sellerRating: 4.5, // Default seller rating
-    });
+    setIsUploading(true);
+    let finalImageUrl = '';
 
-    // Reset form and close modal
-    setFormData({ 
-      name: '', 
-      description: '', 
-      price: '', 
-      category: '', 
-      image: '', 
-      stock: '' 
-    });
-    setShowAddForm(false);
-    toast.success('Product added successfully!');
+    try {
+      // 1. Upload to Cloudinary
+      const result = await cloudinaryService.uploadImage(addFile, "bagify_products");
+      if (!result.ok || !result.data) {
+        toast.error(result.error || "Failed to upload product image to Cloudinary");
+        setIsUploading(false);
+        return;
+      }
+      
+      finalImageUrl = result.data.secure_url;
+      console.log("☁️ Product image uploaded:", finalImageUrl);
+
+      await addProduct({
+        name: formData.name.trim(),
+        description: formData.description.trim(),
+        price: parseFloat(formData.price),
+        category: formData.category.trim(),
+        image: finalImageUrl,
+        stock: parseInt(formData.stock),
+        sellerId: currentSellerId,
+        sellerName: currentUser.name,
+        sellerRating: 4.5, // Default seller rating
+      } as any);
+
+      resetAddForm();
+    } catch (error) {
+      console.error("Failed to add product:", error);
+      toast.error("Failed to add product");
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const handleEditSubmit = async (e: React.FormEvent) => {
@@ -204,23 +297,40 @@ export function SellerDashboard() {
       toast.error('Stock cannot be negative');
       return;
     }
-    if (!editFormData.image.trim()) {
-      toast.error('Product image URL is required');
-      return;
-    }
 
-    const success = await updateProduct(editingProduct.id, {
-      name: editFormData.name.trim(),
-      description: editFormData.description.trim(),
-      price: priceNum,
-      category: editFormData.category.trim(),
-      image: editFormData.image.trim(),
-      stock: stockNum,
-    });
+    setIsUploading(true);
+    let finalImageUrl = editFormData.image;
 
-    if (success) {
-      setShowEditModal(false);
-      setEditingProduct(null);
+    try {
+      // If a new local file is selected, upload it to Cloudinary first
+      if (editFile) {
+        const result = await cloudinaryService.uploadImage(editFile, "bagify_products");
+        if (!result.ok || !result.data) {
+          toast.error(result.error || "Failed to upload new product image to Cloudinary");
+          setIsUploading(false);
+          return;
+        }
+        finalImageUrl = result.data.secure_url;
+        console.log("☁️ New product image uploaded:", finalImageUrl);
+      }
+
+      const success = await updateProduct(editingProduct.id, {
+        name: editFormData.name.trim(),
+        description: editFormData.description.trim(),
+        price: priceNum,
+        category: editFormData.category.trim(),
+        image: finalImageUrl,
+        stock: stockNum,
+      });
+
+      if (success) {
+        resetEditForm();
+      }
+    } catch (error) {
+      console.error("Failed to update product:", error);
+      toast.error("Failed to update product");
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -466,7 +576,7 @@ export function SellerDashboard() {
                     <ShoppingBag className="w-5 h-5 text-purple-600" />
                     Add New Product
                   </h3>
-                  <button onClick={() => setShowAddForm(false)} className="p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg">
+                  <button onClick={resetAddForm} className="p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg">
                     <X className="w-5 h-5" />
                   </button>
                 </div>
@@ -550,19 +660,65 @@ export function SellerDashboard() {
 
                   <div>
                     <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">
-                      Image URL *
+                      Product Image *
                     </label>
-                    <input
-                      type="url"
-                      required
-                      value={formData.image}
-                      onChange={(e) => handleInputChange('image', e.target.value)}
-                      className="w-full px-4 py-2.5 bg-white border border-slate-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-200/50 rounded-xl focus:outline-none transition-all duration-200 text-sm font-medium"
-                      placeholder="https://images.unsplash.com/photo-xxx..."
+                    
+                    {addPreview ? (
+                      <div className="relative group rounded-2xl overflow-hidden border border-slate-250/80 h-64 bg-slate-50 flex items-center justify-center">
+                        <img 
+                          src={addPreview} 
+                          alt="Product Preview" 
+                          className="max-h-full max-w-full object-contain"
+                        />
+                        <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center gap-3">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const fileInput = document.getElementById('add-product-image') as HTMLInputElement;
+                              fileInput?.click();
+                            }}
+                            className="bg-white hover:bg-slate-100 text-slate-800 font-bold text-xs px-4 py-2 rounded-xl transition-all shadow-md"
+                          >
+                            Replace Image
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setAddFile(null);
+                              setAddPreview('');
+                              setFormData(prev => ({ ...prev, image: '' }));
+                            }}
+                            className="bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs px-4 py-2 rounded-xl transition-all shadow-md"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div 
+                        onClick={() => {
+                          const fileInput = document.getElementById('add-product-image') as HTMLInputElement;
+                          fileInput?.click();
+                        }}
+                        className="border-2 border-dashed border-slate-300 hover:border-purple-500 rounded-2xl p-8 text-center cursor-pointer transition-all bg-white hover:bg-purple-50/10 group flex flex-col items-center justify-center gap-2"
+                      >
+                        <div className="p-3 bg-purple-50 text-purple-600 rounded-2xl group-hover:scale-110 transition-transform duration-300">
+                          <Upload className="w-6 h-6" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-slate-700">Click to upload product image</p>
+                          <p className="text-xs text-slate-400 mt-1">Supports PNG, JPG, GIF or WebP (max. 5MB)</p>
+                        </div>
+                      </div>
+                    )}
+                    
+                    <input 
+                      id="add-product-image"
+                      type="file" 
+                      accept="image/jpeg,image/png,image/gif,image/webp" 
+                      onChange={handleAddFileSelect} 
+                      className="hidden"
                     />
-                    <p className="text-[11px] text-slate-400 mt-1.5">
-                      Tip: Use high-quality Unsplash image URLs for the best store catalog appearance.
-                    </p>
                   </div>
 
                   <div>
@@ -582,14 +738,23 @@ export function SellerDashboard() {
                   <div className="flex gap-3 pt-2">
                     <button
                       type="submit"
-                      className="bg-purple-600 hover:bg-purple-700 text-white font-bold px-6 py-2.5 rounded-xl transition-all duration-200 shadow-md shadow-purple-200/50"
+                      disabled={isUploading}
+                      className="bg-purple-600 hover:bg-purple-700 disabled:bg-purple-400 text-white font-bold px-6 py-2.5 rounded-xl transition-all duration-200 shadow-md shadow-purple-200/50 flex items-center gap-2"
                     >
-                      Add Product
+                      {isUploading ? (
+                        <>
+                          <Loader className="w-4 h-4 animate-spin" />
+                          Saving Product...
+                        </>
+                      ) : (
+                        "Add Product"
+                      )}
                     </button>
                     <button
                       type="button"
-                      onClick={() => setShowAddForm(false)}
-                      className="bg-slate-200 text-slate-700 font-bold px-6 py-2.5 rounded-xl hover:bg-slate-300 transition-all duration-200"
+                      disabled={isUploading}
+                      onClick={resetAddForm}
+                      className="bg-slate-200 text-slate-700 font-bold px-6 py-2.5 rounded-xl hover:bg-slate-300 transition-all duration-200 disabled:opacity-50"
                     >
                       Cancel
                     </button>
@@ -855,10 +1020,7 @@ export function SellerDashboard() {
         <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto px-4 py-6">
           <div 
             className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity duration-300"
-            onClick={() => {
-              setShowEditModal(false);
-              setEditingProduct(null);
-            }}
+            onClick={resetEditForm}
           />
           
           <div className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden transform transition-all duration-300 z-10 my-8 animate-scaleIn">
@@ -868,10 +1030,7 @@ export function SellerDashboard() {
                 Edit Catalog Item
               </h3>
               <button
-                onClick={() => {
-                  setShowEditModal(false);
-                  setEditingProduct(null);
-                }}
+                onClick={resetEditForm}
                 className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-xl transition-all"
               >
                 <X className="w-5 h-5" />
@@ -957,15 +1116,56 @@ export function SellerDashboard() {
 
               <div>
                 <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">
-                  Image URL *
+                  Product Image *
                 </label>
-                <input
-                  type="url"
-                  required
-                  value={editFormData.image}
-                  onChange={(e) => setEditFormData(prev => ({ ...prev, image: e.target.value }))}
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 focus:bg-white focus:border-purple-500 focus:ring-2 focus:ring-purple-200/50 rounded-xl focus:outline-none transition-all duration-200 text-sm font-medium"
-                  placeholder="https://example.com/image.jpg"
+                
+                {editPreview || editFormData.image ? (
+                  <div className="relative group rounded-2xl overflow-hidden border border-slate-250/80 h-64 bg-slate-50 flex items-center justify-center">
+                    <img 
+                      src={editPreview || editFormData.image} 
+                      alt="Product Preview" 
+                      className="max-h-full max-w-full object-contain"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1544816155-12df9643f363?w=300';
+                      }}
+                    />
+                    <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center gap-3">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const fileInput = document.getElementById('edit-product-image') as HTMLInputElement;
+                          fileInput?.click();
+                        }}
+                        className="bg-white hover:bg-slate-100 text-slate-800 font-bold text-xs px-4 py-2 rounded-xl transition-all shadow-md"
+                      >
+                        Change Image
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div 
+                    onClick={() => {
+                      const fileInput = document.getElementById('edit-product-image') as HTMLInputElement;
+                      fileInput?.click();
+                    }}
+                    className="border-2 border-dashed border-slate-300 hover:border-purple-500 rounded-2xl p-8 text-center cursor-pointer transition-all bg-white hover:bg-purple-50/10 group flex flex-col items-center justify-center gap-2"
+                  >
+                    <div className="p-3 bg-purple-50 text-purple-600 rounded-2xl group-hover:scale-110 transition-transform duration-300">
+                      <Upload className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-slate-700">Click to upload product image</p>
+                      <p className="text-xs text-slate-400 mt-1">Supports PNG, JPG, GIF or WebP (max. 5MB)</p>
+                    </div>
+                  </div>
+                )}
+                
+                <input 
+                  id="edit-product-image"
+                  type="file" 
+                  accept="image/jpeg,image/png,image/gif,image/webp" 
+                  onChange={handleEditFileSelect} 
+                  className="hidden"
                 />
               </div>
 
@@ -986,19 +1186,25 @@ export function SellerDashboard() {
               <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
                 <button
                   type="button"
-                  onClick={() => {
-                    setShowEditModal(false);
-                    setEditingProduct(null);
-                  }}
-                  className="px-5 py-2.5 bg-slate-100 text-slate-700 font-bold rounded-xl hover:bg-slate-200 transition-colors text-sm"
+                  disabled={isUploading}
+                  onClick={resetEditForm}
+                  className="px-5 py-2.5 bg-slate-100 text-slate-700 font-bold rounded-xl hover:bg-slate-200 transition-colors text-sm disabled:opacity-50"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2.5 bg-purple-600 text-white font-bold rounded-xl hover:bg-purple-700 transition-colors shadow-sm shadow-purple-200/50 text-sm"
+                  disabled={isUploading}
+                  className="px-6 py-2.5 bg-purple-600 text-white font-bold rounded-xl hover:bg-purple-700 transition-colors shadow-sm shadow-purple-200/50 text-sm flex items-center gap-2 disabled:bg-purple-400"
                 >
-                  Save Changes
+                  {isUploading ? (
+                    <>
+                      <Loader className="w-4 h-4 animate-spin" />
+                      Saving Changes...
+                    </>
+                  ) : (
+                    "Save Changes"
+                  )}
                 </button>
               </div>
             </form>
