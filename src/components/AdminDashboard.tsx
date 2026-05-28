@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Shield, Users, Package, TrendingUp, LogOut, AlertTriangle, Search, X, FileText } from 'lucide-react';
+import { Shield, Users, Package, TrendingUp, LogOut, AlertTriangle, Search, X, FileText, CheckCircle2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useAuth } from '../hooks/useAuth';
@@ -654,6 +654,7 @@ export function AdminDashboard() {
                             <th className="py-3.5 px-6 font-semibold text-xs text-gray-700 uppercase tracking-wider">Email</th>
                             <th className="py-3.5 px-6 font-semibold text-xs text-gray-700 uppercase tracking-wider">Role</th>
                             <th className="py-3.5 px-6 font-semibold text-xs text-gray-700 uppercase tracking-wider">Status</th>
+                            <th className="py-3.5 px-6 font-semibold text-xs text-gray-700 uppercase tracking-wider">Verification</th>
                             <th className="py-3.5 px-6 font-semibold text-xs text-gray-700 uppercase tracking-wider">Joined Date</th>
                             <th className="py-3.5 px-6 font-semibold text-xs text-gray-700 uppercase tracking-wider">Actions</th>
                           </tr>
@@ -661,7 +662,7 @@ export function AdminDashboard() {
                         <tbody className="divide-y divide-gray-100">
                           {filteredUsers.length === 0 ? (
                             <tr>
-                              <td colSpan={6} className="py-16 text-center text-gray-500">
+                              <td colSpan={7} className="py-16 text-center text-gray-500">
                                 <div className="flex flex-col items-center justify-center gap-2 max-w-sm mx-auto">
                                   <Users className="w-12 h-12 text-gray-300" />
                                   <p className="text-base font-semibold text-gray-700">No users found</p>
@@ -720,6 +721,43 @@ export function AdminDashboard() {
                                     <span className={`w-1.5 h-1.5 rounded-full ${user.enabled ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></span>
                                     {user.enabled ? 'Enabled' : 'Disabled'}
                                   </span>
+                                </td>
+                                <td className="py-4 px-6 text-sm font-medium">
+                                  {user.role !== 'SELLER' ? (
+                                    <span className="text-gray-400 text-xs">-</span>
+                                  ) : (
+                                    (() => {
+                                      const status = user.verificationStatus || 'NONE';
+                                      switch (status) {
+                                        case 'APPROVED':
+                                          return (
+                                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                                              Verified
+                                            </span>
+                                          );
+                                        case 'PENDING':
+                                          return (
+                                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-yellow-50 text-yellow-700 border border-yellow-200 animate-pulse">
+                                              Pending
+                                            </span>
+                                          );
+                                        case 'REJECTED':
+                                          return (
+                                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200">
+                                              Rejected
+                                            </span>
+                                          );
+                                        case 'NONE':
+                                        default:
+                                          return (
+                                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-500 border border-gray-200">
+                                              Unverified
+                                            </span>
+                                          );
+                                      }
+                                    })()
+                                  )}
                                 </td>
                                 <td className="py-4 px-6 text-sm text-gray-500 font-medium">
                                   {user.createdAt ? new Date(user.createdAt).toLocaleDateString(undefined, {

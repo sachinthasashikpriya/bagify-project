@@ -72,6 +72,7 @@ export interface UserProfileResponse {
   role: 'BUYER' | 'SELLER' | 'ADMIN';
   enabled: boolean;
   createdAt: string;
+  verificationStatus?: VerificationStatus;
 }
 
 export interface SellerVerificationResponse {
