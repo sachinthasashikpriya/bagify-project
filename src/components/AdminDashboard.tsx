@@ -360,7 +360,7 @@ export function AdminDashboard() {
             </div>
             <div>
               <span className="font-extrabold text-white tracking-wider text-lg">BAGIFY</span>
-              <span className="text-[10px] block text-purple-400 font-bold uppercase tracking-widest mt-0.5">Admin Central</span>
+              <span className="text-xs block text-purple-400 font-bold uppercase tracking-widest mt-0.5">Admin Central</span>
             </div>
           </div>
 
@@ -372,7 +372,7 @@ export function AdminDashboard() {
               </div>
               <div className="min-w-0 flex-1">
                 <p className="font-bold text-white text-sm truncate">{currentUser.name}</p>
-                <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-purple-500/10 text-purple-400 border border-purple-500/20 mt-1 uppercase">
+                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-purple-500/10 text-purple-400 border border-purple-500/20 mt-1 uppercase">
                   Super Admin
                 </span>
               </div>
@@ -403,7 +403,7 @@ export function AdminDashboard() {
                   <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-slate-400'}`} />
                   {tab.label}
                   {tab.id === 'verifications' && verifications.length > 0 && (
-                    <span className="ml-auto px-2 py-0.5 text-[10px] font-extrabold bg-rose-500 text-white rounded-full animate-bounce">
+                    <span className="ml-auto px-2 py-0.5 text-xs font-extrabold bg-rose-500 text-white rounded-full animate-bounce">
                       {verifications.length}
                     </span>
                   )}
@@ -447,11 +447,6 @@ export function AdminDashboard() {
             <div className="text-right hidden md:block">
               <p className="text-xs text-slate-400 font-semibold">Active Session</p>
               <p className="text-sm font-bold text-slate-700">{currentUser.email}</p>
-            </div>
-            <div className="h-8 w-[1px] bg-slate-200 hidden md:block"></div>
-            <div className="px-3.5 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-600 shadow-sm flex items-center gap-2">
-              <span className="w-2 h-2 bg-green-500 rounded-full animate-ping"></span>
-              Live Sandbox
             </div>
           </div>
         </header>
@@ -554,7 +549,7 @@ export function AdminDashboard() {
                 <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm">
                   <div className="flex items-center justify-between mb-6">
                     <h3 className="text-base font-extrabold text-slate-800">Popular Categories</h3>
-                    <span className="text-[10px] font-bold bg-slate-50 border border-slate-200 text-slate-500 px-2 py-0.5 rounded-md uppercase">
+                    <span className="text-xs font-bold bg-slate-50 border border-slate-200 text-slate-500 px-2 py-0.5 rounded-md uppercase">
                       Stock Count
                     </span>
                   </div>
@@ -598,7 +593,7 @@ export function AdminDashboard() {
                         <span className={`absolute left-[9px] top-1.5 w-2 h-2 rounded-full ring-4 ring-white ${act.dot}`}></span>
                         <div className="flex-1 bg-slate-50/50 hover:bg-slate-50 border border-slate-100 p-3 rounded-xl transition-all flex items-center justify-between">
                           <span className="text-slate-600 font-semibold">{act.text}</span>
-                          <span className="px-2 py-0.5 bg-white border border-slate-200 text-slate-700 rounded-md text-[10px]">{act.count}</span>
+                          <span className="px-2 py-0.5 bg-white border border-slate-200 text-slate-700 rounded-md text-xs">{act.count}</span>
                         </div>
                       </div>
                     ))}
@@ -617,7 +612,7 @@ export function AdminDashboard() {
                 <div className="overflow-x-auto">
                   <table className="w-full border-collapse text-left">
                     <thead>
-                      <tr className="bg-slate-50/70 border-b border-slate-100 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                      <tr className="bg-slate-50/70 border-b border-slate-100 text-xs font-bold text-slate-500 uppercase tracking-widest">
                         <th className="py-3.5 px-6">Product Details</th>
                         <th className="py-3.5 px-6">Category</th>
                         <th className="py-3.5 px-6">Price</th>
@@ -658,7 +653,7 @@ export function AdminDashboard() {
                                 </div>
                               </td>
                               <td className="py-4 px-6">
-                                <span className="capitalize px-2.5 py-0.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-600 font-bold text-[10px]">
+                                <span className="capitalize px-2.5 py-0.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-600 font-bold text-xs">
                                   {product.category}
                                 </span>
                               </td>
@@ -666,7 +661,7 @@ export function AdminDashboard() {
                                 Rs. {product.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                               </td>
                               <td className="py-4 px-6">
-                                <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg font-bold text-[10px] ${
+                                <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg font-bold text-xs ${
                                   isOutOfStock
                                     ? 'bg-rose-50 text-rose-700 border border-rose-100'
                                     : isLowStock
@@ -733,7 +728,7 @@ export function AdminDashboard() {
                   <div className="overflow-x-auto">
                     <table className="w-full border-collapse text-left">
                       <thead>
-                        <tr className="bg-slate-50/70 border-b border-slate-100 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                        <tr className="bg-slate-50/70 border-b border-slate-100 text-xs font-bold text-slate-500 uppercase tracking-widest">
                           <th className="py-3.5 px-6">User Account</th>
                           <th className="py-3.5 px-6">Email Address</th>
                           <th className="py-3.5 px-6">Platform Role</th>
@@ -779,7 +774,7 @@ export function AdminDashboard() {
                               </td>
                               <td className="py-4 px-6 text-slate-500 font-bold">{user.email}</td>
                               <td className="py-4 px-6">
-                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-lg text-[10px] font-bold uppercase tracking-wider ${
+                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-lg text-xs font-bold uppercase tracking-wider ${
                                   user.role === 'ADMIN'
                                     ? 'bg-amber-50 text-amber-700 border border-amber-100'
                                     : user.role === 'SELLER'
@@ -790,7 +785,7 @@ export function AdminDashboard() {
                                 </span>
                               </td>
                               <td className="py-4 px-6">
-                                <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg font-bold text-[10px] ${
+                                <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg font-bold text-xs ${
                                   user.enabled
                                     ? 'bg-green-50 text-green-700 border border-green-100'
                                     : 'bg-rose-50 text-rose-700 border border-rose-100'
@@ -808,27 +803,27 @@ export function AdminDashboard() {
                                     switch (status) {
                                       case 'APPROVED':
                                         return (
-                                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-100">
+                                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-100">
                                             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
                                             Verified
                                           </span>
                                         );
                                       case 'PENDING':
                                         return (
-                                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-100 animate-pulse">
+                                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-xs font-bold bg-amber-50 text-amber-700 border border-amber-100 animate-pulse">
                                             Pending Approval
                                           </span>
                                         );
                                       case 'REJECTED':
                                         return (
-                                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-100">
+                                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-xs font-bold bg-rose-50 text-rose-700 border border-rose-100">
                                             Rejected
                                           </span>
                                         );
                                       case 'NONE':
                                       default:
                                         return (
-                                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[10px] font-bold bg-slate-50 text-slate-400 border border-slate-200">
+                                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-xs font-bold bg-slate-50 text-slate-400 border border-slate-200">
                                             Unverified
                                           </span>
                                         );
@@ -900,7 +895,7 @@ export function AdminDashboard() {
                               <select
                                 value={order.status}
                                 onChange={(e) => handleStatusChange(order.id, e.target.value)}
-                                className={`appearance-none pl-2.5 pr-7 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider focus:outline-none focus:ring-2 focus:ring-purple-500 shadow-sm cursor-pointer transition-all ${getStatusColor(order.status)}`}
+                                className={`appearance-none pl-2.5 pr-7 py-1 rounded-lg text-xs font-black uppercase tracking-wider focus:outline-none focus:ring-2 focus:ring-purple-500 shadow-sm cursor-pointer transition-all ${getStatusColor(order.status)}`}
                                 title="Override entire order status"
                               >
                                 <option value="PENDING" className="bg-white text-slate-800">PENDING</option>
@@ -916,7 +911,7 @@ export function AdminDashboard() {
                             </div>
                             <button
                               onClick={() => navigate(`/admin/orders/${order.id}`)}
-                              className="px-3 py-1 bg-purple-50 hover:bg-purple-600 hover:text-white text-purple-700 rounded-lg text-[10px] font-extrabold transition-all border border-purple-100 flex items-center gap-1 cursor-pointer"
+                              className="px-3 py-1 bg-purple-50 hover:bg-purple-600 hover:text-white text-purple-700 rounded-lg text-xs font-extrabold transition-all border border-purple-100 flex items-center gap-1 cursor-pointer"
                             >
                               <span>View Details</span>
                               <ArrowUpRight className="w-3 h-3" />
@@ -949,7 +944,7 @@ export function AdminDashboard() {
                                   <select
                                     value={item.itemStatus}
                                     onChange={(e) => handleItemStatusChange(order.id, item.id, e.target.value)}
-                                    className={`appearance-none pl-2.5 pr-7 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider focus:outline-none focus:ring-2 focus:ring-purple-500 shadow-sm cursor-pointer transition-all ${getStatusColor(item.itemStatus)}`}
+                                    className={`appearance-none pl-2.5 pr-7 py-1 rounded-lg text-xs font-black uppercase tracking-wider focus:outline-none focus:ring-2 focus:ring-purple-500 shadow-sm cursor-pointer transition-all ${getStatusColor(item.itemStatus)}`}
                                   >
                                     <option value="PENDING" className="bg-white text-slate-800">PENDING</option>
                                     <option value="PROCESSING" className="bg-white text-slate-800">PROCESSING</option>
@@ -1010,7 +1005,7 @@ export function AdminDashboard() {
                               <h4 className="font-extrabold text-slate-800 text-sm leading-tight mb-0.5">{seller.name}</h4>
                               <p className="text-slate-400 font-bold text-xs">{seller.email}</p>
                             </div>
-                            <span className="inline-flex px-2.5 py-0.5 rounded-lg text-[10px] font-black bg-amber-50 text-amber-700 border border-amber-100 animate-pulse">
+                            <span className="inline-flex px-2.5 py-0.5 rounded-lg text-xs font-black bg-amber-50 text-amber-700 border border-amber-100 animate-pulse">
                               Awaiting Review
                             </span>
                           </div>
@@ -1018,11 +1013,11 @@ export function AdminDashboard() {
                           {/* Business Info Grid */}
                           <div className="grid grid-cols-2 gap-4 bg-slate-50 border border-slate-100 p-4 rounded-xl">
                             <div>
-                              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Company Name</p>
+                              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Company Name</p>
                               <p className="text-xs font-extrabold text-slate-700 truncate" title={seller.businessName}>{seller.businessName}</p>
                             </div>
                             <div>
-                              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Registration No.</p>
+                              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Registration No.</p>
                               <p className="text-xs font-extrabold text-slate-700 truncate" title={seller.registrationNumber}>{seller.registrationNumber}</p>
                             </div>
                           </div>
@@ -1053,7 +1048,7 @@ export function AdminDashboard() {
                                   className="group relative flex flex-col items-center justify-center w-32 h-20 rounded-xl overflow-hidden border border-slate-200 bg-slate-50 hover:shadow-md hover:border-purple-300 transition-all duration-200"
                                 >
                                   <FileText className="w-6 h-6 text-slate-400 mb-1 group-hover:text-purple-500 transition-colors" />
-                                  <span className="text-[10px] text-slate-500 font-semibold group-hover:text-purple-600">BR Certificate</span>
+                                  <span className="text-xs text-slate-500 font-semibold group-hover:text-purple-600">BR Certificate</span>
                                   <img 
                                     src={seller.brCertificateUrl} 
                                     alt="BR Certificate" 
@@ -1063,7 +1058,7 @@ export function AdminDashboard() {
                                     }}
                                   />
                                   <div className="absolute inset-0 bg-slate-900/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-200">
-                                    <span className="text-white text-[10px] font-bold px-2 py-0.5 bg-black/40 border border-white/10 rounded-md">Expand Proof</span>
+                                    <span className="text-white text-xs font-bold px-2 py-0.5 bg-black/40 border border-white/10 rounded-md">Expand Proof</span>
                                   </div>
                                 </a>
                               )}
@@ -1076,7 +1071,7 @@ export function AdminDashboard() {
                                   className="group relative flex flex-col items-center justify-center w-32 h-20 rounded-xl overflow-hidden border border-slate-200 bg-slate-50 hover:shadow-md hover:border-purple-300 transition-all duration-200"
                                 >
                                   <FileText className="w-6 h-6 text-slate-400 mb-1 group-hover:text-purple-500 transition-colors" />
-                                  <span className="text-[10px] text-slate-500 font-semibold group-hover:text-purple-600">NIC Proof</span>
+                                  <span className="text-xs text-slate-500 font-semibold group-hover:text-purple-600">NIC Proof</span>
                                   <img 
                                     src={seller.nicImageUrl} 
                                     alt="NIC Image" 
@@ -1086,7 +1081,7 @@ export function AdminDashboard() {
                                     }}
                                   />
                                   <div className="absolute inset-0 bg-slate-900/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-200">
-                                    <span className="text-white text-[10px] font-bold px-2 py-0.5 bg-black/40 border border-white/10 rounded-md">Expand Proof</span>
+                                    <span className="text-white text-xs font-bold px-2 py-0.5 bg-black/40 border border-white/10 rounded-md">Expand Proof</span>
                                   </div>
                                 </a>
                               )}
@@ -1160,11 +1155,11 @@ export function AdminDashboard() {
             <div className="p-6 space-y-4 text-xs font-bold">
               <div className="bg-rose-50 border border-rose-100 p-4 rounded-2xl text-rose-700 leading-relaxed font-semibold">
                 Rejecting request for <span className="font-extrabold text-slate-900">{rejectionModal.name}</span> of <span className="font-extrabold text-slate-900">{rejectionModal.businessName}</span>.
-                <p className="text-[10px] text-rose-500 font-bold mt-1">Sellers will receive this description in their workspace to corrective re-upload docs.</p>
+                <p className="text-xs text-rose-500 font-bold mt-1">Sellers will receive this description in their workspace to corrective re-upload docs.</p>
               </div>
 
               <div className="space-y-2">
-                <label htmlFor="rejectionReason" className="block text-slate-700 font-bold uppercase tracking-wider text-[10px]">
+                <label htmlFor="rejectionReason" className="block text-slate-700 font-bold uppercase tracking-wider text-xs">
                   Reason for rejection
                 </label>
                 <textarea

@@ -469,12 +469,12 @@ export function BuyerDashboard() {
                                   </p>
                                   <div className="flex gap-1.5 justify-end">
                                     <span
-                                      className={`inline-block px-2 py-0.5 rounded-full text-[11px] font-medium ${getStatusColor(order.status)}`}
+                                      className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}
                                     >
                                       {order.status.replace(/_/g, ' ')}
                                     </span>
                                     <span
-                                      className={`inline-block px-2 py-0.5 rounded-full text-[11px] font-medium ${getPaymentStatusColor(order.paymentStatus)}`}
+                                      className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${getPaymentStatusColor(order.paymentStatus)}`}
                                     >
                                       {order.paymentStatus}
                                     </span>

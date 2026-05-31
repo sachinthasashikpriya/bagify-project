@@ -43,7 +43,7 @@ export function Footer() {
               </a>
               <span className="flex items-center gap-3 text-slate-400 text-sm">
                 <MapPin className="w-4 h-4 text-purple-500" />
-                123 Fashion Ave, New York, NY
+                Katubedda, Moratuwa, Sri Lanka
               </span>
             </div>
           </div>

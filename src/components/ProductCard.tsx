@@ -3,6 +3,7 @@ import { useState } from 'react';
 import type { Product } from '../types';
 import { toast } from 'sonner';
 import { useWishlist } from '../hooks/useWishlist';
+import { Typography } from './common/Typography';
 
 interface ProductCardProps {
   product: Product;
@@ -60,33 +61,33 @@ export function ProductCard({ product, onViewDetails, onAddToCart }: ProductCard
         </div>
         <div className="p-4">
           <div className="flex items-start justify-between gap-2 mb-2">
-            <h3 className="text-gray-900 line-clamp-1">{product.name}</h3>
-            <span className="text-purple-600">Rs. {product.price}</span>
+            <Typography variant="h4" className="text-gray-900 line-clamp-1 font-semibold">{product.name}</Typography>
+            <Typography variant="body" className="text-purple-600 font-bold">Rs. {product.price}</Typography>
           </div>
           
-          <p className="text-sm text-gray-600 line-clamp-2 mb-3">
+          <Typography variant="body-sm" className="text-gray-600 line-clamp-2 mb-3">
              {product.description}
-          </p>
+          </Typography>
 
           <div className="flex items-center justify-between">
             <div>
               <div className="flex items-center gap-1 mb-1">
                 <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                <span className="text-sm text-gray-700">
+                <Typography variant="body-sm" as="span" className="text-gray-700 font-medium">
                   {product.averageRating > 0 ? product.averageRating.toFixed(1) : 'New'}
-                </span>
+                </Typography>
               </div>
-              <div className="text-xs text-gray-500 flex items-center gap-1">
+              <Typography variant="caption" className="text-gray-500 flex items-center gap-1">
                 <span>{product.sellerName}</span>
                 {product.sellerVerified && (
                   <BadgeCheck className="w-4 h-4 fill-blue-500 text-white" title="Verified Seller" />
                 )}
-              </div>
+              </Typography>
             </div>
             
-            <div className="text-xs text-gray-500">
+            <Typography variant="caption" className="text-gray-500 font-medium">
               {product.stock} in stock
-            </div>
+            </Typography>
           </div>
         </div>
       </div>

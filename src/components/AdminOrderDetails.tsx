@@ -195,9 +195,9 @@ export function AdminOrderDetails() {
               <ShoppingBag className="w-6 h-6" />
             </div>
             <div>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Order ID</p>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-0.5">Order ID</p>
               <p className="text-sm font-black text-slate-800">Order #{order.id}</p>
-              <p className="text-[11px] font-semibold text-slate-400 flex items-center gap-1 mt-0.5">
+              <p className="text-xs font-semibold text-slate-400 flex items-center gap-1 mt-0.5">
                 <Clock className="w-3 h-3" />
                 {new Date(order.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
               </p>
@@ -210,12 +210,12 @@ export function AdminOrderDetails() {
               <Package className="w-6 h-6" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Global Status</p>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Global Status</p>
               <div className="relative inline-block w-full">
                 <select
                   value={order.status}
                   onChange={(e) => handleStatusChange(e.target.value)}
-                  className={`appearance-none pl-2.5 pr-7 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider focus:outline-none focus:ring-2 focus:ring-purple-500 shadow-sm cursor-pointer transition-all w-full max-w-max ${getStatusColor(order.status)}`}
+                  className={`appearance-none pl-2.5 pr-7 py-1 rounded-lg text-xs font-black uppercase tracking-wider focus:outline-none focus:ring-2 focus:ring-purple-500 shadow-sm cursor-pointer transition-all w-full max-w-max ${getStatusColor(order.status)}`}
                   title="Override entire order status"
                 >
                   <option value="PENDING" className="bg-white text-slate-800">PENDING</option>
@@ -238,12 +238,12 @@ export function AdminOrderDetails() {
               <CreditCard className="w-6 h-6" />
             </div>
             <div>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Payment Ledger</p>
-              <span className={`inline-flex px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-wider border ${getPaymentStatusColor(order.paymentStatus)}`}>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Payment Ledger</p>
+              <span className={`inline-flex px-2 py-0.5 rounded-lg text-xs font-black uppercase tracking-wider border ${getPaymentStatusColor(order.paymentStatus)}`}>
                 {order.paymentStatus}
               </span>
               {order.paymentId && (
-                <p className="text-[9px] font-bold text-slate-400 mt-1 truncate max-w-[150px]" title={order.paymentId}>
+                <p className="text-xs font-bold text-slate-400 mt-1 truncate max-w-[150px]" title={order.paymentId}>
                   ID: {order.paymentId}
                 </p>
               )}
@@ -256,7 +256,7 @@ export function AdminOrderDetails() {
               <span className="font-extrabold text-lg">Rs.</span>
             </div>
             <div>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Gross Total</p>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-0.5">Gross Total</p>
               <p className="text-base font-black text-slate-800">
                 Rs. {order.totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </p>
@@ -276,7 +276,7 @@ export function AdminOrderDetails() {
                   <Package className="w-5 h-5 text-purple-500" />
                   Order Line Items
                 </h3>
-                <span className="px-2.5 py-0.5 bg-slate-50 border border-slate-200 text-slate-500 rounded-lg text-[10px] font-bold">
+                <span className="px-2.5 py-0.5 bg-slate-50 border border-slate-200 text-slate-500 rounded-lg text-xs font-bold">
                   {order.items.length} items listed
                 </span>
               </div>
@@ -311,7 +311,7 @@ export function AdminOrderDetails() {
 
                       {/* Quantity & Total */}
                       <div className="text-right sm:self-start">
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Qty</p>
+                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Qty</p>
                         <p className="text-sm font-black text-slate-800 mt-0.5">{item.quantity}</p>
                         <p className="text-xs font-bold text-slate-500 mt-1">
                           Subtotal: Rs. {(item.priceAtPurchase * item.quantity).toLocaleString(undefined, { minimumFractionDigits: 2 })}
@@ -330,7 +330,7 @@ export function AdminOrderDetails() {
                           Fulfillment Merchant: <span className="font-extrabold text-slate-800">#{item.sellerId}</span>
                         </span>
                         {sellers[item.sellerId] && (
-                          <span className="text-[11px] text-purple-600 font-extrabold">
+                          <span className="text-xs text-purple-600 font-extrabold">
                             ({sellers[item.sellerId].businessName || sellers[item.sellerId].name})
                           </span>
                         )}
@@ -343,7 +343,7 @@ export function AdminOrderDetails() {
                           <select
                             value={item.itemStatus}
                             onChange={(e) => handleItemStatusChange(item.id, e.target.value)}
-                            className={`appearance-none pl-2.5 pr-7 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider focus:outline-none focus:ring-2 focus:ring-purple-500 shadow-sm cursor-pointer transition-all ${getStatusColor(item.itemStatus)}`}
+                            className={`appearance-none pl-2.5 pr-7 py-1 rounded-lg text-xs font-black uppercase tracking-wider focus:outline-none focus:ring-2 focus:ring-purple-500 shadow-sm cursor-pointer transition-all ${getStatusColor(item.itemStatus)}`}
                           >
                             <option value="PENDING" className="bg-white text-slate-800">PENDING</option>
                             <option value="PROCESSING" className="bg-white text-slate-800">PROCESSING</option>
@@ -382,7 +382,7 @@ export function AdminOrderDetails() {
                     </div>
                     <div>
                       <p className="text-sm font-black text-slate-800">{buyer.name}</p>
-                      <p className="text-[10px] font-bold text-slate-400">Account ID: #{buyer.id}</p>
+                      <p className="text-xs font-bold text-slate-400">Account ID: #{buyer.id}</p>
                     </div>
                   </div>
 
@@ -394,7 +394,7 @@ export function AdminOrderDetails() {
                     <div className="flex items-start gap-2 text-slate-500 font-bold">
                       <MapPin className="w-4 h-4 text-slate-400 flex-shrink-0 mt-0.5" />
                       <div className="text-slate-700">
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Shipping Destination</p>
+                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-0.5">Shipping Destination</p>
                         <p className="leading-relaxed font-semibold">{order.shippingAddress || buyer.address || 'No Address Provided'}</p>
                       </div>
                     </div>
@@ -429,24 +429,24 @@ export function AdminOrderDetails() {
                           </div>
                           <div>
                             <p className="font-extrabold text-slate-800">{seller.name}</p>
-                            <p className="text-[9px] text-slate-400">ID: #{seller.id}</p>
+                            <p className="text-xs text-slate-400">ID: #{seller.id}</p>
                           </div>
                         </div>
                         {seller.rating > 0 && (
-                          <div className="flex items-center gap-0.5 px-1.5 py-0.5 bg-amber-50 text-amber-700 border border-amber-100 rounded-md text-[9px] font-extrabold">
+                          <div className="flex items-center gap-0.5 px-1.5 py-0.5 bg-amber-50 text-amber-700 border border-amber-100 rounded-md text-xs font-extrabold">
                             <Star className="w-3 h-3 fill-amber-500 stroke-amber-500" />
                             {seller.rating.toFixed(1)}
                           </div>
                         )}
                       </div>
 
-                      <div className="space-y-1.5 pt-2 border-t border-slate-100/50 text-[11px] font-semibold text-slate-500">
+                      <div className="space-y-1.5 pt-2 border-t border-slate-100/50 text-xs font-semibold text-slate-500">
                         <div className="flex items-center gap-1.5">
-                          <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400">Store Name:</span>
+                          <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Store Name:</span>
                           <span className="text-slate-700 font-bold">{seller.businessName || 'N/A'}</span>
                         </div>
                         <div className="flex items-center gap-1.5">
-                          <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400">Email:</span>
+                          <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Email:</span>
                           <span className="text-slate-700 truncate">{seller.email}</span>
                         </div>
                       </div>

@@ -411,7 +411,7 @@ export function SellerDashboard() {
               <div>
                 <p className="text-slate-400 font-bold text-xs tracking-wider uppercase mb-1.5">Total Products</p>
                 <p className="text-3xl font-extrabold text-slate-900 tracking-tight">{sellerProducts.length}</p>
-                <p className="text-[11px] text-purple-600 font-bold mt-3 flex items-center gap-1.5">
+                <p className="text-xs text-purple-600 font-bold mt-3 flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-purple-500 inline-block animate-ping" />
                   Active in catalog
                 </p>
@@ -432,7 +432,7 @@ export function SellerDashboard() {
                 ) : (
                   <p className="text-3xl font-extrabold text-slate-900 tracking-tight">{sellerStats.totalItemsSold}</p>
                 )}
-                <p className="text-[11px] text-emerald-600 font-bold mt-3 flex items-center gap-1.5">
+                <p className="text-xs text-emerald-600 font-bold mt-3 flex items-center gap-1.5">
                   <TrendingUp className="w-3.5 h-3.5" />
                   Sales completion rate
                 </p>
@@ -453,7 +453,7 @@ export function SellerDashboard() {
                 ) : (
                   <p className="text-3xl font-extrabold text-slate-900 tracking-tight">Rs. {sellerStats.totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                 )}
-                <p className="text-[11px] text-amber-600 font-bold mt-3 flex items-center gap-1.5">
+                <p className="text-xs text-amber-600 font-bold mt-3 flex items-center gap-1.5">
                   <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400 animate-spin-slow" />
                   Store net earnings
                 </p>
@@ -767,7 +767,7 @@ export function SellerDashboard() {
             <div className="overflow-x-auto">
               <table className="w-full border-collapse">
                 <thead>
-                  <tr className="border-b border-slate-100 text-slate-400 uppercase text-[10px] font-extrabold tracking-wider">
+                  <tr className="border-b border-slate-100 text-slate-400 uppercase text-xs font-extrabold tracking-wider">
                     <th className="text-left py-4 px-5">Product details</th>
                     <th className="text-left py-4 px-5">Category</th>
                     <th className="text-left py-4 px-5">Price</th>
@@ -812,17 +812,17 @@ export function SellerDashboard() {
                         <td className="py-4 px-5">
                           <div className="flex items-center">
                             {isOutOfStock ? (
-                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-rose-50 text-rose-700 border border-rose-200/30 rounded-full text-[11px] font-bold">
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-rose-50 text-rose-700 border border-rose-200/30 rounded-full text-xs font-bold">
                                 <span className="w-1.5 h-1.5 rounded-full bg-rose-500 inline-block animate-pulse" />
                                 Out of Stock
                               </span>
                             ) : isLowStock ? (
-                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-amber-50 text-amber-700 border border-amber-200/30 rounded-full text-[11px] font-bold">
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-amber-50 text-amber-700 border border-amber-200/30 rounded-full text-xs font-bold">
                                 <span className="w-1.5 h-1.5 rounded-full bg-amber-500 inline-block" />
                                 Only {product.stock} Left
                               </span>
                             ) : (
-                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200/30 rounded-full text-[11px] font-bold">
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200/30 rounded-full text-xs font-bold">
                                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
                                 {product.stock} Available
                               </span>
@@ -936,13 +936,13 @@ export function SellerDashboard() {
                           <span className="w-1.5 h-1.5 rounded-full bg-slate-350" />
                           <span className="text-xs text-slate-500 font-bold">{new Date(order.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}</span>
                           <span className="w-1.5 h-1.5 rounded-full bg-slate-355" />
-                          <span className="inline-flex px-2 py-0.5 bg-purple-50 text-purple-700 text-[10px] font-extrabold rounded-md uppercase tracking-wider">Buyer #{order.buyerId}</span>
+                          <span className="inline-flex px-2 py-0.5 bg-purple-50 text-purple-700 text-xs font-extrabold rounded-md uppercase tracking-wider">Buyer #{order.buyerId}</span>
                         </div>
                         <div className="flex items-center gap-4">
                           <span className="text-xs text-slate-500 font-bold">
                             Grand Total: <span className="font-extrabold text-slate-900 text-sm">Rs. {order.totalAmount.toFixed(2)}</span>
                           </span>
-                          <span className={`inline-flex px-3 py-1 rounded-full text-[10px] font-extrabold tracking-wider uppercase ${getStatusColor(order.status)}`}>
+                          <span className={`inline-flex px-3 py-1 rounded-full text-xs font-extrabold tracking-wider uppercase ${getStatusColor(order.status)}`}>
                             {order.status.replace(/_/g, ' ')}
                           </span>
                         </div>
@@ -972,7 +972,7 @@ export function SellerDashboard() {
                             </div>
                             
                             <div className="flex items-center gap-3 self-end sm:self-auto">
-                              <span className={`inline-flex px-2.5 py-1 rounded-full text-[10px] font-extrabold border ${
+                              <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-extrabold border ${
                                 item.itemStatus === 'DELIVERED' ? 'bg-emerald-50 text-emerald-700 border-emerald-250/30' :
                                 item.itemStatus === 'SHIPPED' ? 'bg-blue-50 text-blue-700 border-blue-250/30' :
                                 item.itemStatus === 'PACKED' ? 'bg-cyan-50 text-cyan-700 border-cyan-250/30' :
