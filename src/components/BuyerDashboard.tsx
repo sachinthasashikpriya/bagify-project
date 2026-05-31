@@ -1,4 +1,4 @@
-import { Heart, LogOut, Package, ShoppingBag, Star, User, Loader2, Clock, Truck, CheckCircle2, X, Trash2, ShoppingCart, DollarSign, TrendingUp, ArrowUpRight } from "lucide-react";
+import { Heart, Package, ShoppingBag, Star, User, Loader2, Clock, Truck, CheckCircle2, X, Trash2, ShoppingCart, DollarSign, TrendingUp, ArrowUpRight } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -13,7 +13,7 @@ import { type Review } from "../types";
 
 export function BuyerDashboard() {
   // ✅ Fixed: Changed from SellerDashboard to BuyerDashboard
-  const { currentUser, logout } = useAuth();
+  const { currentUser } = useAuth();
   const { cartItems, addToCart, isLoadingCart } = useCart();
   const { products } = useProducts();
   const navigate = useNavigate();
@@ -131,19 +131,6 @@ export function BuyerDashboard() {
 
   const { wishlistProducts: wishlistItems, removeFromWishlist, isLoadingWishlist } = useWishlist();
 
-  const handleLogout = () => {
-    setConfirmModal({
-      isOpen: true,
-      title: "Confirm Logout",
-      message: "Are you sure you want to logout?",
-      onConfirm: () => {
-        logout();
-        navigate("/");
-        toast.success("Logged out successfully");
-      },
-      isDestructive: true,
-    });
-  };
 
   const handleCancelOrder = (orderId: number) => {
     setConfirmModal({
@@ -195,13 +182,7 @@ export function BuyerDashboard() {
             </h1>
             <p className="text-gray-600">Manage your orders and preferences</p>
           </div>
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-          >
-            <LogOut className="w-5 h-5" />
-            Logout
-          </button>
+
         </div>
 
         {/* Stats */}

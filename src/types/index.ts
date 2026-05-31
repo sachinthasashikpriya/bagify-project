@@ -73,6 +73,8 @@ export interface UserProfileResponse {
   enabled: boolean;
   createdAt: string;
   verificationStatus?: VerificationStatus;
+  itemsSold?: number;
+  revenue?: number;
 }
 
 export interface SellerVerificationResponse {

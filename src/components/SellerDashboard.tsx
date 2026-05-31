@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, Star, Package, TrendingUp, LogOut, BadgeCheck, X, ShoppingBag, DollarSign, ArrowUpRight, BarChart3, Settings, ShieldCheck, Upload, Loader, Image } from 'lucide-react';
+import { Plus, Edit, Trash2, Star, Package, TrendingUp, BadgeCheck, X, ShoppingBag, DollarSign, ArrowUpRight, BarChart3, Settings, ShieldCheck, Upload, Loader, Image } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useAuth } from '../hooks/useAuth';
@@ -8,7 +8,7 @@ import { orderService, type OrderResponse, type OrderItemResponse } from '../ser
 import { cloudinaryService } from '../services/cloudinaryservice';
 
 export function SellerDashboard() {
-  const { currentUser, logout } = useAuth();
+  const { currentUser } = useAuth();
   const { products, addProduct, deleteProduct, updateProduct } = useProducts();
   const navigate = useNavigate();
   
@@ -341,13 +341,6 @@ export function SellerDashboard() {
     }
   };
 
-  const handleLogout = () => {
-    if (window.confirm('Are you sure you want to logout?')) {
-      logout();
-      navigate('/');
-      toast.success('Logged out successfully');
-    }
-  };
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -361,7 +354,7 @@ export function SellerDashboard() {
   const totalReviews = allReviews.length;
 
   return (
-    <div className="min-h-screen bg-slate-50/50 relative overflow-hidden font-sans pb-16">
+    <div className="min-h-screen bg-slate-50/50 relative overflow-hidden font-sans pb-16 admin-panel">
       {/* Ambient background glows */}
       <div className="absolute top-0 left-1/4 w-[400px] h-[400px] bg-purple-200/20 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute top-1/3 right-1/4 w-[400px] h-[400px] bg-indigo-200/15 rounded-full blur-3xl pointer-events-none" />
@@ -394,13 +387,7 @@ export function SellerDashboard() {
               </div>
             </div>
           </div>
-          <button
-            onClick={handleLogout}
-            className="flex items-center justify-center gap-2 px-5 py-2.5 bg-white border border-slate-200 text-slate-700 font-bold rounded-xl hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 transition-all duration-300 shadow-sm hover:shadow-md"
-          >
-            <LogOut className="w-4 h-4" />
-            Logout
-          </button>
+
         </div>
 
         {/* Stats */}

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Shield, Users, Package, TrendingUp, LogOut, AlertTriangle, Search, X, FileText, CheckCircle2, ShoppingBag, ArrowUpRight, ChevronDown } from 'lucide-react';
+import { Shield, Users, Package, TrendingUp, AlertTriangle, Search, X, FileText, CheckCircle2, ShoppingBag, ArrowUpRight, ChevronDown } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useAuth } from '../hooks/useAuth';
@@ -11,7 +11,7 @@ import { ConfirmModal } from './common/ConfirmModal';
 import { adminService } from '../services/adminService';
 
 export function AdminDashboard() {
-  const { currentUser, logout } = useAuth();
+  const { currentUser } = useAuth();
   const { products, deleteProduct } = useProducts();
   const navigate = useNavigate();
   const location = useLocation();
@@ -224,19 +224,6 @@ export function AdminDashboard() {
     }
   };
 
-  const handleLogout = () => {
-    setConfirmModal({
-      isOpen: true,
-      title: 'Confirm Logout',
-      message: 'Are you sure you want to logout?',
-      onConfirm: () => {
-        logout();
-        navigate('/');
-        toast.success('Logged out successfully');
-      },
-      isDestructive: true,
-    });
-  };
 
   const handleDeleteProduct = (productId: string, productName: string) => {
     setConfirmModal({
@@ -413,16 +400,7 @@ export function AdminDashboard() {
           </nav>
         </div>
 
-        {/* Footer Logout */}
-        <div className="p-4 border-t border-slate-800 bg-slate-950/20">
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-slate-400 hover:bg-rose-500/10 hover:text-rose-400 transition-all duration-200"
-          >
-            <LogOut className="w-4 h-4" />
-            Sign Out
-          </button>
-        </div>
+
       </aside>
 
       {/* Main Workspace */}
@@ -774,15 +752,22 @@ export function AdminDashboard() {
                               </td>
                               <td className="py-4 px-6 text-slate-500 font-bold">{user.email}</td>
                               <td className="py-4 px-6">
-                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-lg text-xs font-bold uppercase tracking-wider ${
-                                  user.role === 'ADMIN'
-                                    ? 'bg-amber-50 text-amber-700 border border-amber-100'
-                                    : user.role === 'SELLER'
-                                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
-                                    : 'bg-blue-50 text-blue-700 border border-blue-100'
-                                }`}>
-                                  {user.role}
-                                </span>
+                                <div className="flex flex-col gap-1">
+                                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-lg text-xs font-bold uppercase tracking-wider w-fit ${
+                                    user.role === 'ADMIN'
+                                      ? 'bg-amber-50 text-amber-700 border border-amber-100'
+                                      : user.role === 'SELLER'
+                                      ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+                                      : 'bg-blue-50 text-blue-700 border border-blue-100'
+                                  }`}>
+                                    {user.role}
+                                  </span>
+                                  {user.role === 'SELLER' && (user.itemsSold !== undefined || user.revenue !== undefined) && (
+                                    <span className="text-xs text-slate-400 font-extrabold leading-none mt-0.5">
+                                      {user.itemsSold || 0} sold · Rs. {(user.revenue || 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                                    </span>
+                                  )}
+                                </div>
                               </td>
                               <td className="py-4 px-6">
                                 <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg font-bold text-xs ${
