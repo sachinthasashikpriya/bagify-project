@@ -398,10 +398,7 @@ export function SellerDashboard() {
               <div>
                 <p className="text-slate-400 font-bold text-xs tracking-wider uppercase mb-1.5">Total Products</p>
                 <p className="text-3xl font-extrabold text-slate-900 tracking-tight">{sellerProducts.length}</p>
-                <p className="text-xs text-purple-600 font-bold mt-3 flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-purple-500 inline-block animate-ping" />
-                  Active in catalog
-                </p>
+                
               </div>
               <div className="w-14 h-14 rounded-2xl bg-purple-50 flex items-center justify-center text-purple-600 group-hover:scale-110 transition-transform duration-300">
                 <ShoppingBag className="w-7 h-7" />
@@ -419,10 +416,7 @@ export function SellerDashboard() {
                 ) : (
                   <p className="text-3xl font-extrabold text-slate-900 tracking-tight">{sellerStats.totalItemsSold}</p>
                 )}
-                <p className="text-xs text-emerald-600 font-bold mt-3 flex items-center gap-1.5">
-                  <TrendingUp className="w-3.5 h-3.5" />
-                  Sales completion rate
-                </p>
+               
               </div>
               <div className="w-14 h-14 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-600 group-hover:scale-110 transition-transform duration-300">
                 <TrendingUp className="w-7 h-7" />
@@ -440,10 +434,7 @@ export function SellerDashboard() {
                 ) : (
                   <p className="text-3xl font-extrabold text-slate-900 tracking-tight">Rs. {sellerStats.totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                 )}
-                <p className="text-xs text-amber-600 font-bold mt-3 flex items-center gap-1.5">
-                  <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400 animate-spin-slow" />
-                  Store net earnings
-                </p>
+               
               </div>
               <div className="w-14 h-14 rounded-2xl bg-amber-50 flex items-center justify-center text-amber-500 group-hover:scale-110 transition-transform duration-300">
                 <DollarSign className="w-7 h-7" />
