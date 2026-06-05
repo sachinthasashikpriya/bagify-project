@@ -15,7 +15,7 @@ export function ProductDetailPage() {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
   const { addToCart } = useCart();
-  const { products, addReview, refreshProducts } = useProducts();
+  const { products, refreshProducts } = useProducts();
   const { toggleWishlist, isInWishlist } = useWishlist();
 
   const [rating, setRating] = useState(5);
@@ -292,7 +292,9 @@ export function ProductDetailPage() {
                   <p className="font-medium text-gray-900 flex items-center gap-1">
                     <span>{product.sellerName || "BagMarket Store"}</span>
                     {product.sellerVerified && (
-                      <BadgeCheck className="w-5 h-5 fill-blue-500 text-white" title="Verified Seller" />
+                      <span title="Verified Seller">
+                        <BadgeCheck className="w-5 h-5 fill-blue-500 text-white" />
+                      </span>
                     )}
                   </p>
                   <div className="flex items-center gap-1">

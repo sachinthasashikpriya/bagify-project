@@ -29,14 +29,7 @@ interface SignupFormData {
   userType: "BUYER" | "SELLER";
 }
 
-interface FormErrors {
-  name?: string;
-  email?: string;
-  phone?: string;
-  address?: string;
-  password?: string;
-  confirmPassword?: string;
-}
+type FormErrors = Partial<Record<keyof SignupFormData, string>>;
 
 // ─── Component ───────────────────────────────────────────────────────────────
 

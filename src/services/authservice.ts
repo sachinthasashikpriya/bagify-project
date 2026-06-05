@@ -1,13 +1,12 @@
 import { endpoints } from '../api/endpoints';
 import { httpClient } from '../api/httpClient';
-import { clearAuthToken, getAuthToken } from '../state/authToken';
+import { clearAuthToken } from '../state/authToken';
 import type {
   LoginRequest,
   RegisterRequest,
   Result,
   User,
 } from '../types';
-import { mockBuyers } from '../types/index';
 
 type LoginResponse = { token: string; refreshToken: string; user: User };
 

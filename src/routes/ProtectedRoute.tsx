@@ -1,6 +1,7 @@
-import { Home, Loader, Shield } from "lucide-react";
+import { Home, Shield } from "lucide-react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
+import { LoadingSpinner } from "../components/common/LoadingSpinner";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -16,14 +17,7 @@ export function ProtectedRoute({
 
   // ✅ CRITICAL: Wait for auth to load before redirecting
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <Loader className="w-8 h-8 animate-spin text-purple-600 mx-auto mb-4" />
-          <p className="text-gray-600">Loading...</p>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner />;
   }
 
   // Redirect to login if not authenticated

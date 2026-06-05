@@ -1,4 +1,4 @@
-import { Loader, Lock, ShoppingCart, ArrowLeft, CheckCircle2, AlertCircle, Eye, EyeOff } from "lucide-react";
+import { Loader, Lock, ShoppingCart, CheckCircle2, AlertCircle, Eye, EyeOff } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";

@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { 
   ArrowLeft, Shield, ShoppingBag, User, MapPin, Mail, 
-  Phone, CreditCard, ChevronDown, Package, Clock, Store, Star
+  CreditCard, ChevronDown, Package, Clock, Store, Star
 } from 'lucide-react';
 import { orderService, type OrderResponse } from '../services/orderService';
 import { userService } from '../services/userservice';

@@ -95,13 +95,10 @@ export function ProductDetail() {
     }
 
     addReview(product.id, {
-      id: crypto.randomUUID(),
-      productId: product.id,
       buyerId: String(currentUser.id),
       buyerName: currentUser.name,
       rating,
       comment: comment.trim(),
-      date: new Date().toISOString().split("T")[0],
     });
     toast.success("Review submitted successfully!");
     setComment("");
@@ -216,7 +213,9 @@ export function ProductDetail() {
                   <p className="font-medium text-gray-900 flex items-center gap-1">
                     <span>{product.sellerName || "BagMarket Store"}</span>
                     {product.sellerVerified && (
-                      <BadgeCheck className="w-5 h-5 fill-blue-500 text-white" title="Verified Seller" />
+                      <span title="Verified Seller">
+                        <BadgeCheck className="w-5 h-5 fill-blue-500 text-white" />
+                      </span>
                     )}
                   </p>
                   <div className="flex items-center gap-1">

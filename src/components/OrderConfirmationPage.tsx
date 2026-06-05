@@ -35,7 +35,7 @@ export function OrderConfirmationPage() {
     try {
       const result = await orderService.getPaymentParams(orderId);
       if (!result.ok || !result.data) {
-        toast.error(result.error?.message || "Failed to fetch payment parameters");
+        toast.error(result.error || "Failed to fetch payment parameters");
         setIsPaying(false);
         return;
       }
@@ -70,7 +70,7 @@ export function OrderConfirmationPage() {
         country: "Sri Lanka"
       };
 
-      payhere.onCompleted = function (completedOrderId: string) {
+      payhere.onCompleted = function (_completedOrderId: string) {
         toast.success("Payment successful! Thank you.");
         
         // 1. Optimistic UI update for immediate visual satisfaction
@@ -122,7 +122,7 @@ export function OrderConfirmationPage() {
         if (result.ok && result.data) {
           setOrder(result.data);
         } else {
-          setError(result.error?.message || "Failed to load order details");
+          setError(result.error || "Failed to load order details");
         }
       } catch (err: any) {
         if (err.response && err.response.status === 403) {

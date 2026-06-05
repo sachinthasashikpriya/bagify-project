@@ -1,4 +1,5 @@
-import { useEffect, useState, ReactNode, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
+import type { ReactNode } from "react";
 import { toast } from "sonner";
 import { useAuth } from "../hooks/useAuth";
 import { useProducts } from "../hooks/useProduct";
@@ -37,7 +38,7 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
   }, [currentUser]);
 
   const wishlistProducts = useMemo(() => {
-    return products.filter(p => wishlistProductIds.includes(p.id as number) || wishlistProductIds.includes(Number(p.id)));
+    return products.filter(p => wishlistProductIds.includes(Number(p.id)));
   }, [products, wishlistProductIds]);
 
   const addToWishlist = async (productId: number) => {

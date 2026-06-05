@@ -55,7 +55,8 @@ export interface User {
   phone?: string;
   address?: string;
   role: 'BUYER' | 'SELLER' | 'ADMIN';
-  profileImage?: string;
+  profileImage?: string | null;
+  city?: string;
   createdAt?: string;
   updatedAt?: string;
   // Seller verification

@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useAuth } from "../hooks/useAuth";
 import { useCart } from "../hooks/useCart";
-import { useProducts } from "../hooks/useProduct";
+
 import { orderService, type OrderResponse } from "../services/orderService";
 import { ConfirmModal } from "./common/ConfirmModal";
 import { useWishlist } from "../hooks/useWishlist";
@@ -15,7 +15,7 @@ export function BuyerDashboard() {
   // ✅ Fixed: Changed from SellerDashboard to BuyerDashboard
   const { currentUser } = useAuth();
   const { cartItems, addToCart, isLoadingCart } = useCart();
-  const { products } = useProducts();
+
   const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState<"orders" | "wishlist" | "reviews">(

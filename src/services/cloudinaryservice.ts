@@ -115,13 +115,6 @@ export const cloudinaryService = {
    * @returns URL for a placeholder avatar
    */
   getPlaceholderAvatar(name: string): string {
-    const initials = name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .substring(0, 2);
-    
     // Using UI Avatars service as fallback
     return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=9333ea&color=fff&size=200`;
   },

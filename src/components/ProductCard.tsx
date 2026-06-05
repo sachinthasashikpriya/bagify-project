@@ -80,7 +80,9 @@ export function ProductCard({ product, onViewDetails, onAddToCart }: ProductCard
               <Typography variant="caption" className="text-gray-500 flex items-center gap-1">
                 <span>{product.sellerName}</span>
                 {product.sellerVerified && (
-                  <BadgeCheck className="w-4 h-4 fill-blue-500 text-white" title="Verified Seller" />
+                  <span title="Verified Seller">
+                    <BadgeCheck className="w-4 h-4 fill-blue-500 text-white" />
+                  </span>
                 )}
               </Typography>
             </div>
