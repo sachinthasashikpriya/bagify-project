@@ -21,4 +21,8 @@ export const endpoints = {
       verifications: '/api/v1/admin/verifications',
       reviewVerification: (sellerId: number | string) => `/api/v1/admin/verifications/${sellerId}`,
     },
+    reviews: {
+      base: '/api/v1/reviews',
+      me: '/api/v1/reviews/me',
+    },
   } as const;

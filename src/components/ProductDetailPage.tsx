@@ -58,7 +58,13 @@ export function ProductDetailPage() {
     if (productId) {
       setIsLoadingReviews(true);
       reviewService.getReviews(Number(productId))
-        .then(data => setReviews(data))
+        .then(res => {
+          if (res.ok && res.data) {
+            setReviews(res.data);
+          } else {
+            console.error("Failed to fetch reviews:", res.error);
+          }
+        })
         .catch(err => console.error("Failed to fetch reviews:", err))
         .finally(() => setIsLoadingReviews(false));
     }
@@ -166,19 +172,27 @@ export function ProductDetailPage() {
     }
 
     try {
-      await reviewService.submitReview({
+      const submitRes = await reviewService.submitReview({
         productId: Number(product.id),
         rating,
         comment: comment.trim(),
       });
+      
+      if (!submitRes.ok) {
+        toast.error(submitRes.error || "Failed to submit review");
+        return;
+      }
+
       toast.success("Review submitted successfully!");
       setComment("");
       setRating(5);
       setShowReviewForm(false);
       
       // Refresh the product's review list from the backend
-      const reviewData = await reviewService.getReviews(Number(product.id));
-      setReviews(reviewData);
+      const reviewRes = await reviewService.getReviews(Number(product.id));
+      if (reviewRes.ok && reviewRes.data) {
+        setReviews(reviewRes.data);
+      }
       
       const res = await productService.getProductById(String(product.id));
       if (res.data) {

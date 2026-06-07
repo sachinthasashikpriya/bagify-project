@@ -92,8 +92,12 @@ export function BuyerDashboard() {
     const fetchReviews = async () => {
       try {
         setIsLoadingReviews(true);
-        const data = await reviewService.getMyReviews();
-        setMyReviews(data);
+        const result = await reviewService.getMyReviews();
+        if (result.ok && result.data) {
+          setMyReviews(result.data);
+        } else {
+          toast.error(result.error || "Failed to fetch reviews");
+        }
       } catch (error: any) {
         toast.error(error.message || "Failed to fetch reviews");
       } finally {
