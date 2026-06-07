@@ -8,7 +8,7 @@ import type {
   User,
 } from '../types';
 
-type LoginResponse = { token: string; refreshToken: string; user: User };
+type LoginResponse = { token: string; refreshToken?: string | null; user: User };
 
 const AUTH_FALLBACK_PREFIX = '/api/v1';
 
@@ -155,8 +155,12 @@ async register(payload: RegisterRequest): Promise<Result<User>> {
   /**
    * Logout user
    */
-  logout(): void {
+  async logout(): Promise<Result<void>> {
     clearAuthToken();
+    return httpClient.post<void>(endpoints.auth.logout, null, {
+      service: 'auth-service',
+      auth: false,
+    });
   }
 
   /**

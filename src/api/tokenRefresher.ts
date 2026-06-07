@@ -1,6 +1,7 @@
 import { endpoints } from './endpoints';
 import { serviceRegistry } from './serviceRegistry';
 import { toast } from 'sonner';
+import { setAuthToken, clearAuthToken } from '../state/authToken';
 
 let logoutFn: (() => void) | null = null;
 
@@ -24,11 +25,6 @@ export async function attemptTokenRefresh(): Promise<boolean> {
   }
 
   refreshPromise = (async () => {
-    const refreshToken = localStorage.getItem('refresh_token');
-    if (!refreshToken) {
-      return false;
-    }
-
     try {
       const authServiceUrl = serviceRegistry['auth-service'];
       const response = await fetch(`${authServiceUrl}${endpoints.auth.refresh}`, {
@@ -36,7 +32,7 @@ export async function attemptTokenRefresh(): Promise<boolean> {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ refreshToken }),
+        credentials: 'include',
       });
 
       if (!response.ok) {
@@ -45,11 +41,10 @@ export async function attemptTokenRefresh(): Promise<boolean> {
 
       const payload = await response.json();
       const data = payload.data || payload;
-      const { token: newAccessToken, refreshToken: newRefreshToken } = data;
+      const { token: newAccessToken } = data;
 
-      if (newAccessToken && newRefreshToken) {
-        localStorage.setItem('auth_token', newAccessToken);
-        localStorage.setItem('refresh_token', newRefreshToken);
+      if (newAccessToken) {
+        setAuthToken(newAccessToken);
         return true;
       }
 
@@ -57,9 +52,10 @@ export async function attemptTokenRefresh(): Promise<boolean> {
     } catch (error) {
       console.error('Silent token refresh failed:', error);
       
-      // Clear auth tokens and user session details from localStorage
-      localStorage.removeItem('auth_token');
-      localStorage.removeItem('refresh_token');
+      const wasLoggedIn = !!localStorage.getItem('auth_user');
+      
+      // Clear auth tokens and user session details
+      clearAuthToken();
       localStorage.removeItem('auth_user');
 
       if (logoutFn) {
@@ -70,7 +66,9 @@ export async function attemptTokenRefresh(): Promise<boolean> {
         }
       }
       
-      toast.error('Your session has expired. Please log in again.');
+      if (wasLoggedIn) {
+        toast.error('Your session has expired. Please log in again.');
+      }
       return false;
     }
   })();

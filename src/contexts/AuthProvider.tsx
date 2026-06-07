@@ -4,48 +4,34 @@ import { AuthContext } from "./AuthContext";
 import type { AuthContextType } from "./AuthContext";
 import { authService } from "../services/authservice";
 import { LoadingSpinner } from "../components/common/LoadingSpinner";
-import { registerLogout } from "../api/tokenRefresher";
+import { getAuthToken, setAuthToken, clearAuthToken } from "../state/authToken";
+import { attemptTokenRefresh, registerLogout } from "../api/tokenRefresher";
 
 const USER_STORAGE_KEY = "auth_user";
-const TOKEN_STORAGE_KEY = "auth_token";
-const REFRESH_TOKEN_STORAGE_KEY = "refresh_token";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
-  const [refreshToken, setRefreshToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        const storedToken = localStorage.getItem(TOKEN_STORAGE_KEY);
-        const storedRefreshToken = localStorage.getItem(REFRESH_TOKEN_STORAGE_KEY);
+        // Attempt silent refresh using cookies
+        const refreshSuccess = await attemptTokenRefresh();
         
-        if (storedToken && storedRefreshToken) {
-          setToken(storedToken);
-          setRefreshToken(storedRefreshToken);
-          // Refresh user data from backend
+        if (refreshSuccess) {
           const result = await authService.getCurrentUser();
           if (result.ok && result.data) {
-            // ✅ Re-sync tokens in case they were refreshed during getCurrentUser()
-            const currentToken = localStorage.getItem(TOKEN_STORAGE_KEY);
-            const currentRefreshToken = localStorage.getItem(REFRESH_TOKEN_STORAGE_KEY);
-            if (currentToken) setToken(currentToken);
-            if (currentRefreshToken) setRefreshToken(currentRefreshToken);
-
+            setToken(getAuthToken());
             setCurrentUser(result.data);
             localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(result.data));
           } else {
-            // If token is invalid or user not found, logout
-            console.warn("Session invalid, logging out");
+            console.warn("Failed to get current user profile after refresh");
             logout();
           }
         } else {
-          // No token, ensure state is clear
-          setCurrentUser(null);
-          setToken(null);
-          setRefreshToken(null);
+          logout();
         }
       } catch (error) {
         console.error("Failed to restore user session:", error);
@@ -58,14 +44,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     initializeAuth();
   }, []);
 
-  const login = (user: User, authToken: string, authRefreshToken: string) => {
+  const login = (user: User, authToken: string, _authRefreshToken?: string | null) => {
     setCurrentUser(user);
     setToken(authToken);
-    setRefreshToken(authRefreshToken);
+    setAuthToken(authToken);
     try {
       localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
-      localStorage.setItem(TOKEN_STORAGE_KEY, authToken);
-      localStorage.setItem(REFRESH_TOKEN_STORAGE_KEY, authRefreshToken);
     } catch (error) {
       console.error("Failed to save user to localStorage:", error);
     }
@@ -74,12 +58,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = () => {
     setCurrentUser(null);
     setToken(null); 
-    setRefreshToken(null);
+    clearAuthToken();
     try {
       localStorage.removeItem(USER_STORAGE_KEY);
-      localStorage.removeItem(TOKEN_STORAGE_KEY);
-      localStorage.removeItem(REFRESH_TOKEN_STORAGE_KEY);
-      
+      authService.logout().catch(error => {
+        console.error("Failed backend logout request:", error);
+      });
     } catch (error) {
       console.error("Failed to remove user from localStorage:", error);
     }
@@ -87,8 +71,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Register logout callback for silent token refresher
   registerLogout(logout);
-
-  
 
   // ✅ Update user function - updates profile including image
   const updateUser = useCallback((updatedUser: User) => {
@@ -104,23 +86,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     console.log('🔐 Checking auth...');
     try {
       const storedUser = localStorage.getItem(USER_STORAGE_KEY);
-      const storedToken = localStorage.getItem(TOKEN_STORAGE_KEY);
-      const storedRefreshToken = localStorage.getItem(REFRESH_TOKEN_STORAGE_KEY);
+      const currentToken = getAuthToken();
       
-      if (storedUser && storedToken && storedRefreshToken) {
+      if (storedUser && currentToken) {
         setCurrentUser(JSON.parse(storedUser));
-        setToken(storedToken);
-        setRefreshToken(storedRefreshToken);
+        setToken(currentToken);
       } else {
         setCurrentUser(null);
         setToken(null);
-        setRefreshToken(null);
       }
     } catch (error) {
       console.error("Failed to check auth:", error);
       setCurrentUser(null);
       setToken(null);
-      setRefreshToken(null);
     }
   }, []);
 
@@ -128,7 +106,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const contextValue: AuthContextType = {
     currentUser,
     token,
-    refreshToken,
+    refreshToken: null,
     isLoading,
     login,
     logout,

@@ -198,7 +198,7 @@ async function executeRequest<T>(
         body: body !== undefined && body !== null 
           ? JSON.stringify(body) 
           : undefined,
-        credentials: options.credentials,
+        credentials: options.credentials ?? 'include',
         mode: options.mode,
         cache: options.cache,
         redirect: options.redirect,
@@ -241,7 +241,7 @@ async function executeRequest<T>(
               body: body !== undefined && body !== null
                 ? JSON.stringify(body)
                 : undefined,
-              credentials: options.credentials,
+              credentials: options.credentials ?? 'include',
               mode: options.mode,
               cache: options.cache,
               redirect: options.redirect,

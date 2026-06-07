@@ -1,42 +1,33 @@
 // src/state/authToken.ts
-const TOKEN_KEY = 'auth_token';
-const REFRESH_TOKEN_KEY = 'refresh_token';
+let memoryToken: string | null = null;
 
 export function getAuthToken(): string | null {
-  return localStorage.getItem(TOKEN_KEY);
+  return memoryToken;
 }
 
 export function setAuthToken(token: string | null): void {
-  if (token) {
-    localStorage.setItem(TOKEN_KEY, token);
-  } else {
-    clearAuthToken();
-  }
+  memoryToken = token;
 }
 
 export function clearAuthToken(): void {
-  localStorage.removeItem(TOKEN_KEY);
+  memoryToken = null;
 }
 
 export function getRefreshToken(): string | null {
-  return localStorage.getItem(REFRESH_TOKEN_KEY);
+  // Cookies are used now. JavaScript does not handle or read the refresh token.
+  return null;
 }
 
-export function setRefreshToken(token: string | null): void {
-  if (token) {
-    localStorage.setItem(REFRESH_TOKEN_KEY, token);
-  } else {
-    clearRefreshToken();
-  }
+export function setRefreshToken(_token: string | null): void {
+  // Do nothing. Refresh token is handled by HttpOnly cookie.
 }
 
 export function clearRefreshToken(): void {
-  localStorage.removeItem(REFRESH_TOKEN_KEY);
+  // Do nothing. Refresh token cookie is cleared by calling /api/v1/auth/logout.
 }
 
 export function onUnauthorized(): void {
   clearAuthToken();
-  clearRefreshToken();
   
   // Redirect to login
   if (window.location.pathname !== '/login') {
