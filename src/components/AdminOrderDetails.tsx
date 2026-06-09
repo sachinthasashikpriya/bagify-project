@@ -327,14 +327,25 @@ export function AdminOrderDetails() {
                       <div className="flex items-center gap-2">
                         <Store className="w-4 h-4 text-slate-400" />
                         <span>
-                          Fulfillment Merchant: <span className="font-extrabold text-slate-800">#{item.sellerId}</span>
+                          Fulfillment Merchant: <span className="font-extrabold text-slate-800">#{item.sellerId || 'N/A'}</span>
                         </span>
-                        {sellers[item.sellerId] && (
-                          <span className="text-xs text-purple-600 font-extrabold">
-                            ({sellers[item.sellerId].businessName || sellers[item.sellerId].name})
+                        {item.sellerId ? (
+                          sellers[item.sellerId] ? (
+                            <span className="text-xs text-purple-600 font-extrabold">
+                              ({sellers[item.sellerId].businessName || sellers[item.sellerId].name})
+                            </span>
+                          ) : (
+                            <span className="text-xs text-rose-500 font-extrabold">
+                              (Seller not found)
+                            </span>
+                          )
+                        ) : (
+                          <span className="text-xs text-rose-500 font-extrabold">
+                            (No Seller Assigned)
                           </span>
                         )}
                       </div>
+
 
                       {/* Item Status drop down */}
                       <div className="flex items-center gap-2 self-end sm:self-auto">
@@ -401,8 +412,8 @@ export function AdminOrderDetails() {
                   </div>
                 </div>
               ) : (
-                <div className="text-slate-400 text-xs font-semibold py-4 text-center">
-                  Buyer Account #{order.buyerId}
+                <div className="text-rose-500 text-xs font-semibold py-4 text-center bg-rose-50 rounded-xl border border-rose-100">
+                  Buyer Account Not Found (ID: #{order.buyerId})
                 </div>
               )}
             </div>
@@ -417,7 +428,7 @@ export function AdminOrderDetails() {
               <div className="space-y-4">
                 {Object.values(sellers).length === 0 ? (
                   <div className="text-slate-400 text-xs font-semibold py-4 text-center">
-                    Fetching seller details...
+                    No assigned sellers found
                   </div>
                 ) : (
                   Object.values(sellers).map((seller) => (
