@@ -6,6 +6,7 @@ import { authService } from "../services/authservice";
 import { LoadingSpinner } from "../components/common/LoadingSpinner";
 import { getAuthToken, setAuthToken, clearAuthToken } from "../state/authToken";
 import { attemptTokenRefresh, registerLogout } from "../api/tokenRefresher";
+import { toast } from "sonner";
 
 const USER_STORAGE_KEY = "auth_user";
 
@@ -81,6 +82,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setCurrentUser(updatedUser);
     localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(updatedUser));
   }, []);
+
+  // SSE connection for real-time seller verification updates
+  useEffect(() => {
+    if (!currentUser || currentUser.role !== 'SELLER' || !token) {
+      return;
+    }
+
+    const sseUrl = `/api/v1/users/verifications/stream?token=${encodeURIComponent(token)}`;
+    const eventSource = new EventSource(sseUrl);
+
+    eventSource.addEventListener("verification-update", async (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        console.log("🔔 SSE Verification update received:", data);
+        
+        // Fetch fresh profile details from the backend to update AuthContext fully
+        const result = await authService.getCurrentUser();
+        if (result.ok && result.data) {
+          updateUser(result.data);
+          toast.success(`Your profile verification has been updated to ${data.status}!`);
+        }
+      } catch (err) {
+        console.error("Failed to handle verification update event:", err);
+      }
+    });
+
+    eventSource.onerror = (err) => {
+      console.warn("SSE connection error, browser will retry...", err);
+    };
+
+    return () => {
+      eventSource.close();
+    };
+  }, [currentUser?.id, token, updateUser]);
 
   const checkAuth = useCallback(async () => {
     console.log('🔐 Checking auth...');
