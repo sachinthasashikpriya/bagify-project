@@ -31,44 +31,25 @@ export function OrderConfirmationPage() {
 
   const handlePay = async () => {
     if (!orderId || !currentUser || !order) return;
+
+    const payhere = (window as any).payhere;
+    if (!payhere) {
+      toast.error("PayHere SDK is not loaded yet. Please wait a few seconds and try again.");
+      return;
+    }
+
     setIsPaying(true);
     try {
-      const result = await orderService.getPaymentParams(orderId);
+      const returnUrl = `${window.location.origin}/orders/${orderId}/confirmation`;
+      const cancelUrl = window.location.href;
+      const result = await orderService.getPaymentParams(orderId, returnUrl, cancelUrl);
       if (!result.ok || !result.data) {
         toast.error(result.error || "Failed to fetch payment parameters");
         setIsPaying(false);
         return;
       }
 
-      const payhereParams = result.data;
-      const payhere = (window as any).payhere;
-
-      if (!payhere) {
-        toast.error("PayHere SDK is not loaded yet. Please wait a few seconds and try again.");
-        setIsPaying(false);
-        return;
-      }
-
-      // Prepare standard PayHere checkout payload
-      const payment = {
-        sandbox: payhereParams.sandbox,
-        merchant_id: payhereParams.merchantId,
-        return_url: `${window.location.origin}/orders/${orderId}/confirmation`,
-        cancel_url: window.location.href,
-        notify_url: env.PAYHERE_NOTIFY_URL,
-        order_id: payhereParams.orderId,
-        items: `Purchase Order #${payhereParams.orderId}`,
-        amount: payhereParams.amount,
-        currency: payhereParams.currency,
-        hash: payhereParams.hash,
-        first_name: currentUser.name || "Customer",
-        last_name: "",
-        email: currentUser.email || "",
-        phone: currentUser.phone || "0771234567",
-        address: order.shippingAddress || currentUser.address || "",
-        city: currentUser.city || "Colombo",
-        country: "Sri Lanka"
-      };
+      const payment = result.data;
 
       payhere.onCompleted = function (_completedOrderId: string) {
         toast.success("Payment successful! Thank you.");

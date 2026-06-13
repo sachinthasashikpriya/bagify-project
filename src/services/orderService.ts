@@ -24,6 +24,26 @@ export interface OrderResponse {
   createdAt: string;
 }
 
+export interface PayHereParams {
+  sandbox: boolean;
+  merchant_id: string;
+  return_url: string;
+  cancel_url: string;
+  notify_url: string;
+  order_id: string;
+  items: string;
+  amount: string;
+  currency: string;
+  hash: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string;
+  address: string;
+  city: string;
+  country: string;
+}
+
 export const orderService = {
   /**
    * Place an order from the current cart
@@ -131,17 +151,15 @@ export const orderService = {
   /**
    * Get PayHere sandbox parameters and signature for an order
    */
-  async getPaymentParams(orderId: number | string): Promise<Result<{
-    merchantId: string;
-    orderId: string;
-    amount: string;
-    currency: string;
-    hash: string;
-    sandbox: boolean;
-  }>> {
+  async getPaymentParams(
+    orderId: number | string,
+    returnUrl: string,
+    cancelUrl: string
+  ): Promise<Result<PayHereParams>> {
     return httpClient.get(`/api/v1/orders/${orderId}/payment-params`, {
       service: 'order-service',
       auth: true,
+      query: { returnUrl, cancelUrl },
     });
   }
 };
