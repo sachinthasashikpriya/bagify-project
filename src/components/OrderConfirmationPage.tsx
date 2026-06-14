@@ -82,7 +82,29 @@ export function OrderConfirmationPage() {
         toast.error("Payment error: " + error);
       };
 
-      payhere.startPayment(paymentParams);
+      // Satisfy Acceptance Criteria by using data from useAuth() session context (currentUser)
+      // and geographic routing details (shipping address, profile city, and Sri Lanka).
+      let profileCity = currentUser.city;
+      if (!profileCity && currentUser.address) {
+        const parts = currentUser.address.split(',');
+        if (parts.length >= 2) {
+          profileCity = parts[parts.length - 1].trim();
+        } else {
+          profileCity = currentUser.address.trim();
+        }
+      }
+
+      const checkoutParams = {
+        ...paymentParams,
+        first_name: currentUser.name || paymentParams.first_name || "Customer",
+        email: currentUser.email || paymentParams.email || "",
+        phone: currentUser.phone || paymentParams.phone || "0771234567",
+        address: order.shippingAddress || paymentParams.address || "",
+        city: profileCity || paymentParams.city || "Colombo",
+        country: "Sri Lanka",
+      };
+
+      payhere.startPayment(checkoutParams);
     } catch (err: any) {
       toast.error(err.message || "Checkout failed");
     } finally {
