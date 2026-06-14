@@ -1,11 +1,11 @@
 import { CheckCircle2, ChevronRight, Package, MapPin, Loader2, AlertCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { orderService, type OrderResponse } from "../services/orderService";
+import { orderService, type OrderResponse, type PayHereParams } from "../services/orderService";
 import { useAuth } from "../hooks/useAuth";
 import { useProducts } from "../hooks/useProduct";
 import { toast } from "sonner";
-import { env } from "../config/env";
+
 
 export function OrderConfirmationPage() {
   const { orderId } = useParams<{ orderId: string }>();
@@ -16,6 +16,8 @@ export function OrderConfirmationPage() {
   const { currentUser } = useAuth();
   const { refreshProducts } = useProducts();
   const [isPaying, setIsPaying] = useState(false);
+  const [paymentParams, setPaymentParams] = useState<PayHereParams | null>(null);
+  const [loadingParams, setLoadingParams] = useState(false);
 
   async function fetchOrderDetails() {
     if (!orderId) return;
@@ -29,7 +31,7 @@ export function OrderConfirmationPage() {
     }
   }
 
-  const handlePay = async () => {
+  const handlePay = () => {
     if (!orderId || !currentUser || !order) return;
 
     const payhere = (window as any).payhere;
@@ -38,19 +40,13 @@ export function OrderConfirmationPage() {
       return;
     }
 
+    if (!paymentParams) {
+      toast.error("Payment parameters are not loaded yet. Please wait a moment.");
+      return;
+    }
+
     setIsPaying(true);
     try {
-      const returnUrl = `${window.location.origin}/orders/${orderId}/confirmation`;
-      const cancelUrl = window.location.href;
-      const result = await orderService.getPaymentParams(orderId, returnUrl, cancelUrl);
-      if (!result.ok || !result.data) {
-        toast.error(result.error || "Failed to fetch payment parameters");
-        setIsPaying(false);
-        return;
-      }
-
-      const payment = result.data;
-
       payhere.onCompleted = function (_completedOrderId: string) {
         toast.success("Payment successful! Thank you.");
         
@@ -86,7 +82,7 @@ export function OrderConfirmationPage() {
         toast.error("Payment error: " + error);
       };
 
-      payhere.startPayment(payment);
+      payhere.startPayment(paymentParams);
     } catch (err: any) {
       toast.error(err.message || "Checkout failed");
     } finally {
@@ -102,6 +98,20 @@ export function OrderConfirmationPage() {
         const result = await orderService.getOrder(orderId);
         if (result.ok && result.data) {
           setOrder(result.data);
+          
+          // Pre-fetch PayHere parameters if order is unpaid
+          if (result.data.paymentStatus === "UNPAID") {
+            setLoadingParams(true);
+            const returnUrl = `${window.location.origin}/orders/${orderId}/confirmation`;
+            const cancelUrl = window.location.href;
+            const paramsResult = await orderService.getPaymentParams(orderId, returnUrl, cancelUrl);
+            if (paramsResult.ok && paramsResult.data) {
+              setPaymentParams(paramsResult.data);
+            } else {
+              console.error("Failed to pre-fetch payment parameters:", paramsResult.error);
+            }
+            setLoadingParams(false);
+          }
         } else {
           setError(result.error || "Failed to load order details");
         }
@@ -230,10 +240,10 @@ export function OrderConfirmationPage() {
                 </p>
                 <button
                   onClick={handlePay}
-                  disabled={isPaying}
+                  disabled={isPaying || loadingParams}
                   className="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-xl transition-all font-semibold flex items-center justify-center gap-2 shadow-lg shadow-purple-200 disabled:opacity-50"
                 >
-                  {isPaying ? (
+                  {isPaying || loadingParams ? (
                     <>
                       <Loader2 className="w-5 h-5 animate-spin" />
                       Loading PayHere Sandbox...
