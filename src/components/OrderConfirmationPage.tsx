@@ -137,7 +137,11 @@ export function OrderConfirmationPage() {
             setLoadingParams(false);
           }
         } else {
-          setError(result.error || "Failed to load order details");
+          if (result.status === 403) {
+            setError("You do not have permission to view this order.");
+          } else {
+            setError(result.error || "Failed to load order details");
+          }
         }
       } catch (err: any) {
         if (err.response && err.response.status === 403) {
@@ -161,11 +165,14 @@ export function OrderConfirmationPage() {
   }
 
   if (error || !order) {
+    const isPermissionError = error === "You do not have permission to view this order.";
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-xl p-8 max-w-md w-full shadow-sm text-center">
           <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-          <h2 className="text-xl font-bold text-gray-900 mb-2">Order Not Found</h2>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">
+            {isPermissionError ? "Access Denied" : "Order Not Found"}
+          </h2>
           <p className="text-gray-600 mb-6">{error || "Could not find the requested order."}</p>
           <button
             onClick={() => navigate("/")}
