@@ -1,4 +1,4 @@
-import { CheckCircle2, ChevronRight, Package, MapPin, Loader2, AlertCircle } from "lucide-react";
+import { CheckCircle2, ChevronRight, Package, MapPin, Loader2, AlertCircle, Clock } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { orderService, type OrderResponse, type PayHereParams } from "../services/orderService";
@@ -254,7 +254,7 @@ export function OrderConfirmationPage() {
           <div className="space-y-8">
             {/* PayHere Checkout Card */}
             {order.paymentStatus === 'UNPAID' && (
-              <div className="bg-white rounded-2xl shadow-sm p-6 border-2 border-purple-200">
+              <div className="bg-white rounded-2xl shadow-sm p-6 border-2 border-purple-600">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
                     <div className="p-2 bg-purple-100 text-purple-600 rounded-lg">
@@ -286,8 +286,60 @@ export function OrderConfirmationPage() {
               </div>
             )}
 
+            {order.paymentStatus === 'PENDING' && (
+              <div className="bg-white rounded-2xl shadow-sm p-6 border-2 border-amber-500">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-amber-100 text-amber-600 rounded-lg">
+                      <Clock className="w-5 h-5" />
+                    </div>
+                    <h2 className="text-xl font-bold text-gray-900">Payment Pending</h2>
+                  </div>
+                  <span className="px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-xs font-bold animate-pulse">
+                    PENDING
+                  </span>
+                </div>
+                <p className="text-gray-600 text-sm leading-relaxed">
+                  Your payment is currently processing. We will update the status once the payment gateway confirms the transaction.
+                </p>
+              </div>
+            )}
+
+            {order.paymentStatus === 'FAILED' && (
+              <div className="bg-white rounded-2xl shadow-sm p-6 border-2 border-rose-500">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-rose-100 text-rose-600 rounded-lg">
+                      <AlertCircle className="w-5 h-5 animate-bounce" />
+                    </div>
+                    <h2 className="text-xl font-bold text-gray-900">Payment Failed</h2>
+                  </div>
+                  <span className="px-3 py-1 bg-red-100 text-red-800 rounded-full text-xs font-bold">
+                    FAILED
+                  </span>
+                </div>
+                <p className="text-gray-600 text-sm mb-5 leading-relaxed">
+                  Your payment attempt was unsuccessful. Please try again to complete your order.
+                </p>
+                <button
+                  onClick={handlePay}
+                  disabled={isPaying || loadingParams}
+                  className="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-xl transition-all font-semibold flex items-center justify-center gap-2 shadow-lg shadow-purple-200 disabled:opacity-50"
+                >
+                  {isPaying || loadingParams ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      Loading PayHere Sandbox...
+                    </>
+                  ) : (
+                    "Retry Payment"
+                  )}
+                </button>
+              </div>
+            )}
+
             {order.paymentStatus === 'PAID' && (
-              <div className="bg-white rounded-2xl shadow-sm p-6 border-2 border-green-200">
+              <div className="bg-white rounded-2xl shadow-sm p-6 border-2 border-emerald-500">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="p-2 bg-green-100 text-green-600 rounded-lg">
