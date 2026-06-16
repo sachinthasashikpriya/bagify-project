@@ -339,7 +339,7 @@ export function OrderConfirmationPage() {
             )}
 
             {order.paymentStatus === 'PAID' && (
-              <div className="bg-white rounded-2xl shadow-sm p-6 border-2 border-emerald-500">
+              <div className="bg-white rounded-2xl shadow-sm p-6 border-2 border-green-500">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="p-2 bg-green-100 text-green-600 rounded-lg">
