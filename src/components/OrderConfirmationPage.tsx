@@ -5,6 +5,7 @@ import { orderService, type OrderResponse, type PayHereParams } from "../service
 import { useAuth } from "../hooks/useAuth";
 import { useProducts } from "../hooks/useProduct";
 import { toast } from "sonner";
+import { env } from "../config/env";
 
 
 export function OrderConfirmationPage() {
@@ -96,6 +97,7 @@ export function OrderConfirmationPage() {
 
       const checkoutParams = {
         ...paymentParams,
+        notify_url: env.PAYHERE_NOTIFY_URL,
         first_name: currentUser.name || paymentParams.first_name || "Customer",
         email: currentUser.email || paymentParams.email || "",
         phone: currentUser.phone || paymentParams.phone || "0771234567",
