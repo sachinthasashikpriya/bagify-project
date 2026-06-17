@@ -73,7 +73,7 @@ export function ProductDetailPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="animate-pulse flex items-center gap-2 text-gray-300 mb-6">
             <div className="w-5 h-5 bg-gray-300 rounded"></div>
             <div className="w-32 h-4 bg-gray-300 rounded"></div>
@@ -99,7 +99,7 @@ export function ProductDetailPage() {
   if (!product || fetchError) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <Link
             to="/"
             className="flex items-center gap-2 text-purple-600 hover:text-purple-700 mb-6"
@@ -215,7 +215,7 @@ export function ProductDetailPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Back Button */}
         <Link
           to="/"

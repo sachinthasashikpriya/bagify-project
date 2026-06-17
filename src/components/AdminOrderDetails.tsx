@@ -157,7 +157,7 @@ export function AdminOrderDetails() {
 
   return (
     <div className="min-h-screen bg-[#f8fafc] p-6 lg:p-10 admin-panel">
-      <div className="max-w-7xl mx-auto space-y-8">
+      <div className="max-w-[1440px] mx-auto space-y-8">
         
         {/* Navigation & Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">

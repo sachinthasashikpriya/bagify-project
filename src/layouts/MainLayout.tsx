@@ -21,7 +21,7 @@ export function MainLayout() {
   const handleNavigate = (path: string) => navigate(path);
   const handleLogout = async () => {
     await logout(); // handle errors/toasts if needed
-    navigate("/login");
+    navigate("/");
   };
 
   return (

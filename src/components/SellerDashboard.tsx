@@ -358,7 +358,7 @@ export function SellerDashboard() {
       <div className="absolute top-1/3 right-1/4 w-[400px] h-[400px] bg-indigo-200/15 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-10 left-10 w-[300px] h-[300px] bg-blue-200/10 rounded-full blur-3xl pointer-events-none" />
       
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative">
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8 relative">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-10 pb-6 border-b border-slate-100">
           <div className="flex items-center gap-4">
