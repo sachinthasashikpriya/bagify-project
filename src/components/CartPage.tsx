@@ -8,7 +8,7 @@ import { orderService } from '../services/orderService';
 import { ConfirmModal } from './common/ConfirmModal';
 
 export function CartPage() {
-  const { currentUser } = useAuth();
+  const { currentUser, openLoginModal } = useAuth();
   const { cartItems, updateQuantity, removeFromCart, clearCart } = useCart();
   const navigate = useNavigate();
   const [isCheckingOut, setIsCheckingOut] = useState(false);
@@ -36,7 +36,7 @@ export function CartPage() {
           <h2 className="text-xl font-semibold text-gray-900 mb-2">Please Login</h2>
           <p className="text-gray-600 mb-4">You need to be logged in to view your cart.</p>
           <button
-            onClick={() => navigate('/login')}
+            onClick={openLoginModal}
             className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700"
           >
             Go to Login

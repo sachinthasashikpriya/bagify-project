@@ -1,6 +1,6 @@
 import { Loader2, ArrowLeft, Package, ShoppingCart, Star, Store, BadgeCheck } from "lucide-react";
 import { useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { useAuth } from "../hooks/useAuth";
 import { useCart } from "../hooks/useCart";
@@ -8,8 +8,7 @@ import { useProducts } from "../hooks/useProduct";
 
 export function ProductDetail() {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
-  const { currentUser } = useAuth();
+  const { currentUser, openLoginModal } = useAuth();
   const { addToCart } = useCart();
   const { products, addReview } = useProducts();
 
@@ -51,7 +50,7 @@ export function ProductDetail() {
   const handleAddToCart = async () => {
     if (!currentUser) {
       toast.error("Please login to add items to cart");
-      navigate("/login");
+      openLoginModal();
       return;
     }
     if (currentUser.role !== "BUYER") {
@@ -80,7 +79,7 @@ export function ProductDetail() {
 
     if (!currentUser) {
       toast.error("Please login to submit a review");
-      navigate("/login");
+      openLoginModal();
       return;
     }
 
@@ -246,12 +245,12 @@ export function ProductDetail() {
 
           {!currentUser && (
             <p className="text-center text-sm text-gray-600 mt-3">
-              <Link
-                to="/login"
-                className="text-purple-600 hover:text-purple-700 font-medium"
+              <button
+                onClick={openLoginModal}
+                className="text-purple-600 hover:text-purple-700 font-medium cursor-pointer"
               >
                 Login
-              </Link>{" "}
+              </button>{" "}
               to add items to cart
             </p>
           )}
@@ -395,12 +394,12 @@ export function ProductDetail() {
           <div className="bg-gray-50 rounded-lg p-4 text-center">
             <p className="text-gray-600">
               Please{" "}
-              <Link
-                to="/login"
-                className="text-purple-600 hover:text-purple-700 font-medium"
+              <button
+                onClick={openLoginModal}
+                className="text-purple-600 hover:text-purple-700 font-medium cursor-pointer"
               >
                 login
-              </Link>{" "}
+              </button>{" "}
               to write a review
             </p>
           </div>

@@ -11,6 +11,9 @@ export interface AuthContextType {
   updateUser: (user: User) => void;
   isAuthenticated: boolean;
   checkAuth: () => Promise<void>;
+  isLoginModalOpen: boolean;
+  openLoginModal: () => void;
+  closeLoginModal: () => void;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);

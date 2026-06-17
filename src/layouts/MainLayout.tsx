@@ -3,12 +3,13 @@ import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Header } from "../components/Header";
 import { Footer } from "../components/Footer";
 import { useAuth } from "../hooks/useAuth"; // assuming you have this
+import { LoginModal } from "../components/LoginModal";
 // import { useCart } from "../hooks/useCart"; // if you have a cart hook
 
 export function MainLayout() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { currentUser, logout } = useAuth(); // adjust names to your hook
+  const { currentUser, logout, isLoginModalOpen, closeLoginModal } = useAuth(); // adjust names to your hook
   // const { items } = useCart(); // or however you get cart count
 
   const hideHeader =
@@ -38,6 +39,7 @@ export function MainLayout() {
         <Outlet />
       </div>
       {!hideHeader && <Footer />}
+      <LoginModal isOpen={isLoginModalOpen} onClose={closeLoginModal} />
     </div>
   );
 }

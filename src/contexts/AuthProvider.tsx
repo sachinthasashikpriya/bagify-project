@@ -14,6 +14,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+
+  const openLoginModal = useCallback(() => setIsLoginModalOpen(true), []);
+  const closeLoginModal = useCallback(() => setIsLoginModalOpen(false), []);
 
   useEffect(() => {
     const initializeAuth = async () => {
@@ -151,6 +155,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     updateUser,
     checkAuth,
     isAuthenticated: !!currentUser && !!token,
+    isLoginModalOpen,
+    openLoginModal,
+    closeLoginModal,
   };
 
   // Optional: Show loading state while checking auth

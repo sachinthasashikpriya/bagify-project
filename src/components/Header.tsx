@@ -1,5 +1,6 @@
 import { ShieldCheck, ShoppingCart, User } from "lucide-react";
 import { useCart } from "../hooks/useCart";
+import { useAuth } from "../hooks/useAuth";
 import type { CartItem, User as UserType } from "../types";
 import {cloudinaryService } from "../services/cloudinaryservice";
 
@@ -19,6 +20,7 @@ export function Header({
   currentPage,
 }: HeaderProps) {
   const { cartItems } = useCart(); // Add this hook
+  const { openLoginModal } = useAuth();
   const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0); // Calculate total count
 
   // ✅ Get optimized profile image URL
@@ -180,7 +182,7 @@ export function Header({
               </div>
             ) : (
               <button
-                onClick={() => onNavigate("login")}
+                onClick={openLoginModal}
                 className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700"
               >
                 Login
