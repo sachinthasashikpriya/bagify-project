@@ -220,7 +220,9 @@ export function ProductDetail() {
                   <div className="flex items-center gap-1">
                     <Star className="w-4 h-4 text-yellow-400 fill-current" />
                     <span className="text-gray-600 text-sm">
-                      {product.sellerRating?.toFixed(1) || "4.5"} seller rating
+                      {product.sellerRating && product.sellerRating > 0
+                        ? `${product.sellerRating.toFixed(1)} seller rating`
+                        : "No seller rating"}
                     </span>
                   </div>
                 </div>

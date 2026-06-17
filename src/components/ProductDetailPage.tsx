@@ -312,10 +312,12 @@ export function ProductDetailPage() {
                       </span>
                     )}
                   </p>
-                  <div className="flex items-center gap-1">
+                   <div className="flex items-center gap-1">
                     <Star className="w-4 h-4 text-yellow-400 fill-current" />
                     <span className="text-gray-600 text-sm">
-                      Seller Rating: {product.sellerRating?.toFixed(1) || "4.5"}
+                      Seller Rating: {product.sellerRating && product.sellerRating > 0
+                        ? product.sellerRating.toFixed(1)
+                        : "No ratings yet"}
                     </span>
                   </div>
                 </div>

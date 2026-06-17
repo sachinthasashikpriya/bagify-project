@@ -344,10 +344,11 @@ export function SellerDashboard() {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  // Dynamically compute seller rating from real review data
+  // Dynamically compute seller rating from product average ratings
   const allReviews = sellerProducts.flatMap(p => p.reviews || []);
-  const sellerRating = allReviews.length > 0
-    ? allReviews.reduce((sum, r) => sum + r.rating, 0) / allReviews.length
+  const reviewedProducts = sellerProducts.filter(p => p.reviews && p.reviews.length > 0);
+  const sellerRating = reviewedProducts.length > 0
+    ? reviewedProducts.reduce((sum, p) => sum + (p.averageRating || 0), 0) / reviewedProducts.length
     : 0;
   const totalReviews = allReviews.length;
 
