@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, Star, Package, TrendingUp, BadgeCheck, X, ShoppingBag, DollarSign, ArrowUpRight, BarChart3, Settings, ShieldCheck, Upload, Loader } from 'lucide-react';
+import { Plus, Edit, Trash2, Star, Package, TrendingUp, BadgeCheck, X, ShoppingBag, DollarSign, ArrowUpRight, BarChart3, Settings, ShieldCheck, Upload, Loader, Calendar, Filter } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useAuth } from '../hooks/useAuth';
 import { useProducts } from '../hooks/useProduct';
 import { orderService, type OrderResponse, type OrderItemResponse } from '../services/orderService';
+import { userService } from '../services/userservice';
 import { cloudinaryService } from '../services/cloudinaryservice';
 import type { Product } from '../types';
 
@@ -12,7 +13,7 @@ export function SellerDashboard() {
   const { currentUser } = useAuth();
   const { products, addProduct, deleteProduct, updateProduct } = useProducts();
   const navigate = useNavigate();
-  
+
   const [showAddForm, setShowAddForm] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
@@ -41,14 +42,63 @@ export function SellerDashboard() {
   // Local file upload states for Edit Form
   const [editFile, setEditFile] = useState<File | null>(null);
   const [editPreview, setEditPreview] = useState<string>('');
-  
+
   // Overall upload loading state
   const [isUploading, setIsUploading] = useState(false);
 
   const [activeTab, setActiveTab] = useState<'products' | 'orders'>('products');
   const [orders, setOrders] = useState<OrderResponse[]>([]);
   const [isLoadingOrders, setIsLoadingOrders] = useState(false);
+  const [buyerNames, setBuyerNames] = useState<{ [key: number]: string }>({});
   const [sellerStats, setSellerStats] = useState<{ totalRevenue: number; totalItemsSold: number } | null>(null);
+
+  // Time period filter states
+  const [filterType, setFilterType] = useState<'all' | 'today' | '7days' | '30days' | 'custom'>('all');
+  const [customStartDate, setCustomStartDate] = useState<string>('');
+  const [customEndDate, setCustomEndDate] = useState<string>('');
+
+  // Filtered orders logic
+  const filteredOrders = orders.filter(order => {
+    if (!order.createdAt) return true;
+    const orderDate = new Date(order.createdAt);
+    const now = new Date();
+
+    switch (filterType) {
+      case 'today': {
+        return orderDate.toDateString() === now.toDateString();
+      }
+      case '7days': {
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(now.getDate() - 7);
+        return orderDate.getTime() >= sevenDaysAgo.getTime();
+      }
+      case '30days': {
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(now.getDate() - 30);
+        return orderDate.getTime() >= thirtyDaysAgo.getTime();
+      }
+      case 'custom': {
+        if (customStartDate) {
+          const [year, month, day] = customStartDate.split('-').map(Number);
+          const start = new Date(year, month - 1, day, 0, 0, 0, 0);
+          if (orderDate.getTime() < start.getTime()) {
+            return false;
+          }
+        }
+        if (customEndDate) {
+          const [year, month, day] = customEndDate.split('-').map(Number);
+          const end = new Date(year, month - 1, day, 23, 59, 59, 999);
+          if (orderDate.getTime() > end.getTime()) {
+            return false;
+          }
+        }
+        return true;
+      }
+      case 'all':
+      default:
+        return true;
+    }
+  });
 
   useEffect(() => {
     const fetchSellerStats = async () => {
@@ -69,6 +119,24 @@ export function SellerDashboard() {
         const result = await orderService.getSellerOrders();
         if (result.ok && result.data) {
           setOrders(result.data);
+          // Fetch buyer names for all unique buyerIds
+          const uniqueBuyerIds = Array.from(new Set(result.data.map(o => o.buyerId)));
+          const namesMap: { [key: number]: string } = {};
+          await Promise.all(
+            uniqueBuyerIds.map(async (id) => {
+              try {
+                const buyerRes = await userService.getBuyerById(id);
+                if (buyerRes.ok && buyerRes.data) {
+                  namesMap[id] = buyerRes.data.name;
+                } else {
+                  namesMap[id] = `Buyer #${id}`;
+                }
+              } catch {
+                namesMap[id] = `Buyer #${id}`;
+              }
+            })
+          );
+          setBuyerNames(namesMap);
         } else {
           toast.error(result.error || "Failed to load orders");
         }
@@ -180,13 +248,13 @@ export function SellerDashboard() {
   };
 
   const resetAddForm = () => {
-    setFormData({ 
-      name: '', 
-      description: '', 
-      price: '', 
-      category: '', 
-      image: '', 
-      stock: '' 
+    setFormData({
+      name: '',
+      description: '',
+      price: '',
+      category: '',
+      image: '',
+      stock: ''
     });
     if (addPreview) {
       URL.revokeObjectURL(addPreview);
@@ -208,7 +276,7 @@ export function SellerDashboard() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Validation
     if (!formData.name.trim()) {
       toast.error('Product name is required');
@@ -246,7 +314,7 @@ export function SellerDashboard() {
         setIsUploading(false);
         return;
       }
-      
+
       finalImageUrl = result.data.secure_url;
       console.log("☁️ Product image uploaded:", finalImageUrl);
 
@@ -358,7 +426,7 @@ export function SellerDashboard() {
       <div className="absolute top-0 left-1/4 w-[400px] h-[400px] bg-purple-200/20 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute top-1/3 right-1/4 w-[400px] h-[400px] bg-indigo-200/15 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-10 left-10 w-[300px] h-[300px] bg-blue-200/10 rounded-full blur-3xl pointer-events-none" />
-      
+
       <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8 relative">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-10 pb-6 border-b border-slate-100">
@@ -397,7 +465,7 @@ export function SellerDashboard() {
               <div>
                 <p className="text-slate-400 font-bold text-xs tracking-wider uppercase mb-1.5">Total Products</p>
                 <p className="text-3xl font-extrabold text-slate-900 tracking-tight">{sellerProducts.length}</p>
-                
+
               </div>
               <div className="w-14 h-14 rounded-2xl bg-purple-50 flex items-center justify-center text-purple-600 group-hover:scale-110 transition-transform duration-300">
                 <ShoppingBag className="w-7 h-7" />
@@ -415,7 +483,7 @@ export function SellerDashboard() {
                 ) : (
                   <p className="text-3xl font-extrabold text-slate-900 tracking-tight">{sellerStats.totalItemsSold}</p>
                 )}
-               
+
               </div>
               <div className="w-14 h-14 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-600 group-hover:scale-110 transition-transform duration-300">
                 <TrendingUp className="w-7 h-7" />
@@ -433,7 +501,7 @@ export function SellerDashboard() {
                 ) : (
                   <p className="text-3xl font-extrabold text-slate-900 tracking-tight">Rs. {sellerStats.totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                 )}
-               
+
               </div>
               <div className="w-14 h-14 rounded-2xl bg-amber-50 flex items-center justify-center text-amber-500 group-hover:scale-110 transition-transform duration-300">
                 <DollarSign className="w-7 h-7" />
@@ -449,7 +517,7 @@ export function SellerDashboard() {
             Quick Operations
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <button
+            {/* <button
               onClick={() => setShowAddForm(true)}
               className="group relative flex items-center justify-between p-4 bg-gradient-to-tr from-purple-500 to-indigo-600 text-white rounded-2xl shadow-sm hover:shadow-lg hover:shadow-purple-200/40 hover:-translate-y-0.5 transition-all duration-300"
             >
@@ -457,47 +525,60 @@ export function SellerDashboard() {
                 <div className="p-2.5 bg-white/10 rounded-xl">
                   <Plus className="w-5 h-5 text-white" />
                 </div>
-                <span className="font-bold text-sm">Add Product</span>
+                <span className="self-start sm:self-auto bg-purple-600 hover:bg-purple-700 text-white font-bold px-5 py-2.5 rounded-xl transition-all duration-300 shadow-md shadow-purple-200/50 flex items-center gap-2 hover:-translate-y-0.5">Add Product</span>
               </div>
               <ArrowUpRight className="w-4 h-4 opacity-50 group-hover:opacity-100 transition-opacity" />
+            </button> */}
+
+            <button
+              onClick={() => setShowAddForm(!showAddForm)}
+              className="group relative flex items-center justify-between p-4 bg-purple-50/30 border border-purple-200/85 text-slate-700 rounded-2xl shadow-sm hover:shadow-md hover:border-purple-300 hover:bg-purple-50/50 hover:-translate-y-0.5 transition-all duration-300"
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-purple-600 text-white rounded-xl group-hover:bg-purple-700 transition-colors shadow-sm shadow-purple-100">
+                  <Plus className="w-5 h-5" />
+                </div>
+                <span className="font-bold text-slate-800 text-sm">Add Product</span>
+              </div>
+              <ArrowUpRight className="w-4 h-4 opacity-50 group-hover:opacity-100 text-purple-600 transition-opacity" />
             </button>
 
             <button
               onClick={() => navigate('/')}
-              className="group relative flex items-center justify-between p-4 bg-white border border-slate-200 text-slate-700 rounded-2xl shadow-sm hover:shadow-md hover:border-blue-300 hover:bg-blue-50/20 hover:-translate-y-0.5 transition-all duration-300"
+              className="group relative flex items-center justify-between p-4 bg-white border border-slate-200 text-slate-700 rounded-2xl shadow-sm hover:shadow-md hover:border-purple-300 hover:bg-purple-50/20 hover:-translate-y-0.5 transition-all duration-300"
             >
               <div className="flex items-center gap-3">
-                <div className="p-2.5 bg-blue-50 text-blue-600 rounded-xl group-hover:bg-blue-100 transition-colors">
+                <div className="p-2.5 bg-purple-50 text-purple-600 rounded-xl group-hover:bg-purple-100 transition-colors">
                   <Package className="w-5 h-5" />
                 </div>
                 <span className="font-bold text-slate-800 text-sm">View Store</span>
               </div>
-              <ArrowUpRight className="w-4 h-4 opacity-30 group-hover:opacity-100 text-blue-600 transition-opacity" />
+              <ArrowUpRight className="w-4 h-4 opacity-30 group-hover:opacity-100 text-purple-600 transition-opacity" />
             </button>
 
             <button
               onClick={() => navigate('/edit-profile')}
-              className="group relative flex items-center justify-between p-4 bg-white border border-slate-200 text-slate-700 rounded-2xl shadow-sm hover:shadow-md hover:border-emerald-300 hover:bg-emerald-50/20 hover:-translate-y-0.5 transition-all duration-300"
+              className="group relative flex items-center justify-between p-4 bg-white border border-slate-200 text-slate-700 rounded-2xl shadow-sm hover:shadow-md hover:border-purple-300 hover:bg-purple-50/20 hover:-translate-y-0.5 transition-all duration-300"
             >
               <div className="flex items-center gap-3">
-                <div className="p-2.5 bg-emerald-50 text-emerald-600 rounded-xl group-hover:bg-emerald-100 transition-colors">
+                <div className="p-2.5 bg-purple-50 text-purple-600 rounded-xl group-hover:bg-purple-100 transition-colors">
                   <Edit className="w-5 h-5" />
                 </div>
                 <span className="font-bold text-slate-800 text-sm">Edit Profile</span>
               </div>
-              <ArrowUpRight className="w-4 h-4 opacity-30 group-hover:opacity-100 text-emerald-600 transition-opacity" />
+              <ArrowUpRight className="w-4 h-4 opacity-30 group-hover:opacity-100 text-purple-600 transition-opacity" />
             </button>
 
             <button
-              className="group relative flex items-center justify-between p-4 bg-white border border-slate-200 text-slate-700 rounded-2xl shadow-sm hover:shadow-md hover:border-amber-300 hover:bg-amber-50/20 hover:-translate-y-0.5 transition-all duration-300"
+              className="group relative flex items-center justify-between p-4 bg-white border border-slate-200 text-slate-700 rounded-2xl shadow-sm hover:shadow-md hover:border-purple-300 hover:bg-purple-50/20 hover:-translate-y-0.5 transition-all duration-300"
             >
               <div className="flex items-center gap-3">
-                <div className="p-2.5 bg-amber-50 text-amber-600 rounded-xl group-hover:bg-amber-100 transition-colors">
+                <div className="p-2.5 bg-purple-50 text-purple-600 rounded-xl group-hover:bg-purple-100 transition-colors">
                   <BarChart3 className="w-5 h-5" />
                 </div>
                 <span className="font-bold text-slate-800 text-sm">View Analytics</span>
               </div>
-              <ArrowUpRight className="w-4 h-4 opacity-30 group-hover:opacity-100 text-amber-600 transition-opacity" />
+              <ArrowUpRight className="w-4 h-4 opacity-30 group-hover:opacity-100 text-purple-600 transition-opacity" />
             </button>
           </div>
         </div>
@@ -506,22 +587,20 @@ export function SellerDashboard() {
         <div className="bg-slate-200/40 backdrop-blur-md p-1.5 rounded-2xl inline-flex gap-1.5 mb-8 shadow-inner border border-slate-250/20">
           <button
             onClick={() => setActiveTab('products')}
-            className={`flex items-center gap-2.5 px-6 py-2.5 rounded-xl text-xs font-bold tracking-wide uppercase transition-all duration-300 ${
-              activeTab === 'products'
+            className={`flex items-center gap-2.5 px-6 py-2.5 rounded-xl text-xs font-bold tracking-wide uppercase transition-all duration-300 ${activeTab === 'products'
                 ? 'bg-white text-purple-700 shadow-sm border border-slate-100'
                 : 'text-slate-500 hover:text-slate-900'
-            }`}
+              }`}
           >
             <Package className="w-4.5 h-4.5" />
             Products Catalog
           </button>
           <button
             onClick={() => setActiveTab('orders')}
-            className={`flex items-center gap-2.5 px-6 py-2.5 rounded-xl text-xs font-bold tracking-wide uppercase transition-all duration-300 ${
-              activeTab === 'orders'
+            className={`flex items-center gap-2.5 px-6 py-2.5 rounded-xl text-xs font-bold tracking-wide uppercase transition-all duration-300 ${activeTab === 'orders'
                 ? 'bg-white text-purple-700 shadow-sm border border-slate-100'
                 : 'text-slate-500 hover:text-slate-900'
-            }`}
+              }`}
           >
             <TrendingUp className="w-4.5 h-4.5" />
             Order Requests
@@ -557,7 +636,7 @@ export function SellerDashboard() {
                     <X className="w-5 h-5" />
                   </button>
                 </div>
-                
+
                 <form onSubmit={handleSubmit} className="space-y-5">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div>
@@ -639,12 +718,12 @@ export function SellerDashboard() {
                     <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">
                       Product Image *
                     </label>
-                    
+
                     {addPreview ? (
                       <div className="relative group rounded-2xl overflow-hidden border border-slate-250/80 h-64 bg-slate-50 flex items-center justify-center">
-                        <img 
-                          src={addPreview} 
-                          alt="Product Preview" 
+                        <img
+                          src={addPreview}
+                          alt="Product Preview"
                           className="max-h-full max-w-full object-contain"
                         />
                         <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center gap-3">
@@ -672,7 +751,7 @@ export function SellerDashboard() {
                         </div>
                       </div>
                     ) : (
-                      <div 
+                      <div
                         onClick={() => {
                           const fileInput = document.getElementById('add-product-image') as HTMLInputElement;
                           fileInput?.click();
@@ -688,12 +767,12 @@ export function SellerDashboard() {
                         </div>
                       </div>
                     )}
-                    
-                    <input 
+
+                    <input
                       id="add-product-image"
-                      type="file" 
-                      accept="image/jpeg,image/png,image/gif,image/webp" 
-                      onChange={handleAddFileSelect} 
+                      type="file"
+                      accept="image/jpeg,image/png,image/gif,image/webp"
+                      onChange={handleAddFileSelect}
                       className="hidden"
                     />
                   </div>
@@ -819,7 +898,7 @@ export function SellerDashboard() {
                         </td>
                         <td className="py-4 px-5 text-right">
                           <div className="flex items-center justify-end gap-1.5">
-                            <button 
+                            <button
                               onClick={() => {
                                 setEditingProduct(product);
                                 setEditFormData({
@@ -832,7 +911,7 @@ export function SellerDashboard() {
                                 });
                                 setShowEditModal(true);
                               }}
-                              className="p-2 hover:bg-blue-50 rounded-xl transition-all duration-150 text-blue-600 hover:text-blue-700"
+                              className="p-2 hover:bg-purple-50 rounded-xl transition-all duration-150 text-purple-600 hover:text-purple-700"
                               title="Edit Product"
                             >
                               <Edit className="w-4 h-4" />
@@ -901,105 +980,209 @@ export function SellerDashboard() {
               </div>
             ) : (
               <div className="space-y-6">
-                {orders.map((order) => {
-                  const myItems = getSellerItems(order);
-                  if (myItems.length === 0) return null;
-                  return (
-                    <div key={order.id} className="border border-slate-100 bg-slate-50/20 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200">
-                      {/* Order header */}
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-4 bg-slate-50/80 border-b border-slate-100">
-                        <div className="flex flex-wrap items-center gap-3">
-                          <span className="font-extrabold text-slate-900 text-sm">Order #{order.id}</span>
-                          <span className="w-1.5 h-1.5 rounded-full bg-slate-350" />
-                          <span className="text-xs text-slate-500 font-bold">{new Date(order.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}</span>
-                          <span className="w-1.5 h-1.5 rounded-full bg-slate-355" />
-                          <span className="inline-flex px-2 py-0.5 bg-purple-50 text-purple-700 text-xs font-extrabold rounded-md uppercase tracking-wider">Buyer #{order.buyerId}</span>
-                        </div>
-                        <div className="flex items-center gap-4">
-                          <span className="text-xs text-slate-500 font-bold">
-                            Grand Total: <span className="font-extrabold text-slate-900 text-sm">Rs. {order.totalAmount.toFixed(2)}</span>
-                          </span>
-                          <span className={`inline-flex px-3 py-1 rounded-full text-xs font-extrabold tracking-wider uppercase ${getStatusColor(order.status)}`}>
-                            {order.status.replace(/_/g, ' ')}
-                          </span>
-                        </div>
-                      </div>
+                {/* Time Period Filter Section */}
+                <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                      <Filter className="w-3.5 h-3.5 text-purple-600" />
+                      Time Period:
+                    </span>
+                    <div className="flex flex-wrap gap-1.5">
+                      {[
+                        { id: 'all', label: 'All Time' },
+                        { id: 'today', label: 'Today' },
+                        { id: '7days', label: 'Last 7 Days' },
+                        { id: '30days', label: 'Last 30 Days' },
+                        { id: 'custom', label: 'Custom Range' },
+                      ].map((period) => (
+                        <button
+                          key={period.id}
+                          onClick={() => {
+                            setFilterType(period.id as any);
+                            if (period.id !== 'custom') {
+                              setCustomStartDate('');
+                              setCustomEndDate('');
+                            }
+                          }}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all duration-205 border ${
+                            filterType === period.id
+                              ? 'bg-purple-600 border-purple-600 text-white shadow-sm shadow-purple-100'
+                              : 'bg-white border-slate-200 text-slate-700 hover:border-purple-300 hover:bg-purple-50/10'
+                          }`}
+                        >
+                          {period.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
 
-                      {/* My items in this order */}
-                      <div className="divide-y divide-slate-100 bg-white">
-                        {myItems.map((item) => (
-                          <div key={item.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-5 py-4 hover:bg-slate-50/30 transition-colors duration-150">
-                            <div className="flex items-center gap-4">
-                              {item.imageUrl && (
-                                <img
-                                  src={item.imageUrl}
-                                  alt={item.productName}
-                                  className="w-12 h-12 rounded-xl object-cover border border-slate-200 shadow-sm"
-                                  onError={(e) => {
-                                    (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1544816155-12df9643f363?w=100';
-                                  }}
-                                />
-                              )}
-                              <div>
-                                <p className="font-bold text-slate-950 text-sm">{item.productName}</p>
-                                <p className="text-xs text-slate-400 font-bold mt-0.5">
-                                  Quantity: <span className="text-slate-800 font-extrabold">{item.quantity}</span> × Rs. {item.priceAtPurchase.toFixed(2)}
-                                </p>
-                              </div>
-                            </div>
-                            
-                            <div className="flex items-center gap-3 self-end sm:self-auto">
-                              <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-extrabold border ${
-                                item.itemStatus === 'DELIVERED' ? 'bg-emerald-50 text-emerald-700 border-emerald-250/30' :
-                                item.itemStatus === 'SHIPPED' ? 'bg-blue-50 text-blue-700 border-blue-250/30' :
-                                item.itemStatus === 'PACKED' ? 'bg-cyan-50 text-cyan-700 border-cyan-250/30' :
-                                item.itemStatus === 'PROCESSING' ? 'bg-amber-50 text-amber-700 border-amber-250/30' :
-                                item.itemStatus === 'CANCELLED' ? 'bg-rose-50 text-rose-700 border-rose-250/30' :
-                                'bg-yellow-50 text-yellow-700 border-yellow-250/30'
-                              }`}>
-                                {item.itemStatus}
+                  {filterType === 'custom' && (
+                    <div className="flex flex-wrap items-center gap-3 animate-fadeIn">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs text-slate-400 font-bold">From</span>
+                        <input
+                          type="date"
+                          value={customStartDate}
+                          onChange={(e) => setCustomStartDate(e.target.value)}
+                          className="px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:ring-2 focus:ring-purple-200 focus:border-purple-500"
+                        />
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs text-slate-400 font-bold">To</span>
+                        <input
+                          type="date"
+                          value={customEndDate}
+                          onChange={(e) => setCustomEndDate(e.target.value)}
+                          className="px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:ring-2 focus:ring-purple-200 focus:border-purple-500"
+                        />
+                      </div>
+                      {(customStartDate || customEndDate) && (
+                        <button
+                          onClick={() => {
+                            setCustomStartDate('');
+                            setCustomEndDate('');
+                          }}
+                          className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all"
+                          title="Clear Custom Dates"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {filteredOrders.length === 0 ? (
+                  <div className="text-center py-16 bg-slate-50/30 border border-dashed border-slate-200 rounded-2xl animate-fadeIn">
+                    <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-400">
+                      <Calendar className="w-8 h-8 text-purple-500 animate-pulse" />
+                    </div>
+                    <h3 className="text-base font-bold text-slate-900 mb-1">No Orders in Selected Period</h3>
+                    <p className="text-slate-400 max-w-sm mx-auto text-xs mb-4">
+                      No orders were found matching your current time period filter.
+                    </p>
+                    <button
+                      onClick={() => {
+                        setFilterType('all');
+                        setCustomStartDate('');
+                        setCustomEndDate('');
+                      }}
+                      className="bg-purple-600 hover:bg-purple-700 text-white font-bold px-4 py-2 rounded-xl text-xs transition-all duration-200 shadow-sm"
+                    >
+                      Reset Filter
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    {filteredOrders.map((order) => {
+                      const myItems = getSellerItems(order);
+                      if (myItems.length === 0) return null;
+                      return (
+                        <div key={order.id} className="border border-slate-100 bg-slate-50/20 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200">
+                          {/* Order header */}
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-4 bg-slate-50/80 border-b border-slate-100">
+                            <div className="flex flex-wrap items-center gap-3">
+                              <span className="font-extrabold text-slate-900 text-sm">Order #{order.id}</span>
+                              <span className="w-1.5 h-1.5 rounded-full bg-slate-300" />
+                              <span className="text-xs text-slate-500 font-bold">{new Date(order.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}</span>
+                              <span className="w-1.5 h-1.5 rounded-full bg-slate-300" />
+                              <span className="inline-flex px-2 py-0.5 bg-purple-50 text-purple-700 text-xs font-extrabold rounded-md uppercase tracking-wider">
+                                {buyerNames[order.buyerId] || `Buyer #${order.buyerId}`}
                               </span>
-                              
-                              {/* Seller controls */}
-                              {order.status !== 'CANCELLED' && item.itemStatus !== 'DELIVERED' && (
-                                <select
-                                  value={item.itemStatus}
-                                  onChange={(e) => handleItemStatusChange(order.id, item.id, e.target.value)}
-                                  className="border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 bg-white shadow-sm transition-all"
-                                >
-                                  <option value="PENDING">PENDING</option>
-                                  <option value="PROCESSING">PROCESSING</option>
-                                  <option value="PACKED">PACKED</option>
-                                  <option value="SHIPPED">SHIPPED</option>
-                                </select>
-                              )}
-                              {item.itemStatus === 'DELIVERED' && (
-                                <span className="text-xs text-emerald-600 font-extrabold flex items-center gap-1">
-                                  <ShieldCheck className="w-4 h-4 fill-emerald-500 text-white" />
-                                  Delivered
-                                </span>
-                              )}
+                            </div>
+                            <div className="flex items-center gap-4">
+                              <span className="text-xs text-slate-500 font-bold">
+                                Grand Total: <span className="font-extrabold text-slate-900 text-sm">Rs. {order.totalAmount.toFixed(2)}</span>
+                              </span>
+                              <span className={`inline-flex px-3 py-1 rounded-full text-xs font-extrabold tracking-wider uppercase ${getStatusColor(order.status)}`}>
+                                {order.status.replace(/_/g, ' ')}
+                              </span>
                             </div>
                           </div>
-                        ))}
-                      </div>
-                    </div>
-                  );
-                })}
+
+                          {/* My items in this order */}
+                          <div className="divide-y divide-slate-100 bg-white">
+                            {myItems.map((item) => (
+                              <div key={item.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-5 py-4 hover:bg-slate-50/30 transition-colors duration-150">
+                                <div className="flex items-center gap-4">
+                                  {item.imageUrl && (
+                                    <img
+                                      src={item.imageUrl}
+                                      alt={item.productName}
+                                      className="w-12 h-12 rounded-xl object-cover border border-slate-200 shadow-sm"
+                                      onError={(e) => {
+                                        (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1544816155-12df9643f363?w=100';
+                                      }}
+                                    />
+                                  )}
+                                  <div>
+                                    <p className="font-bold text-slate-950 text-sm">{item.productName}</p>
+                                    <p className="text-xs text-slate-400 font-bold mt-0.5">
+                                      Quantity: <span className="text-slate-800 font-extrabold">{item.quantity}</span> × Rs. {item.priceAtPurchase.toFixed(2)}
+                                    </p>
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center gap-3 self-end sm:self-auto">
+                                  {/* Single status control / display */}
+                                  {order.status !== 'CANCELLED' && item.itemStatus !== 'DELIVERED' && item.itemStatus !== 'CANCELLED' ? (
+                                    <div className="relative inline-block">
+                                      <select
+                                        value={item.itemStatus}
+                                        onChange={(e) => handleItemStatusChange(order.id, item.id, e.target.value)}
+                                        className={`appearance-none pr-8 pl-3 py-1.5 border rounded-xl text-xs font-extrabold shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 cursor-pointer transition-all ${
+                                          item.itemStatus === 'SHIPPED' ? 'bg-blue-50 text-blue-700 border-blue-200 focus:border-blue-500' :
+                                          item.itemStatus === 'PACKED' ? 'bg-cyan-50 text-cyan-700 border-cyan-200 focus:border-cyan-500' :
+                                          item.itemStatus === 'PROCESSING' ? 'bg-amber-50 text-amber-700 border-amber-200 focus:border-amber-500' :
+                                          'bg-yellow-50 text-yellow-700 border-yellow-200 focus:border-yellow-500'
+                                        }`}
+                                      >
+                                        <option value="PENDING">PENDING</option>
+                                        <option value="PROCESSING">PROCESSING</option>
+                                        <option value="PACKED">PACKED</option>
+                                        <option value="SHIPPED">SHIPPED</option>
+                                      </select>
+                                      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2.5 text-slate-500">
+                                        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3.5} d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-extrabold border shadow-sm ${
+                                      item.itemStatus === 'DELIVERED' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                                      item.itemStatus === 'CANCELLED' ? 'bg-rose-50 text-rose-700 border-rose-200' :
+                                      'bg-slate-50 text-slate-700 border-slate-200'
+                                    }`}>
+                                      {item.itemStatus === 'DELIVERED' && (
+                                        <ShieldCheck className="w-3.5 h-3.5 fill-emerald-500 text-white" />
+                                      )}
+                                      {item.itemStatus}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             )}
           </div>
         )}
       </div>
-      
+
       {/* Edit Product Modal */}
       {showEditModal && editingProduct && (
         <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto px-4 py-6">
-          <div 
+          <div
             className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity duration-300"
             onClick={resetEditForm}
           />
-          
+
           <div className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden transform transition-all duration-300 z-10 my-8 animate-scaleIn">
             <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100">
               <h3 className="text-lg font-extrabold text-slate-900 flex items-center gap-2">
@@ -1095,12 +1278,12 @@ export function SellerDashboard() {
                 <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">
                   Product Image *
                 </label>
-                
+
                 {editPreview || editFormData.image ? (
                   <div className="relative group rounded-2xl overflow-hidden border border-slate-250/80 h-64 bg-slate-50 flex items-center justify-center">
-                    <img 
-                      src={editPreview || editFormData.image} 
-                      alt="Product Preview" 
+                    <img
+                      src={editPreview || editFormData.image}
+                      alt="Product Preview"
                       className="max-h-full max-w-full object-contain"
                       onError={(e) => {
                         (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1544816155-12df9643f363?w=300';
@@ -1120,7 +1303,7 @@ export function SellerDashboard() {
                     </div>
                   </div>
                 ) : (
-                  <div 
+                  <div
                     onClick={() => {
                       const fileInput = document.getElementById('edit-product-image') as HTMLInputElement;
                       fileInput?.click();
@@ -1136,12 +1319,12 @@ export function SellerDashboard() {
                     </div>
                   </div>
                 )}
-                
-                <input 
+
+                <input
                   id="edit-product-image"
-                  type="file" 
-                  accept="image/jpeg,image/png,image/gif,image/webp" 
-                  onChange={handleEditFileSelect} 
+                  type="file"
+                  accept="image/jpeg,image/png,image/gif,image/webp"
+                  onChange={handleEditFileSelect}
                   className="hidden"
                 />
               </div>
