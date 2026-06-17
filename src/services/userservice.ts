@@ -17,11 +17,23 @@ export interface VerificationRequest {
   nicImageUrl: string;
 }
 
-function mapBackendUserToFrontendUser(user: any): User {
+interface BackendUser extends Omit<User, 'profileImage' | 'verification' | 'id'> {
+  id?: string | number;
+  profileImageUrl?: string;
+  verificationStatus?: 'PENDING' | 'APPROVED' | 'REJECTED' | null;
+  businessName?: string;
+  registrationNumber?: string;
+  nicImageUrl?: string;
+  brCertificateUrl?: string;
+  rejectionReason?: string;
+  submittedAt?: string;
+}
+
+function mapBackendUserToFrontendUser(user: BackendUser): User {
   const mappedUser: User = {
     ...user,
     profileImage: user.profileImageUrl,
-    id: user.id?.toString(),
+    id: user.id?.toString() || '',
   };
 
   if (user.role === 'SELLER' && user.verificationStatus) {
@@ -43,8 +55,8 @@ export const userService = {
   /**
    * Get current user profile
    */
-  async getMyProfile(_token?: string): Promise<Result<User>> {
-    const result = await httpClient.get<any>(endpoints.users.profile, {
+  async getMyProfile(): Promise<Result<User>> {
+    const result = await httpClient.get<BackendUser>(endpoints.users.profile, {
       service: 'user-service',
       auth: true,
     });
@@ -55,7 +67,7 @@ export const userService = {
       return { ...result, data: mappedUser };
     }
 
-    return result;
+    return { ok: result.ok, status: result.status, error: result.error };
   },
 
   /**
@@ -82,7 +94,7 @@ export const userService = {
         : {}),
     };
 
-    const result = await httpClient.put<any>(endpoints.users.updateProfile, payload, {
+    const result = await httpClient.put<BackendUser>(endpoints.users.updateProfile, payload, {
       service: 'user-service',
       auth: true,
     });
@@ -93,7 +105,7 @@ export const userService = {
       return { ...result, data: mappedUser };
     }
 
-    return result;
+    return { ok: result.ok, status: result.status, error: result.error };
   },
 
   /**
@@ -103,7 +115,7 @@ export const userService = {
     _token: string,
     request: VerificationRequest
   ): Promise<Result<User>> {
-    const result = await httpClient.post<any>(endpoints.users.verification, request, {
+    const result = await httpClient.post<BackendUser>(endpoints.users.verification, request, {
       service: 'user-service',
       auth: true,
     });
@@ -114,7 +126,7 @@ export const userService = {
       return { ...result, data: mappedUser };
     }
 
-    return result;
+    return { ok: result.ok, status: result.status, error: result.error };
   },
 
   /**

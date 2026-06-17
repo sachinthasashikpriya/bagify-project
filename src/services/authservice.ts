@@ -8,6 +8,24 @@ import type {
   User,
 } from '../types';
 
+interface BackendUser extends Omit<User, 'profileImage' | 'verification' | 'id'> {
+  id?: string | number;
+  profileImageUrl?: string;
+  verificationStatus?: 'PENDING' | 'APPROVED' | 'REJECTED' | null;
+  businessName?: string;
+  registrationNumber?: string;
+  nicImageUrl?: string;
+  brCertificateUrl?: string;
+  rejectionReason?: string;
+  submittedAt?: string;
+}
+
+interface BackendLoginResponse {
+  token: string;
+  refreshToken?: string | null;
+  user: BackendUser;
+}
+
 type LoginResponse = { token: string; refreshToken?: string | null; user: User };
 
 const AUTH_FALLBACK_PREFIX = '/api/v1';
@@ -25,11 +43,11 @@ function shouldTryLegacyAuthRoute<T>(result: Result<T>): boolean {
   );
 }
 
-function mapBackendUserToFrontendUser(user: any): User {
+function mapBackendUserToFrontendUser(user: BackendUser): User {
   const mappedUser: User = {
     ...user,
     profileImage: user.profileImageUrl,
-    id: user.id?.toString(),
+    id: user.id?.toString() || '',
   };
 
   if (user.role === 'SELLER' && user.verificationStatus) {
@@ -77,7 +95,7 @@ async register(payload: RegisterRequest): Promise<Result<User>> {
   async login(
     payload: LoginRequest
   ): Promise<Result<LoginResponse>> {
-    const primaryResult = await httpClient.post<LoginResponse>(endpoints.auth.login, payload, {
+    const primaryResult = await httpClient.post<BackendLoginResponse>(endpoints.auth.login, payload, {
       service: 'auth-service',  
       auth: false,
       retry: { attempts: 0, backoffMs: 0 },
@@ -96,15 +114,15 @@ async register(payload: RegisterRequest): Promise<Result<User>> {
     }
 
     if (!shouldTryLegacyAuthRoute(primaryResult)) {
-      return primaryResult;
+      return { ok: primaryResult.ok, status: primaryResult.status, error: primaryResult.error };
     }
 
     const legacyPath = toLegacyAuthPath(endpoints.auth.login);
     if (legacyPath === endpoints.auth.login) {
-      return primaryResult;
+      return { ok: primaryResult.ok, status: primaryResult.status, error: primaryResult.error };
     }
 
-    const legacyResult = await httpClient.post<LoginResponse>(legacyPath, payload, {
+    const legacyResult = await httpClient.post<BackendLoginResponse>(legacyPath, payload, {
       service: 'auth-service',
       auth: false,
       retry: { attempts: 0, backoffMs: 0 },
@@ -122,7 +140,7 @@ async register(payload: RegisterRequest): Promise<Result<User>> {
       };
     }
 
-    return legacyResult;
+    return { ok: legacyResult.ok, status: legacyResult.status, error: legacyResult.error };
   }
 
 
@@ -131,7 +149,7 @@ async register(payload: RegisterRequest): Promise<Result<User>> {
    */
   async getCurrentUser(): Promise<Result<User>> {
     try {
-      const result = await httpClient.get<any>(endpoints.users.me, {
+      const result = await httpClient.get<BackendUser>(endpoints.users.me, {
         service: 'auth-service',
         auth: true,
       });
@@ -176,7 +194,7 @@ async register(payload: RegisterRequest): Promise<Result<User>> {
   /**
    * Reset password with token
    */
-  async resetPassword(payload: any): Promise<Result<string>> {
+  async resetPassword(payload: Record<string, string>): Promise<Result<string>> {
     return httpClient.post<string>(endpoints.auth.resetPassword, payload, {
       service: 'auth-service',
       auth: false,

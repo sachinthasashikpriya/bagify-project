@@ -17,7 +17,7 @@ export function AdminDashboard() {
   const location = useLocation();
   
   const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'users' | 'orders' | 'verifications'>(
-    (location.state?.activeTab as any) || 'overview'
+    (location.state?.activeTab as 'overview' | 'products' | 'users' | 'orders' | 'verifications') || 'overview'
   );
   const [orders, setOrders] = useState<OrderResponse[]>([]);
   const [isLoadingOrders, setIsLoadingOrders] = useState(false);
@@ -335,6 +335,14 @@ export function AdminDashboard() {
   }, 0);
   const lowStockProducts = products.filter(p => p.stock < 5);
 
+  const tabs: { id: 'overview' | 'products' | 'users' | 'orders' | 'verifications'; label: string; icon: typeof TrendingUp }[] = [
+    { id: 'overview', label: 'Overview', icon: TrendingUp },
+    { id: 'products', label: 'Products', icon: Package },
+    { id: 'users', label: 'Users', icon: Users },
+    { id: 'orders', label: 'Orders', icon: ShoppingBag },
+    { id: 'verifications', label: 'Verifications', icon: Shield }
+  ];
+
   return (
     <div className="min-h-screen bg-[#f8fafc] flex admin-panel">
       {/* Sidebar Navigation */}
@@ -368,19 +376,13 @@ export function AdminDashboard() {
 
           {/* Navigation Links */}
           <nav className="p-4 space-y-1.5">
-            {[
-              { id: 'overview', label: 'Overview', icon: TrendingUp },
-              { id: 'products', label: 'Products', icon: Package },
-              { id: 'users', label: 'Users', icon: Users },
-              { id: 'orders', label: 'Orders', icon: ShoppingBag },
-              { id: 'verifications', label: 'Verifications', icon: Shield }
-            ].map((tab) => {
+            {tabs.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
               return (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id as any)}
+                  onClick={() => setActiveTab(tab.id)}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 ${
                     isActive
                       ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg shadow-purple-500/20 translate-x-1'
@@ -691,7 +693,7 @@ export function AdminDashboard() {
                   <div className="flex gap-3">
                     <select
                       value={roleFilter}
-                      onChange={(e) => setRoleFilter(e.target.value as any)}
+                      onChange={(e) => setRoleFilter(e.target.value as 'ALL' | 'BUYER' | 'SELLER')}
                       className="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white transition-all shadow-sm"
                     >
                       <option value="ALL">All Accounts</option>

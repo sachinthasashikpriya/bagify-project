@@ -35,7 +35,14 @@ export function OrderConfirmationPage() {
   const handlePay = () => {
     if (!orderId || !currentUser || !order) return;
 
-    const payhere = (window as any).payhere;
+    interface PayHereSDK {
+      startPayment: (params: unknown) => void;
+      onCompleted: (orderId: string) => void;
+      onDismissed: () => void;
+      onError: (error: string) => void;
+    }
+
+    const payhere = (window as unknown as { payhere?: PayHereSDK }).payhere;
     if (!payhere) {
       toast.error("PayHere SDK is not loaded yet. Please wait a few seconds and try again.");
       return;
@@ -48,7 +55,7 @@ export function OrderConfirmationPage() {
 
     setIsPaying(true);
     try {
-      payhere.onCompleted = function (_completedOrderId: string) {
+      payhere.onCompleted = function () {
         toast.success("Payment successful! Thank you.");
         
         // 1. Optimistic UI update for immediate visual satisfaction
@@ -107,8 +114,9 @@ export function OrderConfirmationPage() {
       };
 
       payhere.startPayment(checkoutParams);
-    } catch (err: any) {
-      toast.error(err.message || "Checkout failed");
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Checkout failed";
+      toast.error(errorMessage);
     } finally {
       setIsPaying(false);
     }
@@ -143,11 +151,12 @@ export function OrderConfirmationPage() {
             setError(result.error || "Failed to load order details");
           }
         }
-      } catch (err: any) {
-        if (err.response && err.response.status === 403) {
+      } catch (err) {
+        const errorObject = err as { response?: { status?: number }; message?: string };
+        if (errorObject.response && errorObject.response.status === 403) {
           setError("You do not have permission to view this order.");
         } else {
-          setError(err.message || "Failed to load order details");
+          setError(errorObject.message || "Failed to load order details");
         }
       } finally {
         setLoading(false);

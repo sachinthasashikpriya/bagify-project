@@ -201,8 +201,9 @@ export function ProductDetailPage() {
       
       // Also refresh the global products list
       await refreshProducts();
-    } catch (error: any) {
-      toast.error(error.message || "Failed to submit review");
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to submit review";
+      toast.error(errorMessage);
     }
   };
 

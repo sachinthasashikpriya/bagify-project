@@ -9,12 +9,13 @@ import { orderService, type OrderResponse } from "../services/orderService";
 import { ConfirmModal } from "./common/ConfirmModal";
 import { useWishlist } from "../hooks/useWishlist";
 import { reviewService } from "../services/reviewService";
-import { type Review } from "../types";
+import { type Review, type Product } from "../types";
 
 export function BuyerDashboard() {
   // ✅ Fixed: Changed from SellerDashboard to BuyerDashboard
   const { currentUser } = useAuth();
   const { cartItems, addToCart, isLoadingCart } = useCart();
+  const { wishlistProducts: wishlistItems, removeFromWishlist, isLoadingWishlist } = useWishlist();
 
   const navigate = useNavigate();
 
@@ -98,8 +99,9 @@ export function BuyerDashboard() {
         } else {
           toast.error(result.error || "Failed to fetch reviews");
         }
-      } catch (error: any) {
-        toast.error(error.message || "Failed to fetch reviews");
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : "Failed to fetch reviews";
+        toast.error(errorMessage);
       } finally {
         setIsLoadingReviews(false);
       }
@@ -133,7 +135,7 @@ export function BuyerDashboard() {
     );
   }
 
-  const { wishlistProducts: wishlistItems, removeFromWishlist, isLoadingWishlist } = useWishlist();
+
 
 
   const handleCancelOrder = (orderId: number) => {
@@ -162,11 +164,11 @@ export function BuyerDashboard() {
     navigate(path);
   };
 
-  const handleAddToCart = async (product: any) => {
+  const handleAddToCart = async (product: Product) => {
     try {
       await addToCart(product);
       toast.success("Added to cart");
-    } catch (error) {
+    } catch {
       toast.error("Failed to add to cart");
     }
   };

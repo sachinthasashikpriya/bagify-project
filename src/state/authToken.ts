@@ -18,7 +18,7 @@ export function getRefreshToken(): string | null {
   return null;
 }
 
-export function setRefreshToken(_token: string | null): void {
+export function setRefreshToken(): void {
   // Do nothing. Refresh token is handled by HttpOnly cookie.
 }
 

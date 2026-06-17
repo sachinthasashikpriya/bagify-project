@@ -45,7 +45,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     initializeAuth();
   }, []);
 
-  const login = (user: User, authToken: string, _authRefreshToken?: string | null) => {
+  const login = (user: User, authToken: string) => {
     setCurrentUser(user);
     setToken(authToken);
     setAuthToken(authToken);
@@ -83,9 +83,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(updatedUser));
   }, []);
 
+  const currentUserId = currentUser?.id;
+  const currentUserRole = currentUser?.role;
+
   // SSE connection for real-time seller verification updates
   useEffect(() => {
-    if (!currentUser || currentUser.role !== 'SELLER' || !token) {
+    if (!currentUserId || currentUserRole !== 'SELLER' || !token) {
       return;
     }
 
@@ -115,7 +118,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       eventSource.close();
     };
-  }, [currentUser?.id, token, updateUser]);
+  }, [currentUserId, currentUserRole, token, updateUser]);
 
   const checkAuth = useCallback(async () => {
     console.log('🔐 Checking auth...');

@@ -35,7 +35,7 @@ export function ProductCard({ product, onViewDetails, onAddToCart }: ProductCard
     e.stopPropagation();
     try {
       await toggleWishlist(Number(product.id));
-    } catch (error) {
+    } catch {
       // Error is handled in the context
     }
   };

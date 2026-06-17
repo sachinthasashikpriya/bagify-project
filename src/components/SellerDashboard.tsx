@@ -6,6 +6,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useProducts } from '../hooks/useProduct';
 import { orderService, type OrderResponse, type OrderItemResponse } from '../services/orderService';
 import { cloudinaryService } from '../services/cloudinaryservice';
+import type { Product } from '../types';
 
 export function SellerDashboard() {
   const { currentUser } = useAuth();
@@ -27,7 +28,7 @@ export function SellerDashboard() {
   const [addPreview, setAddPreview] = useState<string>('');
 
   const [showEditModal, setShowEditModal] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<any>(null);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [editFormData, setEditFormData] = useState({
     name: '',
     description: '',
@@ -256,10 +257,7 @@ export function SellerDashboard() {
         category: formData.category.trim(),
         image: finalImageUrl,
         stock: parseInt(formData.stock),
-        sellerId: currentSellerId,
-        sellerName: currentUser.name,
-        sellerRating: 4.5, // Default seller rating
-      } as any);
+      });
 
       resetAddForm();
     } catch (error) {

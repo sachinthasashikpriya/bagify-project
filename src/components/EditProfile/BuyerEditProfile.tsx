@@ -1,5 +1,4 @@
 import { ArrowLeft, User, Lock } from "lucide-react";
-import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { useEditProfileForm } from "../../hooks/useEditProfileForm";
@@ -10,16 +9,8 @@ export function BuyerEditProfile() {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [activeSection, setActiveSection] = useState<"profile" | "security">(() => {
-    const section = new URLSearchParams(location.search).get("section");
-    return section === "security" ? "security" : "profile";
-  });
-
-  useEffect(() => {
-    const section = new URLSearchParams(location.search).get("section");
-    if (section === "security") setActiveSection("security");
-    else setActiveSection("profile");
-  }, [location.search]);
+  const sectionQuery = new URLSearchParams(location.search).get("section");
+  const activeSection: "profile" | "security" = sectionQuery === "security" ? "security" : "profile";
   
   const {
     formData,

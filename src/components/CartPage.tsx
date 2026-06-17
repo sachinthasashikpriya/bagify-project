@@ -54,7 +54,7 @@ export function CartPage() {
     try {
       setUpdatingItems(prev => new Set(prev).add(productId));
       await updateQuantity(productId, newQuantity);
-    } catch (error) {
+    } catch {
       toast.error('Failed to update quantity');
     } finally {
       setUpdatingItems(prev => {
@@ -80,7 +80,7 @@ export function CartPage() {
           setUpdatingItems(prev => new Set(prev).add(productId));
           await removeFromCart(productId);
           toast.success('Item removed from cart');
-        } catch (error) {
+        } catch {
           toast.error('Failed to remove item');
         } finally {
           setUpdatingItems(prev => {
@@ -106,7 +106,7 @@ export function CartPage() {
         try {
           await clearCart();
           toast.success('Cart cleared');
-        } catch (error) {
+        } catch {
           toast.error('Failed to clear cart');
         }
       }
@@ -154,9 +154,10 @@ export function CartPage() {
         toast.success('Order placed successfully! Thank you for your purchase.');
         navigate(`/orders/${response.data.id}/confirmation`);
       }
-    } catch (error: any) { 
+    } catch (error) { 
       console.error('Checkout error:', error);
-      toast.error(error.response?.data?.message || error.message || 'Checkout failed. Please try again.');
+      const e = error as { response?: { data?: { message?: string } }; message?: string };
+      toast.error(e.response?.data?.message || e.message || 'Checkout failed. Please try again.');
     } finally {
       setIsCheckingOut(false);
     }
