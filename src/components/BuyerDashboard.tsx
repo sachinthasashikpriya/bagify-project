@@ -1,4 +1,4 @@
-import { Heart, Package, ShoppingBag, Star, User, Loader2, Clock, Truck, CheckCircle2, X, Trash2, ShoppingCart, DollarSign, TrendingUp, ArrowUpRight } from "lucide-react";
+import { Heart, Package, ShoppingBag, Star, User, Loader2, Clock, Truck, CheckCircle2, X, Trash2, ShoppingCart, DollarSign, TrendingUp, ArrowUpRight, AlertTriangle } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -346,11 +346,11 @@ export function BuyerDashboard() {
               Edit Profile
             </button>
             <button
-              onClick={() => setActiveTab("reviews")}
-              className="flex items-center gap-2 p-4 bg-yellow-50 text-yellow-700 rounded-lg hover:bg-yellow-100 transition-colors"
+              onClick={() => handleNavigate("/add-complaint")}
+              className="flex items-center gap-2 p-4 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition-colors"
             >
-              <Star className="w-5 h-5" />
-              My Reviews
+              <AlertTriangle className="w-5 h-5" />
+              File Complaint
             </button>
           </div>
         </div>

@@ -7,6 +7,7 @@ import { HomePage } from "../components/HomePage";
 import { LoginPage } from "../components/LoginPage";
 import { ProductDetailPage } from "../components/ProductDetailPage";
 import { SellerDashboard } from "../components/SellerDashboard";
+import { SellerAnalytics } from "../components/SellerAnalytics";
 import { SignupPage } from "../components/SignupPage";
 import { ForgotPasswordPage } from "../components/ForgotPasswordPage";
 import { ResetPasswordPage } from "../components/ResetPasswordPage";
@@ -15,6 +16,7 @@ import { ProtectedRoute } from "./ProtectedRoute";
 import { OrderConfirmationPage } from "../components/OrderConfirmationPage";
 
 import { AdminOrderDetails } from "../components/AdminOrderDetails";
+import { AddComplaint } from "../components/AddComplaint";
 
 export function AppRoutes() {
   return (
@@ -37,10 +39,28 @@ export function AppRoutes() {
         />
 
         <Route
+          path="/seller-analytics"
+          element={
+            <ProtectedRoute allowedroles={["SELLER"]}>
+              <SellerAnalytics />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
           path="/buyer-dashboard"
           element={
             <ProtectedRoute allowedroles={["BUYER"]}>
               <BuyerDashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/add-complaint"
+          element={
+            <ProtectedRoute allowedroles={["BUYER"]}>
+              <AddComplaint />
             </ProtectedRoute>
           }
         />

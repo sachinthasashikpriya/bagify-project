@@ -134,6 +134,26 @@ export interface Review {
   date: string;
 }
 
+export interface Complaint {
+  id: string;
+  productId: string;
+  productName: string;
+  productImage: string;
+  buyerId: string;
+  buyerName: string;
+  sellerId: string;
+  description: string;
+  images: string[];
+  status: string;
+  date: string;
+}
+
+export interface ComplaintRequest {
+  productId: number;
+  description: string;
+  images?: string[];
+}
+
 export interface CartItem {
   product: Product;
   quantity: number;

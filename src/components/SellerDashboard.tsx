@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Plus, Edit, Trash2, Star, Package, TrendingUp, BadgeCheck, X, ShoppingBag, DollarSign, ArrowUpRight, BarChart3, Settings, ShieldCheck, Upload, Loader, Calendar, Filter } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -13,6 +13,7 @@ export function SellerDashboard() {
   const { currentUser } = useAuth();
   const { products, addProduct, deleteProduct, updateProduct } = useProducts();
   const navigate = useNavigate();
+  const currentSellerId = String(currentUser?.id || '');
 
   const [showAddForm, setShowAddForm] = useState(false);
   const [formData, setFormData] = useState({
@@ -48,9 +49,8 @@ export function SellerDashboard() {
 
   const [activeTab, setActiveTab] = useState<'products' | 'orders'>('products');
   const [orders, setOrders] = useState<OrderResponse[]>([]);
-  const [isLoadingOrders, setIsLoadingOrders] = useState(false);
+  const [isLoadingOrders, setIsLoadingOrders] = useState(true);
   const [buyerNames, setBuyerNames] = useState<{ [key: number]: string }>({});
-  const [sellerStats, setSellerStats] = useState<{ totalRevenue: number; totalItemsSold: number } | null>(null);
 
   // Time period filter states
   const [filterType, setFilterType] = useState<'all' | 'today' | '7days' | '30days' | 'custom'>('all');
@@ -101,50 +101,59 @@ export function SellerDashboard() {
   });
 
   useEffect(() => {
-    const fetchSellerStats = async () => {
-      const result = await orderService.getSellerStats();
+    const fetchOrders = async () => {
+      setIsLoadingOrders(true);
+      const result = await orderService.getSellerOrders();
       if (result.ok && result.data) {
-        setSellerStats(result.data);
-      } else {
-        toast.error(result.error || "Failed to load seller stats");
-      }
-    };
-    fetchSellerStats();
-  }, []);
-
-  useEffect(() => {
-    if (activeTab === 'orders') {
-      const fetchOrders = async () => {
-        setIsLoadingOrders(true);
-        const result = await orderService.getSellerOrders();
-        if (result.ok && result.data) {
-          setOrders(result.data);
-          // Fetch buyer names for all unique buyerIds
-          const uniqueBuyerIds = Array.from(new Set(result.data.map(o => o.buyerId)));
-          const namesMap: { [key: number]: string } = {};
-          await Promise.all(
-            uniqueBuyerIds.map(async (id) => {
-              try {
-                const buyerRes = await userService.getBuyerById(id);
-                if (buyerRes.ok && buyerRes.data) {
-                  namesMap[id] = buyerRes.data.name;
-                } else {
-                  namesMap[id] = `Buyer #${id}`;
-                }
-              } catch {
+        setOrders(result.data);
+        // Fetch buyer names for all unique buyerIds
+        const uniqueBuyerIds = Array.from(new Set(result.data.map(o => o.buyerId)));
+        const namesMap: { [key: number]: string } = {};
+        await Promise.all(
+          uniqueBuyerIds.map(async (id) => {
+            try {
+              const buyerRes = await userService.getBuyerById(id);
+              if (buyerRes.ok && buyerRes.data) {
+                namesMap[id] = buyerRes.data.name;
+              } else {
                 namesMap[id] = `Buyer #${id}`;
               }
-            })
-          );
-          setBuyerNames(namesMap);
-        } else {
-          toast.error(result.error || "Failed to load orders");
-        }
-        setIsLoadingOrders(false);
-      };
+            } catch {
+              namesMap[id] = `Buyer #${id}`;
+            }
+          })
+        );
+        setBuyerNames(namesMap);
+      } else {
+        toast.error(result.error || "Failed to load orders");
+      }
+      setIsLoadingOrders(false);
+    };
+
+    if (currentUser) {
       fetchOrders();
     }
-  }, [activeTab]);
+  }, [currentUser]);
+
+  const sellerStats = useMemo(() => {
+    let totalRevenue = 0;
+    let totalItemsSold = 0;
+
+    filteredOrders.forEach(order => {
+      // Only paid and non-cancelled orders count towards revenue and items sold
+      const isPaid = order.paymentStatus === 'PAID' || 
+                    ['PROCESSING', 'PARTIALLY_SHIPPED', 'SHIPPED', 'DELIVERED'].includes(order.status);
+      if (isPaid && order.status !== 'CANCELLED') {
+        const myItems = order.items.filter(item => String(item.sellerId) === currentSellerId);
+        myItems.forEach(item => {
+          totalRevenue += item.priceAtPurchase * item.quantity;
+          totalItemsSold += item.quantity;
+        });
+      }
+    });
+
+    return { totalRevenue, totalItemsSold };
+  }, [filteredOrders, currentSellerId]);
 
   const handleItemStatusChange = async (orderId: number, itemId: number, newStatus: string) => {
     try {
@@ -197,8 +206,7 @@ export function SellerDashboard() {
     );
   }
 
-  // ✅ FIX 1: Convert currentUser.id to string for comparison
-  const currentSellerId = String(currentUser.id);
+  // currentSellerId is defined at the top
 
   // ✅ FIX 2: Define sellerProducts - filter products for current seller
   const sellerProducts = products.filter(p => p.sellerId === currentSellerId);
@@ -478,7 +486,7 @@ export function SellerDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-slate-400 font-bold text-xs tracking-wider uppercase mb-1.5">Items Sold</p>
-                {sellerStats === null ? (
+                {isLoadingOrders ? (
                   <div className="h-9 w-16 bg-slate-100 rounded animate-pulse mt-1" />
                 ) : (
                   <p className="text-3xl font-extrabold text-slate-900 tracking-tight">{sellerStats.totalItemsSold}</p>
@@ -496,7 +504,7 @@ export function SellerDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-slate-400 font-bold text-xs tracking-wider uppercase mb-1.5">Total Revenue</p>
-                {sellerStats === null ? (
+                {isLoadingOrders ? (
                   <div className="h-9 w-24 bg-slate-100 rounded animate-pulse mt-1" />
                 ) : (
                   <p className="text-3xl font-extrabold text-slate-900 tracking-tight">Rs. {sellerStats.totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
@@ -570,6 +578,7 @@ export function SellerDashboard() {
             </button>
 
             <button
+              onClick={() => navigate('/seller-analytics')}
               className="group relative flex items-center justify-between p-4 bg-white border border-slate-200 text-slate-700 rounded-2xl shadow-sm hover:shadow-md hover:border-purple-300 hover:bg-purple-50/20 hover:-translate-y-0.5 transition-all duration-300"
             >
               <div className="flex items-center gap-3">
