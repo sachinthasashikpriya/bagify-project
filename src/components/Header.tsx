@@ -1,4 +1,5 @@
 import { ShieldCheck, ShoppingCart, User } from "lucide-react";
+import { useLocation } from "react-router-dom";
 import { useCart } from "../hooks/useCart";
 import { useAuth } from "../hooks/useAuth";
 import type { CartItem, User as UserType } from "../types";
@@ -22,6 +23,8 @@ export function Header({
   const { cartItems } = useCart(); // Add this hook
   const { openLoginModal } = useAuth();
   const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0); // Calculate total count
+  const location = useLocation();
+  const isAdminDashboard = location.pathname === "/admin-dashboard";
 
   // ✅ Get optimized profile image URL
   const getProfileImageUrl = (): string | null => {
@@ -37,7 +40,7 @@ export function Header({
   const profileImageUrl = getProfileImageUrl();
 
   return (
-    <header className="bg-white shadow-sm sticky top-0 z-50">
+    <header className={`bg-white shadow-sm sticky top-0 z-50 ${isAdminDashboard ? "pl-64" : ""}`}>
       <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}

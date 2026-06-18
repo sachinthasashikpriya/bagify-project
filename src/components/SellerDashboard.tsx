@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Plus, Edit, Trash2, Star, Package, TrendingUp, BadgeCheck, X, ShoppingBag, DollarSign, ArrowUpRight, BarChart3, Settings, ShieldCheck, Upload, Loader, Calendar, Filter } from 'lucide-react';
+import { Plus, Edit, Trash2, Star, Package, TrendingUp, BadgeCheck, X, ShoppingBag, DollarSign, ArrowUpRight, BarChart3, Settings, ShieldCheck, Upload, Loader, Calendar, Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useAuth } from '../hooks/useAuth';
@@ -56,9 +56,36 @@ export function SellerDashboard() {
   const [filterType, setFilterType] = useState<'all' | 'today' | '7days' | '30days' | 'custom'>('all');
   const [customStartDate, setCustomStartDate] = useState<string>('');
   const [customEndDate, setCustomEndDate] = useState<string>('');
+  const [orderStatusFilter, setOrderStatusFilter] = useState<'ALL' | 'PENDING' | 'PROCESSING' | 'PACKED' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED'>('ALL');
+  const [orderSearchQuery, setOrderSearchQuery] = useState('');
 
   // Filtered orders logic
   const filteredOrders = orders.filter(order => {
+    // 1. Search Query filter (matches Order ID, Buyer Name, or product name)
+    if (orderSearchQuery) {
+      const q = orderSearchQuery.toLowerCase();
+      const matchesOrderId = String(order.id).includes(q);
+      const buyerName = buyerNames[order.buyerId]?.toLowerCase() || '';
+      const matchesBuyer = buyerName.includes(q) || String(order.buyerId).includes(q);
+      const myItems = order.items.filter(item => String(item.sellerId) === currentSellerId);
+      const matchesProductName = myItems.some(item => 
+        item.productName.toLowerCase().includes(q)
+      );
+      if (!matchesOrderId && !matchesBuyer && !matchesProductName) {
+        return false;
+      }
+    }
+
+    // 2. Status Filter
+    if (orderStatusFilter !== 'ALL') {
+      const myItems = order.items.filter(item => String(item.sellerId) === currentSellerId);
+      const hasMatchingStatus = myItems.some(item => item.itemStatus === orderStatusFilter);
+      if (!hasMatchingStatus) {
+        return false;
+      }
+    }
+
+    // 3. Time Period Filter
     if (!order.createdAt) return true;
     const orderDate = new Date(order.createdAt);
     const now = new Date();
@@ -989,96 +1016,128 @@ export function SellerDashboard() {
               </div>
             ) : (
               <div className="space-y-6">
-                {/* Time Period Filter Section */}
-                <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                  <div className="flex flex-wrap items-center gap-3">
-                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
-                      <Filter className="w-3.5 h-3.5 text-purple-600" />
-                      Time Period:
-                    </span>
-                    <div className="flex flex-wrap gap-1.5">
-                      {[
-                        { id: 'all', label: 'All Time' },
-                        { id: 'today', label: 'Today' },
-                        { id: '7days', label: 'Last 7 Days' },
-                        { id: '30days', label: 'Last 30 Days' },
-                        { id: 'custom', label: 'Custom Range' },
-                      ].map((period) => (
+                {/* Filter Section */}
+                <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm space-y-4">
+                  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                    {/* Search Bar */}
+                    <div className="relative flex-1">
+                      <Search className="absolute left-3.5 top-3 w-4 h-4 text-slate-400" />
+                      <input
+                        type="text"
+                        placeholder="Search by Order ID, Buyer Name, or Bag Name..."
+                        value={orderSearchQuery}
+                        onChange={(e) => setOrderSearchQuery(e.target.value)}
+                        className="w-full pl-10 pr-10 py-2 bg-slate-50 border border-slate-200 focus:border-purple-500 focus:bg-white focus:ring-2 focus:ring-purple-200/50 rounded-xl focus:outline-none transition-all duration-200 text-xs font-semibold"
+                      />
+                      {orderSearchQuery && (
                         <button
-                          key={period.id}
-                          onClick={() => {
-                            setFilterType(period.id as any);
-                            if (period.id !== 'custom') {
-                              setCustomStartDate('');
-                              setCustomEndDate('');
-                            }
-                          }}
-                          className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all duration-205 border ${
-                            filterType === period.id
-                              ? 'bg-purple-600 border-purple-600 text-white shadow-sm shadow-purple-100'
-                              : 'bg-white border-slate-200 text-slate-700 hover:border-purple-300 hover:bg-purple-50/10'
-                          }`}
+                          onClick={() => setOrderSearchQuery('')}
+                          className="absolute right-3 top-2.5 p-0.5 text-slate-400 hover:text-slate-600 hover:bg-slate-200 rounded-full cursor-pointer"
                         >
-                          {period.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {filterType === 'custom' && (
-                    <div className="flex flex-wrap items-center gap-3 animate-fadeIn">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-xs text-slate-400 font-bold">From</span>
-                        <input
-                          type="date"
-                          value={customStartDate}
-                          onChange={(e) => setCustomStartDate(e.target.value)}
-                          className="px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:ring-2 focus:ring-purple-200 focus:border-purple-500"
-                        />
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-xs text-slate-400 font-bold">To</span>
-                        <input
-                          type="date"
-                          value={customEndDate}
-                          onChange={(e) => setCustomEndDate(e.target.value)}
-                          className="px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:ring-2 focus:ring-purple-200 focus:border-purple-500"
-                        />
-                      </div>
-                      {(customStartDate || customEndDate) && (
-                        <button
-                          onClick={() => {
-                            setCustomStartDate('');
-                            setCustomEndDate('');
-                          }}
-                          className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all"
-                          title="Clear Custom Dates"
-                        >
-                          <X className="w-4 h-4" />
+                          <X className="w-3.5 h-3.5" />
                         </button>
                       )}
                     </div>
-                  )}
+
+                    {/* Status Dropdown */}
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">Status:</span>
+                      <select
+                        value={orderStatusFilter}
+                        onChange={(e) => setOrderStatusFilter(e.target.value as any)}
+                        className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:ring-2 focus:ring-purple-200/50 focus:border-purple-500 transition-all cursor-pointer"
+                      >
+                        <option value="ALL">All Statuses</option>
+                        <option value="PENDING">Pending</option>
+                        <option value="PROCESSING">Processing</option>
+                        <option value="PACKED">Packed</option>
+                        <option value="SHIPPED">Shipped</option>
+                        <option value="DELIVERED">Delivered</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Time Period Filter Row */}
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pt-3 border-t border-slate-100/85">
+                    <div className="flex flex-wrap items-center gap-3">
+                      <span className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                        <Calendar className="w-3.5 h-3.5 text-purple-600" />
+                        Time Period:
+                      </span>
+                      <div className="flex flex-wrap gap-1.5">
+                        {[
+                          { id: 'all', label: 'All Time' },
+                          { id: 'today', label: 'Today' },
+                          { id: '7days', label: 'Last 7 Days' },
+                          { id: '30days', label: 'Last 30 Days' },
+                          { id: 'custom', label: 'Custom Range' },
+                        ].map((period) => (
+                          <button
+                            key={period.id}
+                            onClick={() => {
+                              setFilterType(period.id as any);
+                              if (period.id !== 'custom') {
+                                setCustomStartDate('');
+                                setCustomEndDate('');
+                              }
+                            }}
+                            className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all duration-205 border cursor-pointer ${
+                              filterType === period.id
+                                ? 'bg-purple-600 border-purple-600 text-white shadow-sm shadow-purple-100'
+                                : 'bg-white border-slate-200 text-slate-700 hover:border-purple-300 hover:bg-purple-50/10'
+                            }`}
+                          >
+                            {period.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {filterType === 'custom' && (
+                      <div className="flex flex-wrap items-center gap-3 animate-fadeIn">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs text-slate-400 font-bold">From</span>
+                          <input
+                            type="date"
+                            value={customStartDate}
+                            onChange={(e) => setCustomStartDate(e.target.value)}
+                            className="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:ring-2 focus:ring-purple-200 focus:border-purple-500"
+                          />
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs text-slate-400 font-bold">To</span>
+                          <input
+                            type="date"
+                            value={customEndDate}
+                            onChange={(e) => setCustomEndDate(e.target.value)}
+                            className="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:ring-2 focus:ring-purple-200 focus:border-purple-500"
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {filteredOrders.length === 0 ? (
-                  <div className="text-center py-16 bg-slate-50/30 border border-dashed border-slate-200 rounded-2xl animate-fadeIn">
-                    <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-400">
+                  <div className="text-center py-16 bg-slate-50/30 border border-dashed border-slate-200 rounded-2xl animate-fadeIn flex flex-col items-center justify-center gap-3">
+                    <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center text-purple-600">
                       <Calendar className="w-8 h-8 text-purple-500 animate-pulse" />
                     </div>
-                    <h3 className="text-base font-bold text-slate-900 mb-1">No Orders in Selected Period</h3>
-                    <p className="text-slate-400 max-w-sm mx-auto text-xs mb-4">
-                      No orders were found matching your current time period filter.
+                    <h3 className="text-base font-bold text-slate-900 mb-1">No Orders Found</h3>
+                    <p className="text-slate-400 max-w-sm mx-auto text-xs">
+                      No order records match your current filter settings. Try clearing or relaxing your search query or filters.
                     </p>
                     <button
                       onClick={() => {
                         setFilterType('all');
                         setCustomStartDate('');
                         setCustomEndDate('');
+                        setOrderStatusFilter('ALL');
+                        setOrderSearchQuery('');
                       }}
-                      className="bg-purple-600 hover:bg-purple-700 text-white font-bold px-4 py-2 rounded-xl text-xs transition-all duration-200 shadow-sm"
+                      className="bg-purple-600 hover:bg-purple-700 text-white font-bold px-4 py-2 rounded-xl text-xs transition-all duration-200 shadow-sm cursor-pointer"
                     >
-                      Reset Filter
+                      Clear All Filters
                     </button>
                   </div>
                 ) : (

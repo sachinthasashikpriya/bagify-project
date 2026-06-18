@@ -22,4 +22,24 @@ export const complaintService = {
       auth: true,
     });
   },
+
+  /**
+   * Get all complaints filed against the authenticated seller's products
+   */
+  async getSellerComplaints(): Promise<Result<Complaint[]>> {
+    return httpClient.get<Complaint[]>(endpoints.complaints.seller, {
+      service: 'product-service',
+      auth: true,
+    });
+  },
+
+  /**
+   * Update the status of a complaint (e.g. to RESOLVED)
+   */
+  async updateComplaintStatus(id: string, status: string): Promise<Result<Complaint>> {
+    return httpClient.put<Complaint>(`${endpoints.complaints.base}/${id}/status?status=${status}`, {}, {
+      service: 'product-service',
+      auth: true,
+    });
+  },
 };

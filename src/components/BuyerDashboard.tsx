@@ -1,4 +1,4 @@
-import { Heart, Package, ShoppingBag, Star, User, Loader2, Clock, Truck, CheckCircle2, X, Trash2, ShoppingCart, DollarSign, TrendingUp, ArrowUpRight, AlertTriangle } from "lucide-react";
+import { Heart, Package, ShoppingBag, Star, User, Loader2, Clock, Truck, CheckCircle2, X, Trash2, ShoppingCart, DollarSign, AlertTriangle, Image as ImageIcon } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -9,7 +9,8 @@ import { orderService, type OrderResponse } from "../services/orderService";
 import { ConfirmModal } from "./common/ConfirmModal";
 import { useWishlist } from "../hooks/useWishlist";
 import { reviewService } from "../services/reviewService";
-import { type Review, type Product } from "../types";
+import { complaintService } from "../services/complaintService";
+import { type Review, type Product, type Complaint } from "../types";
 
 export function BuyerDashboard() {
   // ✅ Fixed: Changed from SellerDashboard to BuyerDashboard
@@ -19,9 +20,13 @@ export function BuyerDashboard() {
 
   const navigate = useNavigate();
 
-  const [activeTab, setActiveTab] = useState<"orders" | "wishlist" | "reviews">(
+  const [activeTab, setActiveTab] = useState<"orders" | "wishlist" | "reviews" | "complaints">(
     "orders"
   );
+
+  const [myComplaints, setMyComplaints] = useState<Complaint[]>([]);
+  const [isLoadingComplaints, setIsLoadingComplaints] = useState(true);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
 
 
@@ -41,7 +46,7 @@ export function BuyerDashboard() {
     isOpen: false,
     title: '',
     message: '',
-    onConfirm: () => {},
+    onConfirm: () => { },
     isDestructive: true,
   });
 
@@ -109,6 +114,28 @@ export function BuyerDashboard() {
 
     if (currentUser?.role === "BUYER" && activeTab === "reviews") {
       fetchReviews();
+    }
+  }, [currentUser, activeTab]);
+
+  useEffect(() => {
+    const fetchComplaints = async () => {
+      try {
+        setIsLoadingComplaints(true);
+        const result = await complaintService.getMyComplaints();
+        if (result.ok && result.data) {
+          setMyComplaints(result.data);
+        } else {
+          toast.error(result.error || "Failed to fetch complaints");
+        }
+      } catch {
+        toast.error("An error occurred while fetching complaints");
+      } finally {
+        setIsLoadingComplaints(false);
+      }
+    };
+
+    if (currentUser?.role === "BUYER" && activeTab === "complaints") {
+      fetchComplaints();
     }
   }, [currentUser, activeTab]);
 
@@ -193,15 +220,15 @@ export function BuyerDashboard() {
 
         {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-          
+
           {/* Total Orders Card */}
-          <div 
+          <div
             onClick={() => setActiveTab("orders")}
             className="group relative bg-gradient-to-br from-white via-white to-purple-50/10 border border-purple-100/80 rounded-2xl p-6 shadow-[0_4px_20px_-4px_rgba(147,51,234,0.04)] hover:shadow-[0_12px_24px_-4px_rgba(147,51,234,0.1)] hover:-translate-y-1 hover:border-purple-300 cursor-pointer transition-all duration-300 select-none overflow-hidden"
           >
             {/* Background Accent Glow */}
             <div className="absolute top-0 right-0 w-32 h-32 bg-purple-100/30 rounded-full blur-3xl group-hover:bg-purple-200/40 transition-colors duration-300" />
-            
+
             <div className="relative flex items-center justify-between">
               <div className="space-y-2">
                 <p className="text-sm font-medium text-gray-500 tracking-wide uppercase">Total Orders</p>
@@ -210,7 +237,7 @@ export function BuyerDashboard() {
                 ) : (
                   <div className="flex items-baseline gap-2">
                     <span className="text-3xl font-extrabold text-gray-900 tracking-tight">{totalOrders}</span>
-                    <span className="text-xs font-semibold text-purple-600 bg-purple-50 px-2 py-0.5 rounded-full">orders</span>
+
                   </div>
                 )}
               </div>
@@ -218,18 +245,15 @@ export function BuyerDashboard() {
                 <Package className="w-6 h-6" />
               </div>
             </div>
-            
-            <div className="mt-4 flex items-center gap-1 text-xs text-purple-600 font-semibold group-hover:translate-x-1 transition-transform duration-300">
-              <span>View order history</span>
-              <ArrowUpRight className="w-3.5 h-3.5" />
-            </div>
+
+
           </div>
 
           {/* Total Spent Card */}
           <div className="group relative bg-gradient-to-br from-white via-white to-emerald-50/10 border border-emerald-100/80 rounded-2xl p-6 shadow-[0_4px_20px_-4px_rgba(16,185,129,0.04)] hover:shadow-[0_12px_24px_-4px_rgba(16,185,129,0.1)] hover:-translate-y-1 hover:border-emerald-300 transition-all duration-300 select-none overflow-hidden">
             {/* Background Accent Glow */}
             <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-100/30 rounded-full blur-3xl transition-colors duration-300" />
-            
+
             <div className="relative flex items-center justify-between">
               <div className="space-y-2">
                 <p className="text-sm font-medium text-gray-500 tracking-wide uppercase">Total Spent</p>
@@ -245,21 +269,18 @@ export function BuyerDashboard() {
                 <DollarSign className="w-6 h-6" />
               </div>
             </div>
+
             
-            <div className="mt-4 flex items-center gap-1.5 text-xs text-emerald-600 font-semibold">
-              <TrendingUp className="w-3.5 h-3.5" />
-              <span>All-time lifetime investment</span>
-            </div>
           </div>
 
           {/* Cart Items Card */}
-          <div 
+          <div
             onClick={() => navigate("/cart")}
             className="group relative bg-gradient-to-br from-white via-white to-blue-50/10 border border-blue-100/80 rounded-2xl p-6 shadow-[0_4px_20px_-4px_rgba(59,130,246,0.04)] hover:shadow-[0_12px_24px_-4px_rgba(59,130,246,0.1)] hover:-translate-y-1 hover:border-blue-300 cursor-pointer transition-all duration-300 select-none overflow-hidden"
           >
             {/* Background Accent Glow */}
             <div className="absolute top-0 right-0 w-32 h-32 bg-blue-100/30 rounded-full blur-3xl group-hover:bg-blue-200/40 transition-colors duration-300" />
-            
+
             <div className="relative flex items-center justify-between">
               <div className="space-y-2">
                 <p className="text-sm font-medium text-gray-500 tracking-wide uppercase">Cart Items</p>
@@ -278,21 +299,18 @@ export function BuyerDashboard() {
                 <ShoppingCart className="w-6 h-6" />
               </div>
             </div>
+
             
-            <div className="mt-4 flex items-center gap-1 text-xs text-blue-600 font-semibold group-hover:translate-x-1 transition-transform duration-300">
-              <span>Go to shopping cart</span>
-              <ArrowUpRight className="w-3.5 h-3.5" />
-            </div>
           </div>
 
           {/* Wishlist Card */}
-          <div 
+          <div
             onClick={() => setActiveTab("wishlist")}
             className="group relative bg-gradient-to-br from-white via-white to-rose-50/10 border border-rose-100/80 rounded-2xl p-6 shadow-[0_4px_20px_-4px_rgba(244,63,94,0.04)] hover:shadow-[0_12px_24px_-4px_rgba(244,63,94,0.1)] hover:-translate-y-1 hover:border-rose-300 cursor-pointer transition-all duration-300 select-none overflow-hidden"
           >
             {/* Background Accent Glow */}
             <div className="absolute top-0 right-0 w-32 h-32 bg-rose-100/30 rounded-full blur-3xl group-hover:bg-rose-200/40 transition-colors duration-300" />
-            
+
             <div className="relative flex items-center justify-between">
               <div className="space-y-2">
                 <p className="text-sm font-medium text-gray-500 tracking-wide uppercase">Wishlist</p>
@@ -309,11 +327,8 @@ export function BuyerDashboard() {
                 <Heart className="w-6 h-6" />
               </div>
             </div>
-            
-            <div className="mt-4 flex items-center gap-1 text-xs text-rose-600 font-semibold group-hover:translate-x-1 transition-transform duration-300">
-              <span>View saved items</span>
-              <ArrowUpRight className="w-3.5 h-3.5" />
-            </div>
+
+           
           </div>
 
         </div>
@@ -361,36 +376,43 @@ export function BuyerDashboard() {
             <nav className="-mb-px flex space-x-8 px-6">
               <button
                 onClick={() => setActiveTab("orders")}
-                className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === "orders"
+                className={`py-4 px-1 border-b-2 font-medium text-sm ${activeTab === "orders"
                     ? "border-purple-500 text-purple-600"
                     : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                }`}
+                  }`}
               >
                 <Package className="w-5 h-5 inline mr-2" />
                 Recent Orders
               </button>
               <button
                 onClick={() => setActiveTab("wishlist")}
-                className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === "wishlist"
+                className={`py-4 px-1 border-b-2 font-medium text-sm ${activeTab === "wishlist"
                     ? "border-purple-500 text-purple-600"
                     : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                }`}
+                  }`}
               >
                 <Heart className="w-5 h-5 inline mr-2" />
                 Wishlist
               </button>
               <button
                 onClick={() => setActiveTab("reviews")}
-                className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === "reviews"
+                className={`py-4 px-1 border-b-2 font-medium text-sm ${activeTab === "reviews"
                     ? "border-purple-500 text-purple-600"
                     : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                }`}
+                  }`}
               >
                 <Star className="w-5 h-5 inline mr-2" />
                 My Reviews
+              </button>
+              <button
+                onClick={() => setActiveTab("complaints")}
+                className={`py-4 px-1 border-b-2 font-medium text-sm ${activeTab === "complaints"
+                    ? "border-purple-500 text-purple-600"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                  }`}
+              >
+                <AlertTriangle className="w-5 h-5 inline mr-2" />
+                My Complaints
               </button>
             </nav>
           </div>
@@ -439,7 +461,7 @@ export function BuyerDashboard() {
                             >
                               <div className="flex items-center justify-between px-4 py-3 bg-gray-50 border-b border-gray-200">
                                 <div>
-                                  <p 
+                                  <p
                                     onClick={() => navigate(`/orders/${order.id}/confirmation`)}
                                     className="font-semibold text-purple-600 hover:text-purple-800 hover:underline cursor-pointer transition-colors"
                                     title="View order details"
@@ -524,7 +546,7 @@ export function BuyerDashboard() {
                                           Rs. {(item.priceAtPurchase * item.quantity).toFixed(2)}
                                         </span>
                                       </div>
-                                      
+
                                       {item.itemStatus?.toUpperCase() === 'DELIVERED' && (
                                         <button
                                           onClick={() => navigate(`/product/${item.productId}`)}
@@ -720,11 +742,10 @@ export function BuyerDashboard() {
                               {Array.from({ length: 5 }).map((_, i) => (
                                 <Star
                                   key={i}
-                                  className={`w-4 h-4 ${
-                                    i < review.rating
+                                  className={`w-4 h-4 ${i < review.rating
                                       ? "text-yellow-400 fill-yellow-400"
                                       : "text-gray-200"
-                                  }`}
+                                    }`}
                                 />
                               ))}
                             </div>
@@ -759,6 +780,103 @@ export function BuyerDashboard() {
                 )}
               </div>
             )}
+
+            {/* Complaints Tab */}
+            {activeTab === "complaints" && (
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  My Complaints
+                </h3>
+                {isLoadingComplaints ? (
+                  <div className="text-center py-12">
+                    <Loader2 className="w-8 h-8 animate-spin text-purple-600 mx-auto mb-4" />
+                    <p className="text-gray-500">Loading your complaints...</p>
+                  </div>
+                ) : myComplaints.length === 0 ? (
+                  <div className="text-center py-8">
+                    <AlertTriangle className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                    <h4 className="text-lg font-medium text-gray-900 mb-2">
+                      No complaints filed yet
+                    </h4>
+                    <p className="text-gray-500">
+                      If you have any issues with your orders, you can file a complaint.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {myComplaints.map((complaint) => (
+                      <div
+                        key={complaint.id}
+                        className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex flex-col gap-4 hover:shadow-md hover:border-purple-200 transition-all duration-300 group"
+                      >
+                        {/* Top: Product details & status badge */}
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex items-center gap-3 min-w-0">
+                            {complaint.productImage ? (
+                              <img
+                                src={complaint.productImage}
+                                alt={complaint.productName}
+                                className="w-12 h-12 rounded-xl object-cover border border-gray-200 shrink-0"
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1544816155-12df9643f363?w=100';
+                                }}
+                              />
+                            ) : (
+                              <div className="w-12 h-12 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-center shrink-0 text-slate-400">
+                                <ShoppingBag className="w-6 h-6" />
+                              </div>
+                            )}
+                            <div className="min-w-0">
+                              <h4 className="font-semibold text-gray-900 text-base truncate">{complaint.productName}</h4>
+                            </div>
+
+                          </div>
+
+                          <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border shrink-0 ${complaint.status === 'RESOLVED'
+                              ? 'bg-green-50 text-green-700 border-green-200'
+                              : 'bg-yellow-50 text-yellow-700 border-yellow-200'
+                            }`}>
+                            {complaint.status}
+                          </span>
+                        </div>
+
+                        {/* Description */}
+                        <div className="bg-gray-50 p-4 rounded-xl border border-gray-100/60">
+                          <p className="text-gray-750 text-sm leading-relaxed whitespace-pre-wrap">
+                            {complaint.description}
+                          </p>
+                        </div>
+
+                        {/* Attached Images */}
+                        {complaint.images && complaint.images.length > 0 && (
+                          <div className="flex flex-wrap gap-2">
+                            {complaint.images.map((imgUrl, idx) => (
+                              <div
+                                key={idx}
+                                onClick={() => setSelectedImage(imgUrl)}
+                                className="w-14 h-14 rounded-lg overflow-hidden border border-gray-200 cursor-zoom-in hover:scale-105 transition-transform shrink-0 relative group bg-white shadow-sm"
+                              >
+                                <img src={imgUrl} alt={`Attachment ${idx + 1}`} className="w-full h-full object-cover" />
+                                <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
+                                  <ImageIcon className="w-4 h-4" />
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Footer: Date */}
+                        <div className="flex items-center justify-between text-xs text-gray-400 pt-3 border-t border-gray-50 mt-auto">
+                          <span>
+                            Filed on: {complaint.date}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -779,7 +897,7 @@ export function BuyerDashboard() {
                 <X className="w-5 h-5" />
               </button>
             </div>
-            
+
             <div className="p-6">
               <div className="relative">
                 {/* Timeline line */}
@@ -798,9 +916,8 @@ export function BuyerDashboard() {
 
                 {/* Step 2: Shipped */}
                 <div className="relative flex items-start gap-4 mb-8">
-                  <div className={`relative z-10 flex items-center justify-center w-10 h-10 rounded-full ${
-                    ['SHIPPED', 'DELIVERED'].includes(trackingOrder.status) ? 'bg-purple-100 text-purple-600' : 'bg-gray-100 text-gray-400'
-                  }`}>
+                  <div className={`relative z-10 flex items-center justify-center w-10 h-10 rounded-full ${['SHIPPED', 'DELIVERED'].includes(trackingOrder.status) ? 'bg-purple-100 text-purple-600' : 'bg-gray-100 text-gray-400'
+                    }`}>
                     <Truck className="w-5 h-5" />
                   </div>
                   <div className="pt-2">
@@ -813,9 +930,8 @@ export function BuyerDashboard() {
 
                 {/* Step 3: Delivered */}
                 <div className="relative flex items-start gap-4">
-                  <div className={`relative z-10 flex items-center justify-center w-10 h-10 rounded-full ${
-                    trackingOrder.status === 'DELIVERED' ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'
-                  }`}>
+                  <div className={`relative z-10 flex items-center justify-center w-10 h-10 rounded-full ${trackingOrder.status === 'DELIVERED' ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'
+                    }`}>
                     <CheckCircle2 className="w-5 h-5" />
                   </div>
                   <div className="pt-2">
@@ -839,7 +955,7 @@ export function BuyerDashboard() {
                 </div>
               )}
             </div>
-            
+
             <div className="p-4 border-t border-gray-100 bg-gray-50 rounded-b-xl flex justify-end">
               <button
                 onClick={() => setTrackingOrder(null)}
@@ -860,6 +976,25 @@ export function BuyerDashboard() {
         message={confirmModal.message}
         isDestructive={confirmModal.isDestructive}
       />
+
+      {/* Lightbox Modal for Attached Images */}
+      {selectedImage && (
+        <div
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[9999] flex items-center justify-center p-4"
+          onClick={() => setSelectedImage(null)}
+        >
+          <div className="relative max-w-3xl max-h-[90vh] bg-white rounded-3xl p-1 overflow-hidden" onClick={e => e.stopPropagation()}>
+            <img src={selectedImage} alt="Complaint Attachment Preview" className="max-w-full max-h-[80vh] object-contain rounded-2xl" />
+            <button
+              type="button"
+              onClick={() => setSelectedImage(null)}
+              className="absolute top-4 right-4 p-2 bg-black/60 hover:bg-black/80 text-white rounded-full transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -28,5 +28,6 @@ export const endpoints = {
     complaints: {
       base: '/api/v1/complaints',
       me: '/api/v1/complaints/me',
+      seller: '/api/v1/complaints/seller',
     },
   } as const;

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Shield, Users, Package, TrendingUp, AlertTriangle, Search, X, FileText, CheckCircle2, ShoppingBag, ArrowUpRight, ChevronDown } from 'lucide-react';
+import { Shield, Users, Package, TrendingUp, AlertTriangle, Search, X, FileText, CheckCircle2, ShoppingBag, ArrowUpRight, ChevronDown, Calendar } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useAuth } from '../hooks/useAuth';
@@ -21,6 +21,77 @@ export function AdminDashboard() {
   );
   const [orders, setOrders] = useState<OrderResponse[]>([]);
   const [isLoadingOrders, setIsLoadingOrders] = useState(false);
+
+  // Order filter states
+  const [orderFilterType, setOrderFilterType] = useState<'all' | 'today' | '7days' | '30days' | 'custom'>('all');
+  const [orderStartDate, setOrderStartDate] = useState<string>('');
+  const [orderEndDate, setOrderEndDate] = useState<string>('');
+  const [orderStatusFilter, setOrderStatusFilter] = useState<'ALL' | 'PENDING' | 'PROCESSING' | 'PARTIALLY_SHIPPED' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED'>('ALL');
+  const [orderSearchQuery, setOrderSearchQuery] = useState('');
+
+  // Filtered orders logic
+  const filteredOrders = orders.filter(order => {
+    // 1. Search filter
+    if (orderSearchQuery) {
+      const q = orderSearchQuery.toLowerCase();
+      const matchesOrderId = String(order.id).includes(q);
+      const matchesBuyerId = String(order.buyerId).includes(q);
+      const matchesProductName = order.items.some(item => 
+        item.productName.toLowerCase().includes(q)
+      );
+      if (!matchesOrderId && !matchesBuyerId && !matchesProductName) {
+        return false;
+      }
+    }
+
+    // 2. Status filter
+    if (orderStatusFilter !== 'ALL') {
+      if (order.status !== orderStatusFilter) {
+        return false;
+      }
+    }
+
+    // 3. Date range filter
+    if (!order.createdAt) return true;
+    const orderDate = new Date(order.createdAt);
+    const now = new Date();
+
+    switch (orderFilterType) {
+      case 'today': {
+        return orderDate.toDateString() === now.toDateString();
+      }
+      case '7days': {
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(now.getDate() - 7);
+        return orderDate.getTime() >= sevenDaysAgo.getTime();
+      }
+      case '30days': {
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(now.getDate() - 30);
+        return orderDate.getTime() >= thirtyDaysAgo.getTime();
+      }
+      case 'custom': {
+        if (orderStartDate) {
+          const [year, month, day] = orderStartDate.split('-').map(Number);
+          const start = new Date(year, month - 1, day, 0, 0, 0, 0);
+          if (orderDate.getTime() < start.getTime()) {
+            return false;
+          }
+        }
+        if (orderEndDate) {
+          const [year, month, day] = orderEndDate.split('-').map(Number);
+          const end = new Date(year, month - 1, day, 23, 59, 59, 999);
+          if (orderDate.getTime() > end.getTime()) {
+            return false;
+          }
+        }
+        return true;
+      }
+      case 'all':
+      default:
+        return true;
+    }
+  });
   const [verifications, setVerifications] = useState<SellerVerificationResponse[]>([]);
   const [isLoadingVerifications, setIsLoadingVerifications] = useState(false);
   const [processingSellerId, setProcessingSellerId] = useState<number | null>(null);
@@ -854,7 +925,7 @@ export function AdminDashboard() {
               <div className="space-y-6 animate-in fade-in duration-300">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-base font-extrabold text-slate-800">Global Customer Transactions</h3>
-                  <span className="text-xs font-bold text-slate-500">{orders.length} order entries</span>
+                  <span className="text-xs font-bold text-slate-500">{filteredOrders.length} of {orders.length} order entries</span>
                 </div>
                 {isLoadingOrders ? (
                   <div className="flex flex-col items-center justify-center py-16 gap-2">
@@ -867,8 +938,134 @@ export function AdminDashboard() {
                   </div>
                 ) : (
                   <div className="space-y-6">
-                    {orders.map((order) => (
-                      <div key={order.id} className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                    {/* Filters Section */}
+                    <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm space-y-4">
+                      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                        {/* Search Bar */}
+                        <div className="relative flex-1">
+                          <Search className="absolute left-3.5 top-3 w-4 h-4 text-slate-400" />
+                          <input
+                            type="text"
+                            placeholder="Search by Order ID, Buyer ID, or Bag Name..."
+                            value={orderSearchQuery}
+                            onChange={(e) => setOrderSearchQuery(e.target.value)}
+                            className="w-full pl-10 pr-10 py-2 bg-slate-50 border border-slate-200 focus:border-purple-500 focus:bg-white focus:ring-2 focus:ring-purple-200/50 rounded-xl focus:outline-none transition-all duration-200 text-xs font-semibold"
+                          />
+                          {orderSearchQuery && (
+                            <button
+                              onClick={() => setOrderSearchQuery('')}
+                              className="absolute right-3 top-2.5 p-0.5 text-slate-400 hover:text-slate-600 hover:bg-slate-200 rounded-full cursor-pointer"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Status Dropdown */}
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">Status:</span>
+                          <select
+                            value={orderStatusFilter}
+                            onChange={(e) => setOrderStatusFilter(e.target.value as any)}
+                            className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:ring-2 focus:ring-purple-200/50 focus:border-purple-500 transition-all cursor-pointer"
+                          >
+                            <option value="ALL">All Statuses</option>
+                            <option value="PENDING">Pending</option>
+                            <option value="PROCESSING">Processing</option>
+                            <option value="PARTIALLY_SHIPPED">Partially Shipped</option>
+                            <option value="SHIPPED">Shipped</option>
+                            <option value="DELIVERED">Delivered</option>
+                            <option value="CANCELLED">Cancelled</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      {/* Time Range Selector */}
+                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pt-3 border-t border-slate-100/85">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                            <Calendar className="w-3.5 h-3.5 text-purple-600" />
+                            Time Period:
+                          </span>
+                          <div className="flex flex-wrap gap-1.5">
+                            {[
+                              { id: 'all', label: 'All Time' },
+                              { id: 'today', label: 'Today' },
+                              { id: '7days', label: 'Last 7 Days' },
+                              { id: '30days', label: 'Last 30 Days' },
+                              { id: 'custom', label: 'Custom Range' },
+                            ].map((period) => (
+                              <button
+                                key={period.id}
+                                onClick={() => {
+                                  setOrderFilterType(period.id as any);
+                                  if (period.id !== 'custom') {
+                                    setOrderStartDate('');
+                                    setOrderEndDate('');
+                                  }
+                                }}
+                                className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all duration-200 border cursor-pointer ${
+                                  orderFilterType === period.id
+                                    ? 'bg-purple-600 border-purple-600 text-white shadow-sm shadow-purple-500/10'
+                                    : 'bg-white border-slate-200 text-slate-700 hover:border-purple-300 hover:bg-purple-50/10'
+                                }`}
+                              >
+                                {period.label}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        {orderFilterType === 'custom' && (
+                          <div className="flex flex-wrap items-center gap-2.5 animate-in fade-in duration-200">
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-xs text-slate-400 font-bold">From</span>
+                              <input
+                                type="date"
+                                value={orderStartDate}
+                                onChange={(e) => setOrderStartDate(e.target.value)}
+                                className="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:ring-2 focus:ring-purple-200 focus:border-purple-500"
+                              />
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-xs text-slate-400 font-bold">To</span>
+                              <input
+                                type="date"
+                                value={orderEndDate}
+                                onChange={(e) => setOrderEndDate(e.target.value)}
+                                className="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:ring-2 focus:ring-purple-200 focus:border-purple-500"
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {filteredOrders.length === 0 ? (
+                      <div className="py-16 text-center text-slate-400 font-medium bg-white rounded-2xl border border-slate-100 shadow-sm flex flex-col items-center justify-center gap-3">
+                        <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center text-slate-400 border border-slate-100 shadow-inner">
+                          <Calendar className="w-8 h-8 text-purple-500 animate-pulse" />
+                        </div>
+                        <h3 className="text-base font-bold text-slate-900 mb-0.5">No Orders Found</h3>
+                        <p className="text-xs text-slate-400 max-w-sm mx-auto">
+                          No order records match your current filter settings. Try clearing or relaxing your search query or filters.
+                        </p>
+                        <button
+                          onClick={() => {
+                            setOrderFilterType('all');
+                            setOrderStartDate('');
+                            setOrderEndDate('');
+                            setOrderStatusFilter('ALL');
+                            setOrderSearchQuery('');
+                          }}
+                          className="bg-purple-600 hover:bg-purple-700 text-white font-bold px-4 py-2 rounded-xl text-xs transition-all duration-200 shadow-sm cursor-pointer"
+                        >
+                          Clear All Filters
+                        </button>
+                      </div>
+                    ) : (
+                      filteredOrders.map((order) => (
+                        <div key={order.id} className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
                         {/* Header banner */}
                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 px-6 py-4 bg-slate-50/50 border-b border-slate-100 text-xs font-bold">
                           <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
@@ -948,7 +1145,7 @@ export function AdminDashboard() {
                           ))}
                         </div>
                       </div>
-                    ))}
+                    )))}
                   </div>
                 )}
               </div>

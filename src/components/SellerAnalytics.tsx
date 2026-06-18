@@ -1,8 +1,11 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import { useAuth } from '../hooks/useAuth';
 import { useProducts } from '../hooks/useProduct';
 import { orderService, type OrderResponse } from '../services/orderService';
+import { complaintService } from '../services/complaintService';
+import type { Complaint } from '../types';
 import {
   ArrowLeft,
   DollarSign,
@@ -14,7 +17,10 @@ import {
   ChevronRight,
   ChevronDown,
   TrendingDown,
-  Info
+  Info,
+  X,
+  CheckCircle2,
+  Image as ImageIcon
 } from 'lucide-react';
 
 export function SellerAnalytics() {
@@ -26,6 +32,12 @@ export function SellerAnalytics() {
   const [orders, setOrders] = useState<OrderResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Complaints states
+  const [complaints, setComplaints] = useState<Complaint[]>([]);
+  const [isLoadingComplaints, setIsLoadingComplaints] = useState(true);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [isResolvingId, setIsResolvingId] = useState<string | null>(null);
   
   // Dashboard filter range: '7days' | '30days' | 'all'
   const [timeRange, setTimeRange] = useState<'7days' | '30days' | 'all'>('7days');
@@ -59,6 +71,45 @@ export function SellerAnalytics() {
       fetchSellerOrders();
     }
   }, [currentUser]);
+
+  useEffect(() => {
+    async function fetchComplaints() {
+      try {
+        setIsLoadingComplaints(true);
+        const result = await complaintService.getSellerComplaints();
+        if (result.ok && result.data) {
+          setComplaints(result.data);
+        }
+      } catch (err) {
+        console.error('Failed to fetch complaints:', err);
+      } finally {
+        setIsLoadingComplaints(false);
+      }
+    }
+
+    if (currentUser) {
+      fetchComplaints();
+    }
+  }, [currentUser]);
+
+  const handleResolveComplaint = async (complaintId: string) => {
+    try {
+      setIsResolvingId(complaintId);
+      const result = await complaintService.updateComplaintStatus(complaintId, 'RESOLVED');
+      if (result.ok && result.data) {
+        toast.success('Complaint marked as resolved successfully');
+        setComplaints(prev =>
+          prev.map(c => (c.id === complaintId ? { ...c, status: 'RESOLVED' } : c))
+        );
+      } else {
+        toast.error(result.error || 'Failed to update complaint status');
+      }
+    } catch {
+      toast.error('An error occurred while resolving the complaint');
+    } finally {
+      setIsResolvingId(null);
+    }
+  };
 
   // 1. Filter orders matching the selected time range and only consider PAID and non-CANCELLED orders
   const timeFilteredOrders = useMemo(() => {
@@ -761,66 +812,106 @@ export function SellerAnalytics() {
             {orders.length > 0 && (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 
-                {/* Top Bags list */}
-                <div className="bg-white border border-slate-200/60 rounded-3xl p-6 shadow-sm">
-                  <h3 className="text-base font-black text-slate-900 mb-1">Top Selling Custom Bags</h3>
-                  <p className="text-xs text-slate-400 font-bold mb-6">Your highest revenue generating bag designs</p>
+                {/* Buyer Complaints List */}
+                <div className="bg-white border border-slate-200/60 rounded-3xl p-6 shadow-sm flex flex-col h-[500px]">
+                  <h3 className="text-base font-black text-slate-900 mb-1">Buyer Complaints</h3>
+                  <p className="text-xs text-slate-400 font-bold mb-6">Customer complaints filed against your products</p>
                   
-                  {stats.topProducts.length === 0 ? (
-                    <div className="text-center py-10">
-                      <span className="text-xs text-slate-400 font-bold">No product performance data</span>
+                  {isLoadingComplaints ? (
+                    <div className="flex flex-col items-center justify-center py-20 flex-1">
+                      <Loader2 className="w-8 h-8 text-purple-600 animate-spin mb-2" />
+                      <span className="text-xs text-slate-450 font-bold">Loading complaints...</span>
+                    </div>
+                  ) : complaints.length === 0 ? (
+                    <div className="text-center py-20 flex-1 flex flex-col items-center justify-center">
+                      <div className="w-12 h-12 bg-slate-50 border border-slate-100 rounded-xl flex items-center justify-center mb-3 text-slate-400">
+                        <CheckCircle2 className="w-6 h-6 text-emerald-500" />
+                      </div>
+                      <span className="text-xs text-slate-450 font-bold">No buyer complaints registered</span>
                     </div>
                   ) : (
-                    <div className="space-y-5">
-                      {stats.topProducts.map((prod, index) => {
-                        const maxRevenue = stats.topProducts[0].revenue || 1;
-                        const barWidthPercent = (prod.revenue / maxRevenue) * 100;
-                        return (
-                          <div key={prod.id} className="flex items-center gap-4">
-                            {/* Product Rank */}
-                            <span className="text-sm font-black text-slate-300 w-5 text-center shrink-0">
-                              #{index + 1}
-                            </span>
-                            
-                            {/* Product Thumbnail */}
-                            {prod.image ? (
-                              <img
-                                src={prod.image}
-                                alt={prod.name}
-                                className="w-11 h-11 rounded-xl object-cover border border-slate-200 shrink-0"
-                                onError={(e) => {
-                                  (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1544816155-12df9643f363?w=100';
-                                }}
-                              />
-                            ) : (
-                              <div className="w-11 h-11 bg-slate-100 border border-slate-200 rounded-xl flex items-center justify-center shrink-0 text-slate-400">
-                                <ShoppingBag className="w-5 h-5" />
-                              </div>
-                            )}
-                            
-                            {/* Details & Custom Progress Bar */}
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center justify-between gap-2 mb-1.5">
-                                <h4 className="text-xs font-black text-slate-800 truncate">{prod.name}</h4>
-                                <span className="text-xs font-black text-slate-900 shrink-0">Rs. {prod.revenue.toFixed(2)}</span>
-                              </div>
-                              
-                              {/* Custom Track bar */}
-                              <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
-                                <div
-                                  className="bg-purple-600 h-full rounded-full transition-all duration-500 ease-out"
-                                  style={{ width: `${barWidthPercent}%` }}
+                    <div className="space-y-4 overflow-y-auto flex-1 pr-1">
+                      {complaints.map((complaint) => (
+                        <div key={complaint.id} className="border border-slate-150 rounded-2xl p-4 bg-slate-50/30 space-y-3">
+                          {/* Top row: Product image, name, and status badge */}
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex items-center gap-3 min-w-0">
+                              {complaint.productImage ? (
+                                <img
+                                  src={complaint.productImage}
+                                  alt={complaint.productName}
+                                  className="w-10 h-10 rounded-xl object-cover border border-slate-200 shrink-0"
+                                  onError={(e) => {
+                                    (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1544816155-12df9643f363?w=100';
+                                  }}
                                 />
-                              </div>
-                              
-                              <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 mt-1">
-                                <span>{prod.units} units sold</span>
-                                <span>{((prod.revenue / stats.totalRevenue) * 100).toFixed(0)}% contribution</span>
+                              ) : (
+                                <div className="w-10 h-10 bg-slate-100 border border-slate-200 rounded-xl flex items-center justify-center shrink-0 text-slate-400">
+                                  <ShoppingBag className="w-5 h-5" />
+                                </div>
+                              )}
+                              <div className="min-w-0">
+                                <h4 className="text-xs font-black text-slate-800 truncate">{complaint.productName}</h4>
+                                <span className="text-[10px] font-bold text-slate-400 block mt-0.5">By {complaint.buyerName}</span>
                               </div>
                             </div>
+
+                            {/* Status Badge */}
+                            <span className={`text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full border shrink-0 ${
+                              complaint.status === 'RESOLVED'
+                                ? 'bg-emerald-50 text-emerald-700 border-emerald-250/30'
+                                : 'bg-amber-50 text-amber-700 border-amber-250/30'
+                            }`}>
+                              {complaint.status}
+                            </span>
                           </div>
-                        );
-                      })}
+
+                          {/* Complaint message */}
+                          <p className="text-xs text-slate-600 font-medium bg-white p-3 rounded-xl border border-slate-100 leading-relaxed whitespace-pre-wrap">
+                            {complaint.description}
+                          </p>
+
+                          {/* Attached images */}
+                          {complaint.images && complaint.images.length > 0 && (
+                            <div className="flex flex-wrap gap-2">
+                              {complaint.images.map((imgUrl, idx) => (
+                                <div
+                                  key={idx}
+                                  onClick={() => setSelectedImage(imgUrl)}
+                                  className="w-12 h-12 rounded-lg overflow-hidden border border-slate-200 cursor-zoom-in hover:scale-105 transition-transform shrink-0 relative group bg-white"
+                                >
+                                  <img src={imgUrl} alt={`Attachment ${idx + 1}`} className="w-full h-full object-cover" />
+                                  <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
+                                    <ImageIcon className="w-3.5 h-3.5" />
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* Footer details & Mark as resolved button */}
+                          <div className="flex items-center justify-between gap-4 pt-1.5 border-t border-slate-100/60">
+                            <span className="text-[10px] font-bold text-slate-400">Filed on: {complaint.date}</span>
+                            {complaint.status !== 'RESOLVED' && (
+                              <button
+                                type="button"
+                                disabled={isResolvingId === complaint.id}
+                                onClick={() => handleResolveComplaint(complaint.id)}
+                                className="text-[10px] font-extrabold uppercase tracking-wide px-3 py-1.5 bg-purple-600 hover:bg-purple-700 disabled:bg-purple-400 text-white rounded-lg transition-colors flex items-center gap-1 shadow-sm"
+                              >
+                                {isResolvingId === complaint.id ? (
+                                  <>
+                                    <Loader2 className="w-3 h-3 animate-spin" />
+                                    Resolving...
+                                  </>
+                                ) : (
+                                  'Mark as Resolved'
+                                )}
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   )}
                 </div>
@@ -1071,6 +1162,25 @@ export function SellerAnalytics() {
         )}
 
       </div>
+
+      {/* Lightbox Modal for Attached Images */}
+      {selectedImage && (
+        <div 
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[9999] flex items-center justify-center p-4"
+          onClick={() => setSelectedImage(null)}
+        >
+          <div className="relative max-w-3xl max-h-[90vh] bg-white rounded-3xl p-1 overflow-hidden" onClick={e => e.stopPropagation()}>
+            <img src={selectedImage} alt="Complaint Attachment Preview" className="max-w-full max-h-[80vh] object-contain rounded-2xl" />
+            <button
+              type="button"
+              onClick={() => setSelectedImage(null)}
+              className="absolute top-4 right-4 p-2 bg-black/60 hover:bg-black/80 text-white rounded-full transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
