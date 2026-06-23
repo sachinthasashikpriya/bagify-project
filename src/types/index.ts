@@ -48,7 +48,6 @@ export interface BusinessVerification {
 }
 
 export interface User {
-  
   id: string;
   name: string;
   email: string;
@@ -61,6 +60,8 @@ export interface User {
   updatedAt?: string;
   // Seller verification
   verification?: BusinessVerification;
+  totalSpent?: number;
+  totalOrders?: number;
 }
 
 export interface UserProfileResponse {
@@ -76,6 +77,8 @@ export interface UserProfileResponse {
   verificationStatus?: VerificationStatus;
   itemsSold?: number;
   revenue?: number;
+  totalSpent?: number;
+  totalOrders?: number;
 }
 
 export interface SellerVerificationResponse {

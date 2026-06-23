@@ -6,6 +6,7 @@ import { useAuth } from "../hooks/useAuth";
 import { useCart } from "../hooks/useCart";
 
 import { orderService, type OrderResponse } from "../services/orderService";
+import { authService } from "../services/authservice";
 import { ConfirmModal } from "./common/ConfirmModal";
 import { useWishlist } from "../hooks/useWishlist";
 import { reviewService } from "../services/reviewService";
@@ -14,7 +15,7 @@ import { type Review, type Product, type Complaint } from "../types";
 
 export function BuyerDashboard() {
   // ✅ Fixed: Changed from SellerDashboard to BuyerDashboard
-  const { currentUser } = useAuth();
+  const { currentUser, updateUser } = useAuth();
   const { cartItems, addToCart, isLoadingCart } = useCart();
   const { wishlistProducts: wishlistItems, removeFromWishlist, isLoadingWishlist } = useWishlist();
 
@@ -71,6 +72,23 @@ export function BuyerDashboard() {
       default: return 'bg-rose-100 text-rose-800';
     }
   };
+
+  useEffect(() => {
+    const fetchFreshProfile = async () => {
+      try {
+        const result = await authService.getCurrentUser();
+        if (result.ok && result.data) {
+          updateUser(result.data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch fresh user profile:", err);
+      }
+    };
+
+    if (currentUser?.role === "BUYER") {
+      fetchFreshProfile();
+    }
+  }, []);
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -200,8 +218,8 @@ export function BuyerDashboard() {
     }
   };
 
-  const totalOrders = orders.length;
-  const totalSpent = orders.reduce((sum, order) => sum + order.totalAmount, 0);
+  const totalOrders = currentUser?.totalOrders ?? 0;
+  const totalSpent = currentUser?.totalSpent ?? 0;
   const cartItemsCount = cartItems.length;
 
   return (
