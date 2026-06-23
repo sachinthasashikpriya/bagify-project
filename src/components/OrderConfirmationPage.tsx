@@ -104,7 +104,7 @@ export function OrderConfirmationPage() {
 
       const checkoutParams = {
         ...paymentParams,
-        notify_url: env.PAYHERE_NOTIFY_URL,
+        notify_url: paymentParams.notify_url || env.PAYHERE_NOTIFY_URL,
         first_name: currentUser.name || paymentParams.first_name || "Customer",
         email: currentUser.email || paymentParams.email || "",
         phone: currentUser.phone || paymentParams.phone || "0771234567",
