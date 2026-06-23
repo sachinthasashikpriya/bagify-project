@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Shield, Users, Package, TrendingUp, AlertTriangle, Search, X, FileText, CheckCircle2, ShoppingBag, ArrowUpRight, ChevronDown, Calendar } from 'lucide-react';
+import { Shield, Users, Package, TrendingUp, AlertTriangle, Search, X, FileText, CheckCircle2, ShoppingBag, ArrowUpRight, ChevronDown, Calendar, Menu } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useAuth } from '../hooks/useAuth';
@@ -15,6 +15,7 @@ export function AdminDashboard() {
   const { products, deleteProduct } = useProducts();
   const navigate = useNavigate();
   const location = useLocation();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   
   const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'users' | 'orders' | 'verifications'>(
     (location.state?.activeTab as 'overview' | 'products' | 'users' | 'orders' | 'verifications') || 'overview'
@@ -417,17 +418,26 @@ export function AdminDashboard() {
   return (
     <div className="min-h-screen bg-[#f8fafc] flex admin-panel">
       {/* Sidebar Navigation */}
-      <aside className="w-64 bg-slate-900 text-slate-300 flex flex-col justify-between border-r border-slate-800 shadow-xl fixed h-screen z-20">
+      <aside className={`fixed top-0 bottom-0 left-0 z-40 w-64 bg-slate-900 text-slate-300 flex flex-col justify-between border-r border-slate-800 shadow-xl transition-transform duration-300 lg:translate-x-0 ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"}`}>
         <div>
           {/* Logo Brand */}
-          <div className="p-6 flex items-center gap-3 border-b border-slate-800 bg-slate-950/40">
-            <div className="p-2 bg-purple-500/10 rounded-xl border border-purple-500/20 text-purple-400 shadow-inner">
-              <Shield className="w-6 h-6 animate-pulse" />
+          <div className="p-6 flex items-center justify-between border-b border-slate-800 bg-slate-950/40">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-purple-500/10 rounded-xl border border-purple-500/20 text-purple-400 shadow-inner">
+                <Shield className="w-6 h-6 animate-pulse" />
+              </div>
+              <div>
+                <span className="font-extrabold text-white tracking-wider text-lg">BAGIFY</span>
+                <span className="text-xs block text-purple-400 font-bold uppercase tracking-widest mt-0.5">Admin Central</span>
+              </div>
             </div>
-            <div>
-              <span className="font-extrabold text-white tracking-wider text-lg">BAGIFY</span>
-              <span className="text-xs block text-purple-400 font-bold uppercase tracking-widest mt-0.5">Admin Central</span>
-            </div>
+            <button
+              onClick={() => setIsSidebarOpen(false)}
+              className="lg:hidden p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+              aria-label="Close sidebar menu"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </div>
 
           {/* User Profile Summary */}
@@ -453,7 +463,10 @@ export function AdminDashboard() {
               return (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
+                  onClick={() => {
+                    setActiveTab(tab.id);
+                    setIsSidebarOpen(false);
+                  }}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 ${
                     isActive
                       ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg shadow-purple-500/20 translate-x-1'
@@ -476,23 +489,40 @@ export function AdminDashboard() {
 
       </aside>
 
+      {/* Sidebar Overlay */}
+      {isSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-30 lg:hidden" 
+          onClick={() => setIsSidebarOpen(false)} 
+        />
+      )}
+
       {/* Main Workspace */}
-      <main className="flex-1 min-w-0 pl-64 flex flex-col min-h-screen">
+      <main className="flex-1 min-w-0 lg:pl-64 flex flex-col min-h-screen">
         {/* Top Navbar */}
-        <header className="bg-white/80 backdrop-blur-md border-b border-slate-100 px-8 py-5 sticky top-0 z-10 flex items-center justify-between shadow-sm">
-          <div>
-            <div className="flex items-center gap-2 text-xs font-semibold text-slate-400 uppercase tracking-widest mb-1">
-              <span>Admin Console</span>
-              <span>/</span>
-              <span className="text-purple-600 capitalize">{activeTab}</span>
+        <header className="bg-white/80 backdrop-blur-md border-b border-slate-100 px-4 sm:px-8 py-5 sticky top-0 z-10 flex items-center justify-between shadow-sm">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setIsSidebarOpen(true)}
+              className="lg:hidden p-2 hover:bg-slate-100 rounded-xl text-slate-600 transition-colors"
+              aria-label="Open sidebar menu"
+            >
+              <Menu className="w-6 h-6" />
+            </button>
+            <div>
+              <div className="flex items-center gap-2 text-xs font-semibold text-slate-400 uppercase tracking-widest mb-1">
+                <span>Admin Console</span>
+                <span>/</span>
+                <span className="text-purple-600 capitalize">{activeTab}</span>
+              </div>
+              <h2 className="text-lg sm:text-xl font-black text-slate-800">
+                {activeTab === 'overview' && 'System Analytics Overview'}
+                {activeTab === 'products' && 'Product Inventory Hub'}
+                {activeTab === 'users' && 'Account Directory & Security'}
+                {activeTab === 'orders' && 'Global Transaction Board'}
+                {activeTab === 'verifications' && 'Seller Document Desk'}
+              </h2>
             </div>
-            <h2 className="text-xl font-black text-slate-800">
-              {activeTab === 'overview' && 'System Analytics Overview'}
-              {activeTab === 'products' && 'Product Inventory Hub'}
-              {activeTab === 'users' && 'Account Directory & Security'}
-              {activeTab === 'orders' && 'Global Transaction Board'}
-              {activeTab === 'verifications' && 'Seller Document Desk'}
-            </h2>
           </div>
           <div className="flex items-center gap-4">
             <div className="text-right hidden md:block">
