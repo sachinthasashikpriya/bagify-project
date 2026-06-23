@@ -61,7 +61,7 @@ export function BuyerEditProfile() {
         <div className="flex items-center gap-1 mb-8 bg-white p-1.5 rounded-2xl shadow-sm border border-gray-100">
           <button
             onClick={() => navigate("?section=profile")}
-            className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-bold transition-all ${
+            className={`flex-1 flex-shrink-0 flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-bold transition-all ${
               activeSection === "profile"
                 ? "bg-purple-600 text-white shadow-lg shadow-purple-200"
                 : "text-gray-500 hover:bg-gray-50"
@@ -72,7 +72,7 @@ export function BuyerEditProfile() {
           </button>
           <button
             onClick={() => navigate("?section=security")}
-            className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-bold transition-all ${
+            className={`flex-1 flex-shrink-0 flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-bold transition-all ${
               activeSection === "security"
                 ? "bg-purple-600 text-white shadow-lg shadow-purple-200"
                 : "text-gray-500 hover:bg-gray-50"

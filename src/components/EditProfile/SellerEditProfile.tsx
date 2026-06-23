@@ -232,10 +232,10 @@ export function SellerEditProfile() {
         </button>
 
         {/* ── Tab Navigation ────────────────────────────────────────────────── */}
-        <div className="flex items-center gap-1 mb-8 bg-white p-1.5 rounded-2xl shadow-sm border border-gray-100">
+        <div className="flex items-center gap-1 mb-8 bg-white p-1.5 rounded-2xl shadow-sm border border-gray-100 overflow-x-auto whitespace-nowrap">
           <button
             onClick={() => navigate("?section=profile")}
-            className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-bold transition-all duration-300 ${
+            className={`flex-1 flex-shrink-0 flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-bold transition-all duration-300 ${
               activeSection === "profile"
                 ? "bg-purple-600 text-white shadow-lg shadow-purple-200"
                 : "text-gray-500 hover:bg-gray-50 hover:text-purple-600"
@@ -246,7 +246,7 @@ export function SellerEditProfile() {
           </button>
           <button
             onClick={() => navigate("?section=verification")}
-            className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-bold transition-all duration-300 ${
+            className={`flex-1 flex-shrink-0 flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-bold transition-all duration-300 ${
               activeSection === "verification"
                 ? "bg-purple-600 text-white shadow-lg shadow-purple-200"
                 : "text-gray-500 hover:bg-gray-50 hover:text-purple-600"
@@ -257,7 +257,7 @@ export function SellerEditProfile() {
           </button>
           <button
             onClick={() => navigate("?section=security")}
-            className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-bold transition-all duration-300 ${
+            className={`flex-1 flex-shrink-0 flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-bold transition-all duration-300 ${
               activeSection === "security"
                 ? "bg-purple-600 text-white shadow-lg shadow-purple-200"
                 : "text-gray-500 hover:bg-gray-50 hover:text-purple-600"

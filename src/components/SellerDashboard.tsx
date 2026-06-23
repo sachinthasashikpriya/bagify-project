@@ -620,10 +620,10 @@ export function SellerDashboard() {
         </div>
 
         {/* Navigation Tabs */}
-        <div className="bg-slate-200/40 backdrop-blur-md p-1.5 rounded-2xl inline-flex gap-1.5 mb-8 shadow-inner border border-slate-250/20">
+        <div className="bg-slate-200/40 backdrop-blur-md p-1.5 rounded-2xl flex flex-wrap sm:inline-flex gap-1.5 mb-8 shadow-inner border border-slate-250/20">
           <button
             onClick={() => setActiveTab('products')}
-            className={`flex items-center gap-2.5 px-6 py-2.5 rounded-xl text-xs font-bold tracking-wide uppercase transition-all duration-300 ${activeTab === 'products'
+            className={`flex items-center justify-center flex-1 sm:flex-none gap-2.5 px-6 py-2.5 rounded-xl text-xs font-bold tracking-wide uppercase transition-all duration-300 ${activeTab === 'products'
                 ? 'bg-white text-purple-700 shadow-sm border border-slate-100'
                 : 'text-slate-500 hover:text-slate-900'
               }`}
@@ -633,7 +633,7 @@ export function SellerDashboard() {
           </button>
           <button
             onClick={() => setActiveTab('orders')}
-            className={`flex items-center gap-2.5 px-6 py-2.5 rounded-xl text-xs font-bold tracking-wide uppercase transition-all duration-300 ${activeTab === 'orders'
+            className={`flex items-center justify-center flex-1 sm:flex-none gap-2.5 px-6 py-2.5 rounded-xl text-xs font-bold tracking-wide uppercase transition-all duration-300 ${activeTab === 'orders'
                 ? 'bg-white text-purple-700 shadow-sm border border-slate-100'
                 : 'text-slate-500 hover:text-slate-900'
               }`}

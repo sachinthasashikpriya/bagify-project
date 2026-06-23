@@ -13,7 +13,7 @@ export function Footer() {
   };
 
   return (
-    <footer className={`bg-slate-950 text-slate-400 border-t border-slate-900 relative overflow-hidden ${isAdminDashboard ? "pl-64" : ""}`}>
+    <footer className={`bg-slate-950 text-slate-400 border-t border-slate-900 relative overflow-hidden ${isAdminDashboard ? "lg:pl-64" : ""}`}>
       {/* Background radial glow */}
       <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-purple-500/5 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute top-0 left-1/4 w-[400px] h-[400px] bg-indigo-500/5 rounded-full blur-3xl pointer-events-none" />
