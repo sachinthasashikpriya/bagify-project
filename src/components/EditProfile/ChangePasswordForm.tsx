@@ -15,11 +15,29 @@ export function ChangePasswordForm() {
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  const getPasswordStrength = (password: string): { label: string; color: string; width: string; score: number } => {
+    if (!password) return { label: "", color: "", width: "0%", score: 0 };
+    
+    let score = 0;
+    if (password.length >= 8) score++;
+    if (/[A-Z]/.test(password)) score++;
+    if (/[a-z]/.test(password)) score++;
+    if (/[0-9]/.test(password)) score++;
+    if (/[^A-Za-z0-9]/.test(password)) score++;
+
+    if (score <= 2) return { label: "Weak", color: "bg-red-500", width: "33%", score };
+    if (score <= 4) return { label: "Medium", color: "bg-yellow-500", width: "66%", score };
+    return { label: "Strong", color: "bg-green-500", width: "100%", score };
+  };
+
   const validate = () => {
     const e: Record<string, string> = {};
     if (!formData.currentPassword) e.currentPassword = "Current password is required";
     if (!formData.newPassword) e.newPassword = "New password is required";
     else if (formData.newPassword.length < 8) e.newPassword = "Password must be at least 8 characters";
+    else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])/.test(formData.newPassword)) {
+      e.newPassword = "Must include uppercase, lowercase, and a number";
+    }
     
     if (formData.newPassword !== formData.confirmPassword) {
       e.confirmPassword = "Passwords do not match";
@@ -27,6 +45,8 @@ export function ChangePasswordForm() {
     setErrors(e);
     return Object.keys(e).length === 0;
   };
+
+  const strength = getPasswordStrength(formData.newPassword);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -122,6 +142,24 @@ export function ChangePasswordForm() {
               <p className="mt-1 text-xs font-medium text-red-500 flex items-center gap-1">
                 <AlertCircle size={12} /> {errors.newPassword}
               </p>
+            )}
+
+            {/* Password strength bar */}
+            {formData.newPassword && (
+              <div className="mt-3 px-1 animate-in fade-in zoom-in-95 duration-500">
+                <div className="flex justify-between items-center mb-1.5">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Security Strength</span>
+                  <span className={`text-[10px] font-bold uppercase tracking-wider ${strength.color.replace('bg-', 'text-')}`}>
+                    {strength.label}
+                  </span>
+                </div>
+                <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden flex gap-1">
+                  <div
+                    className={`h-full rounded-full transition-all duration-700 ease-out ${strength.color}`}
+                    style={{ width: strength.width }}
+                  />
+                </div>
+              </div>
             )}
           </div>
 

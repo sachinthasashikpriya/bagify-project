@@ -172,7 +172,6 @@ export function useEditProfileForm() {
       }
 
       toast.success("Profile updated successfully!");
-      navigate(getDashboardPath());
     } catch (error) {
       void error;
       toast.error("Failed to update profile. Please try again.");

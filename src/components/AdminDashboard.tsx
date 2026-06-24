@@ -451,7 +451,7 @@ export function AdminDashboard() {
   return (
     <div className="min-h-screen bg-[#f8fafc] flex admin-panel">
       {/* Sidebar Navigation */}
-      <aside className={`fixed top-0 bottom-0 left-0 z-40 w-64 bg-slate-900 text-slate-300 flex flex-col justify-between border-r border-slate-800 shadow-xl transition-transform duration-300 lg:translate-x-0 ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"}`}>
+      <aside className={`fixed top-0 bottom-0 left-0 z-[60] w-64 bg-slate-900 text-slate-300 flex flex-col justify-between border-r border-slate-800 shadow-xl transition-transform duration-300 lg:translate-x-0 ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"}`}>
         <div>
           {/* Logo Brand */}
           <div className="p-6 flex items-center justify-between border-b border-slate-800 bg-slate-950/40">
@@ -525,7 +525,7 @@ export function AdminDashboard() {
       {/* Sidebar Overlay */}
       {isSidebarOpen && (
         <div 
-          className="fixed inset-0 bg-black/50 z-30 lg:hidden" 
+          className="fixed inset-0 bg-black/50 z-[55] lg:hidden" 
           onClick={() => setIsSidebarOpen(false)} 
         />
       )}
