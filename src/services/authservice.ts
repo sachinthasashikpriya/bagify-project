@@ -200,6 +200,59 @@ async register(payload: RegisterRequest): Promise<Result<User>> {
       auth: false,
     });
   }
+
+  /**
+   * Verify registration OTP
+   */
+  async verifyOtp(email: string, code: string): Promise<Result<LoginResponse>> {
+    const payload = { email, code };
+    const primaryResult = await httpClient.post<BackendLoginResponse>(endpoints.auth.verifyOtp, payload, {
+      service: 'auth-service',
+      auth: false,
+      retry: { attempts: 0, backoffMs: 0 },
+    });
+
+    if (primaryResult.ok && primaryResult.data) {
+      const user = primaryResult.data.user;
+      const mappedUser = mapBackendUserToFrontendUser(user);
+      return {
+        ...primaryResult,
+        data: {
+          ...primaryResult.data,
+          user: mappedUser,
+        },
+      };
+    }
+
+    if (!shouldTryLegacyAuthRoute(primaryResult)) {
+      return { ok: primaryResult.ok, status: primaryResult.status, error: primaryResult.error };
+    }
+
+    const legacyPath = toLegacyAuthPath(endpoints.auth.verifyOtp);
+    if (legacyPath === endpoints.auth.verifyOtp) {
+      return { ok: primaryResult.ok, status: primaryResult.status, error: primaryResult.error };
+    }
+
+    const legacyResult = await httpClient.post<BackendLoginResponse>(legacyPath, payload, {
+      service: 'auth-service',
+      auth: false,
+      retry: { attempts: 0, backoffMs: 0 },
+    });
+
+    if (legacyResult.ok && legacyResult.data) {
+      const user = legacyResult.data.user;
+      const mappedUser = mapBackendUserToFrontendUser(user);
+      return {
+        ...legacyResult,
+        data: {
+          ...legacyResult.data,
+          user: mappedUser,
+        },
+      };
+    }
+
+    return { ok: legacyResult.ok, status: legacyResult.status, error: legacyResult.error };
+  }
 }
 
 export const authService = new AuthService();

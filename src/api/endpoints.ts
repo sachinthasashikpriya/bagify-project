@@ -1,6 +1,7 @@
 export const endpoints = {
     auth: {
       register: '/api/v1/auth/register',  // POST - no token returned
+      verifyOtp: '/api/v1/auth/verify-otp', // POST - returns login response
       login: '/api/v1/auth/login',        // POST - returns { token: "..." }
       refresh: '/api/v1/auth/refresh',    // POST - returns { token: "..." }
       logout: '/api/v1/auth/logout',      // POST

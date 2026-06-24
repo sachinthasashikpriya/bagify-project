@@ -16,6 +16,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { authService } from "../services/authservice";
+import { useAuth } from "../hooks/useAuth";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -35,9 +36,21 @@ type FormErrors = Partial<Record<keyof SignupFormData, string>>;
 
 export function SignupPage() {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [step, setStep] = useState<"SIGNUP" | "OTP">("SIGNUP");
+  const [otpCode, setOtpCode] = useState("");
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [resendTimer, setResendTimer] = useState(0);
+
+  useEffect(() => {
+    if (resendTimer > 0) {
+      const timer = setTimeout(() => setResendTimer(resendTimer - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [resendTimer]);
 
   const [formData, setFormData] = useState<SignupFormData>({
     name: "",
@@ -166,13 +179,73 @@ export function SignupPage() {
         return;
       }
 
-      toast.success("Account created successfully! Please login.");
-      navigate("/login");
+      toast.success("A verification OTP code has been sent to your email!");
+      setStep("OTP");
+      setResendTimer(60);
     } catch (error) {
       console.error("Registration error:", error);
       toast.error("An unexpected error occurred. Please try again.");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!otpCode.trim() || otpCode.trim().length !== 6) {
+      toast.error("Please enter a valid 6-digit OTP code");
+      return;
+    }
+
+    setIsVerifying(true);
+    try {
+      const response = await authService.verifyOtp(formData.email.trim().toLowerCase(), otpCode.trim());
+      if (!response.ok || !response.data) {
+        toast.error(response.error || "Invalid or expired verification code");
+        return;
+      }
+
+      const { user, token, refreshToken } = response.data;
+      login(user, token, refreshToken || null);
+
+      toast.success(`Account verified successfully! Welcome, ${user.name}!`);
+      
+      if (user.role === "SELLER") {
+        navigate("/seller-dashboard");
+      } else {
+        navigate("/");
+      }
+    } catch (error) {
+      console.error("Verification error:", error);
+      toast.error("An unexpected error occurred during verification.");
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    if (resendTimer > 0) return;
+    setIsVerifying(true);
+    try {
+      const response = await authService.register({
+        name: formData.name.trim(),
+        email: formData.email.trim().toLowerCase(),
+        phone: formData.phone.trim(),
+        address: formData.address.trim(),
+        password: formData.password,
+        confirmPassword: formData.confirmPassword,
+        userrole: formData.userType,
+      });
+      if (response.ok) {
+        toast.success("A new verification code has been sent to your email!");
+        setResendTimer(60);
+      } else {
+        toast.error(response.error || "Failed to resend verification code");
+      }
+    } catch (error) {
+      toast.error("An unexpected error occurred");
+    } finally {
+      setIsVerifying(false);
     }
   };
 
@@ -249,6 +322,90 @@ export function SignupPage() {
       )}
     </div>
   );
+
+  if (step === "OTP") {
+    return (
+      <div className="min-h-screen bg-[#F8F9FF] flex items-center justify-center px-4 py-12 selection:bg-purple-100">
+        <div className="max-w-md w-full">
+          {/* Logo & Header */}
+          <div className="text-center mb-10">
+            <div className="inline-flex items-center justify-center w-20 h-20 bg-white rounded-3xl shadow-xl shadow-purple-200/50 mb-6 group cursor-default transition-transform hover:scale-105 duration-300">
+              <ShoppingBag className="w-10 h-10 text-purple-600 group-hover:rotate-12 transition-transform" />
+            </div>
+            <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight mb-2">
+              Verify Your Email
+            </h1>
+            <p className="text-gray-500 font-medium">We've sent a 6-digit verification code to <span className="text-purple-600 font-bold">{formData.email}</span></p>
+          </div>
+
+          <div className="bg-white rounded-[2.5rem] shadow-2xl shadow-purple-200/40 p-10 overflow-hidden relative border border-purple-50">
+            {/* Decorative Elements */}
+            <div className="absolute top-0 right-0 w-32 h-32 bg-purple-50 rounded-full -mr-16 -mt-16 blur-3xl opacity-50"></div>
+            <div className="absolute bottom-0 left-0 w-32 h-32 bg-blue-50 rounded-full -ml-16 -mb-16 blur-3xl opacity-50"></div>
+
+            <form onSubmit={handleVerifyOtp} className="space-y-6 relative">
+              <div className="relative group">
+                <label htmlFor="otpCode" className="block text-sm font-semibold text-gray-700 mb-1.5 ml-1">
+                  Verification Code <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-purple-600 transition-colors">
+                    <CheckCircle size={18} />
+                  </div>
+                  <input
+                    type="text"
+                    id="otpCode"
+                    maxLength={6}
+                    value={otpCode}
+                    onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
+                    className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-600/20 focus:border-purple-600 transition-all text-center tracking-[0.5em] text-lg font-bold"
+                    placeholder="••••••"
+                    disabled={isVerifying}
+                    required
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={isVerifying || otpCode.length !== 6}
+                className="w-full relative group overflow-hidden flex items-center justify-center gap-3 px-8 py-4 bg-purple-600 text-white rounded-2xl font-bold text-lg transition-all duration-300 hover:bg-purple-700 hover:shadow-xl hover:shadow-purple-200 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isVerifying ? (
+                  <Loader className="w-6 h-6 animate-spin" />
+                ) : (
+                  <>
+                    <UserPlus className="w-6 h-6 group-hover:scale-110 transition-transform" />
+                    <span>Verify & Create Account</span>
+                  </>
+                )}
+              </button>
+
+              <div className="flex justify-between items-center text-sm font-medium mt-4">
+                <button
+                  type="button"
+                  onClick={() => setStep("SIGNUP")}
+                  disabled={isVerifying}
+                  className="text-gray-400 hover:text-purple-600 transition-colors"
+                >
+                  ← Edit registration info
+                </button>
+                
+                <button
+                  type="button"
+                  onClick={handleResendOtp}
+                  disabled={isVerifying || resendTimer > 0}
+                  className={`text-purple-600 font-bold transition-colors ${resendTimer > 0 ? "opacity-50 cursor-not-allowed" : "hover:text-purple-700 underline"}`}
+                >
+                  {resendTimer > 0 ? `Resend in ${resendTimer}s` : "Resend Code"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#F8F9FF] flex items-center justify-center px-4 py-12 selection:bg-purple-100">
