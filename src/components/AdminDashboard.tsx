@@ -28,7 +28,7 @@ export function AdminDashboard() {
   const [orderFilterType, setOrderFilterType] = useState<'all' | 'today' | '7days' | '30days' | 'custom'>('all');
   const [orderStartDate, setOrderStartDate] = useState<string>('');
   const [orderEndDate, setOrderEndDate] = useState<string>('');
-  const [orderStatusFilter, setOrderStatusFilter] = useState<'ALL' | 'PENDING' | 'PROCESSING' | 'PARTIALLY_SHIPPED' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED'>('ALL');
+  const [orderStatusFilter, setOrderStatusFilter] = useState<'ALL' | 'PENDING' | 'PROCESSING' | 'PARTIALLY_SHIPPED' | 'SHIPPED' | 'CANCELLED'>('ALL');
   const [orderSearchQuery, setOrderSearchQuery] = useState('');
 
   // Filtered orders logic
@@ -299,8 +299,7 @@ export function AdminDashboard() {
 
   const getStatusColor = (status: string) => {
     switch (status?.toUpperCase()) {
-      case 'DELIVERED': return 'bg-green-50 text-green-700 border border-green-200';
-      case 'SHIPPED': return 'bg-blue-50 text-blue-700 border border-blue-200';
+      case 'SHIPPED': return 'bg-green-50 text-green-700 border border-green-200';
       case 'PARTIALLY_SHIPPED': return 'bg-indigo-50 text-indigo-700 border border-indigo-200';
       case 'PACKED': return 'bg-cyan-50 text-cyan-700 border border-cyan-200';
       case 'PROCESSING': return 'bg-orange-50 text-orange-700 border border-orange-200';
@@ -419,7 +418,7 @@ export function AdminDashboard() {
     if (adminStats) return adminStats.totalRevenue;
     return orders.reduce((sum, order) => {
       const isPaid = order.paymentStatus === 'PAID' || 
-                    ['PROCESSING', 'PARTIALLY_SHIPPED', 'SHIPPED', 'DELIVERED'].includes(order.status);
+                    ['PROCESSING', 'PARTIALLY_SHIPPED', 'SHIPPED'].includes(order.status);
       if (isPaid && order.status !== 'CANCELLED') {
         const subtotal = order.subtotal ?? (order.totalAmount - (order.tax || 0) - (order.shipping || 0));
         return sum + subtotal;
@@ -432,7 +431,7 @@ export function AdminDashboard() {
     if (adminStats) return adminStats.adminEarnings;
     return orders.reduce((sum, order) => {
       const isPaid = order.paymentStatus === 'PAID' || 
-                    ['PROCESSING', 'PARTIALLY_SHIPPED', 'SHIPPED', 'DELIVERED'].includes(order.status);
+                    ['PROCESSING', 'PARTIALLY_SHIPPED', 'SHIPPED'].includes(order.status);
       if (isPaid && order.status !== 'CANCELLED') {
         return sum + (order.tax || 0);
       }
@@ -1052,7 +1051,6 @@ export function AdminDashboard() {
                             <option value="PROCESSING">Processing</option>
                             <option value="PARTIALLY_SHIPPED">Partially Shipped</option>
                             <option value="SHIPPED">Shipped</option>
-                            <option value="DELIVERED">Delivered</option>
                             <option value="CANCELLED">Cancelled</option>
                           </select>
                         </div>
@@ -1153,24 +1151,9 @@ export function AdminDashboard() {
                           </div>
                           <div className="flex flex-wrap items-center gap-3">
                             <span className="text-slate-500 font-bold">Gross Total: <span className="font-extrabold text-slate-800">Rs. {order.totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></span>
-                            <div className="relative inline-block">
-                              <select
-                                value={order.status}
-                                onChange={(e) => handleStatusChange(order.id, e.target.value)}
-                                className={`appearance-none pl-2.5 pr-7 py-1 rounded-lg text-xs font-black uppercase tracking-wider focus:outline-none focus:ring-2 focus:ring-purple-500 shadow-sm cursor-pointer transition-all ${getStatusColor(order.status)}`}
-                                title="Override entire order status"
-                              >
-                                <option value="PENDING" className="bg-white text-slate-800">PENDING</option>
-                                <option value="PROCESSING" className="bg-white text-slate-800">PROCESSING</option>
-                                <option value="PARTIALLY_SHIPPED" className="bg-white text-slate-800">PARTIALLY SHIPPED</option>
-                                <option value="SHIPPED" className="bg-white text-slate-800">SHIPPED</option>
-                                <option value="DELIVERED" className="bg-white text-slate-800">DELIVERED</option>
-                                <option value="CANCELLED" className="bg-white text-slate-800">CANCELLED</option>
-                              </select>
-                              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2 text-current opacity-70">
-                                <ChevronDown className="w-3.5 h-3.5" />
-                              </div>
-                            </div>
+                            <span className={`px-2.5 py-1 rounded-lg text-xs font-black uppercase tracking-wider border shadow-sm ${getStatusColor(order.status)}`}>
+                              {order.status}
+                            </span>
                             <button
                               onClick={() => navigate(`/admin/orders/${order.id}`)}
                               className="px-3 py-1 bg-purple-50 hover:bg-purple-600 hover:text-white text-purple-700 rounded-lg text-xs font-extrabold transition-all border border-purple-100 flex items-center gap-1 cursor-pointer"
@@ -1202,22 +1185,9 @@ export function AdminDashboard() {
                                  </div>
                                </div>
                               <div className="flex items-center gap-3 self-end sm:self-auto">
-                                <div className="relative inline-block">
-                                  <select
-                                    value={item.itemStatus}
-                                    onChange={(e) => handleItemStatusChange(order.id, item.id, e.target.value)}
-                                    className={`appearance-none pl-2.5 pr-7 py-1 rounded-lg text-xs font-black uppercase tracking-wider focus:outline-none focus:ring-2 focus:ring-purple-500 shadow-sm cursor-pointer transition-all ${getStatusColor(item.itemStatus)}`}
-                                  >
-                                    <option value="PENDING" className="bg-white text-slate-800">PENDING</option>
-                                    <option value="PROCESSING" className="bg-white text-slate-800">PROCESSING</option>
-                                    <option value="PACKED" className="bg-white text-slate-800">PACKED</option>
-                                    <option value="SHIPPED" className="bg-white text-slate-800">SHIPPED</option>
-                                    <option value="DELIVERED" className="bg-white text-slate-800">DELIVERED</option>
-                                  </select>
-                                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2 text-current opacity-70">
-                                    <ChevronDown className="w-3.5 h-3.5" />
-                                  </div>
-                                </div>
+                                <span className={`px-2.5 py-1 rounded-lg text-xs font-black uppercase tracking-wider border shadow-sm ${getStatusColor(item.itemStatus)}`}>
+                                  {item.itemStatus}
+                                </span>
                               </div>
                             </div>
                           ))}

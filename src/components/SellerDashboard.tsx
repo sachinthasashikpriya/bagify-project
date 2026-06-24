@@ -56,7 +56,7 @@ export function SellerDashboard() {
   const [filterType, setFilterType] = useState<'all' | 'today' | '7days' | '30days' | 'custom'>('all');
   const [customStartDate, setCustomStartDate] = useState<string>('');
   const [customEndDate, setCustomEndDate] = useState<string>('');
-  const [orderStatusFilter, setOrderStatusFilter] = useState<'ALL' | 'PENDING' | 'PROCESSING' | 'PACKED' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED'>('ALL');
+  const [orderStatusFilter, setOrderStatusFilter] = useState<'ALL' | 'PENDING' | 'PROCESSING' | 'PACKED' | 'SHIPPED' | 'CANCELLED'>('ALL');
   const [orderSearchQuery, setOrderSearchQuery] = useState('');
 
   // Filtered orders logic
@@ -169,7 +169,7 @@ export function SellerDashboard() {
     filteredOrders.forEach(order => {
       // Only paid and non-cancelled orders count towards revenue and items sold
       const isPaid = order.paymentStatus === 'PAID' || 
-                    ['PROCESSING', 'PARTIALLY_SHIPPED', 'SHIPPED', 'DELIVERED'].includes(order.status);
+                    ['PROCESSING', 'PARTIALLY_SHIPPED', 'SHIPPED'].includes(order.status);
       if (isPaid && order.status !== 'CANCELLED') {
         const myItems = order.items.filter(item => String(item.sellerId) === currentSellerId);
         myItems.forEach(item => {
@@ -199,8 +199,7 @@ export function SellerDashboard() {
 
   const getStatusColor = (status: string) => {
     switch (status?.toUpperCase()) {
-      case 'DELIVERED': return 'bg-green-100 text-green-800';
-      case 'SHIPPED': return 'bg-blue-100 text-blue-800';
+      case 'SHIPPED': return 'bg-green-100 text-green-800';
       case 'PARTIALLY_SHIPPED': return 'bg-indigo-100 text-indigo-800';
       case 'PACKED': return 'bg-cyan-100 text-cyan-800';
       case 'PROCESSING': return 'bg-orange-100 text-orange-800';
@@ -1052,7 +1051,6 @@ export function SellerDashboard() {
                         <option value="PROCESSING">Processing</option>
                         <option value="PACKED">Packed</option>
                         <option value="SHIPPED">Shipped</option>
-                        <option value="DELIVERED">Delivered</option>
                       </select>
                     </div>
                   </div>
@@ -1193,7 +1191,7 @@ export function SellerDashboard() {
 
                                 <div className="flex items-center gap-3 self-end sm:self-auto">
                                   {/* Single status control / display */}
-                                  {order.status !== 'CANCELLED' && item.itemStatus !== 'DELIVERED' && item.itemStatus !== 'CANCELLED' ? (
+                                  {order.status !== 'CANCELLED' && item.itemStatus !== 'SHIPPED' && item.itemStatus !== 'CANCELLED' ? (
                                     <div className="relative inline-block">
                                       <select
                                         value={item.itemStatus}
@@ -1218,11 +1216,11 @@ export function SellerDashboard() {
                                     </div>
                                   ) : (
                                     <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-extrabold border shadow-sm ${
-                                      item.itemStatus === 'DELIVERED' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                                      item.itemStatus === 'SHIPPED' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
                                       item.itemStatus === 'CANCELLED' ? 'bg-rose-50 text-rose-700 border-rose-200' :
                                       'bg-slate-50 text-slate-700 border-slate-200'
                                     }`}>
-                                      {item.itemStatus === 'DELIVERED' && (
+                                      {item.itemStatus === 'SHIPPED' && (
                                         <ShieldCheck className="w-3.5 h-3.5 fill-emerald-500 text-white" />
                                       )}
                                       {item.itemStatus}

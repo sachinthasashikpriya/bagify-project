@@ -53,8 +53,7 @@ export function BuyerDashboard() {
 
   const getStatusColor = (status: string) => {
     switch (status?.toUpperCase()) {
-      case 'DELIVERED': return 'bg-green-100 text-green-800';
-      case 'SHIPPED': return 'bg-blue-100 text-blue-800';
+      case 'SHIPPED': return 'bg-green-100 text-green-800';
       case 'PARTIALLY_SHIPPED': return 'bg-indigo-100 text-indigo-800';
       case 'PACKED': return 'bg-cyan-100 text-cyan-800';
       case 'PROCESSING': return 'bg-orange-100 text-orange-800';
@@ -565,7 +564,7 @@ export function BuyerDashboard() {
                                         </span>
                                       </div>
 
-                                      {item.itemStatus?.toUpperCase() === 'DELIVERED' && (
+                                      {item.itemStatus?.toUpperCase() === 'SHIPPED' && (
                                         <button
                                           onClick={() => navigate(`/product/${item.productId}`)}
                                           className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 transition-colors duration-200 shadow-sm"
@@ -933,29 +932,15 @@ export function BuyerDashboard() {
                 </div>
 
                 {/* Step 2: Shipped */}
-                <div className="relative flex items-start gap-4 mb-8">
-                  <div className={`relative z-10 flex items-center justify-center w-10 h-10 rounded-full ${['SHIPPED', 'DELIVERED'].includes(trackingOrder.status) ? 'bg-purple-100 text-purple-600' : 'bg-gray-100 text-gray-400'
+                <div className="relative flex items-start gap-4">
+                  <div className={`relative z-10 flex items-center justify-center w-10 h-10 rounded-full ${trackingOrder.status === 'SHIPPED' ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'
                     }`}>
                     <Truck className="w-5 h-5" />
                   </div>
                   <div className="pt-2">
-                    <h4 className={`font-semibold ${['SHIPPED', 'DELIVERED'].includes(trackingOrder.status) ? 'text-gray-900' : 'text-gray-400'}`}>Shipped</h4>
-                    {['SHIPPED', 'DELIVERED'].includes(trackingOrder.status) && (
-                      <p className="text-sm text-gray-500">Your order is on the way</p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Step 3: Delivered */}
-                <div className="relative flex items-start gap-4">
-                  <div className={`relative z-10 flex items-center justify-center w-10 h-10 rounded-full ${trackingOrder.status === 'DELIVERED' ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'
-                    }`}>
-                    <CheckCircle2 className="w-5 h-5" />
-                  </div>
-                  <div className="pt-2">
-                    <h4 className={`font-semibold ${trackingOrder.status === 'DELIVERED' ? 'text-gray-900' : 'text-gray-400'}`}>Delivered</h4>
-                    {trackingOrder.status === 'DELIVERED' && (
-                      <p className="text-sm text-gray-500">Package has been delivered</p>
+                    <h4 className={`font-semibold ${trackingOrder.status === 'SHIPPED' ? 'text-gray-900' : 'text-gray-400'}`}>Shipped</h4>
+                    {trackingOrder.status === 'SHIPPED' && (
+                      <p className="text-sm text-gray-500">Your order has been shipped successfully</p>
                     )}
                   </div>
                 </div>

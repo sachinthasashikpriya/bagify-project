@@ -117,7 +117,7 @@ export function SellerAnalytics() {
     const paidNonCancelledOrders = orders.filter(
       order => 
         (order.paymentStatus === 'PAID' || 
-         ['PROCESSING', 'PARTIALLY_SHIPPED', 'SHIPPED', 'DELIVERED'].includes(order.status)) && 
+         ['PROCESSING', 'PARTIALLY_SHIPPED', 'SHIPPED'].includes(order.status)) && 
         order.status !== 'CANCELLED'
     );
 
@@ -153,7 +153,6 @@ export function SellerAnalytics() {
       PROCESSING: 0,
       PACKED: 0,
       SHIPPED: 0,
-      DELIVERED: 0,
       CANCELLED: 0
     };
 
@@ -1138,13 +1137,12 @@ export function SellerAnalytics() {
                 <h3 className="text-base font-black text-slate-900 mb-1">Item Fulfillment Funnel</h3>
                 <p className="text-xs text-slate-400 font-bold mb-6">Volume of order items currently traversing your workflow stages</p>
                 
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                   {[
                     { label: 'Pending', count: stats.statusCounts.PENDING, color: 'bg-yellow-50 text-yellow-700 border-yellow-200' },
                     { label: 'Processing', count: stats.statusCounts.PROCESSING, color: 'bg-amber-50 text-amber-700 border-amber-200' },
                     { label: 'Packed', count: stats.statusCounts.PACKED, color: 'bg-cyan-50 text-cyan-700 border-cyan-200' },
-                    { label: 'Shipped', count: stats.statusCounts.SHIPPED, color: 'bg-blue-50 text-blue-700 border-blue-200' },
-                    { label: 'Delivered', count: stats.statusCounts.DELIVERED, color: 'bg-emerald-50 text-emerald-700 border-emerald-200' }
+                    { label: 'Shipped', count: stats.statusCounts.SHIPPED, color: 'bg-emerald-50 text-emerald-700 border-emerald-200' }
                   ].map((stage, idx) => (
                     <div
                       key={idx}

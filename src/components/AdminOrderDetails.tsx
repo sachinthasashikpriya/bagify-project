@@ -110,8 +110,7 @@ export function AdminOrderDetails() {
 
   const getStatusColor = (status: string) => {
     switch (status?.toUpperCase()) {
-      case 'DELIVERED': return 'bg-green-50 text-green-700 border border-green-200';
-      case 'SHIPPED': return 'bg-blue-50 text-blue-700 border border-blue-200';
+      case 'SHIPPED': return 'bg-green-50 text-green-700 border border-green-200';
       case 'PARTIALLY_SHIPPED': return 'bg-indigo-50 text-indigo-700 border border-indigo-200';
       case 'PACKED': return 'bg-cyan-50 text-cyan-700 border border-cyan-200';
       case 'PROCESSING': return 'bg-orange-50 text-orange-700 border border-orange-200';
@@ -211,24 +210,9 @@ export function AdminOrderDetails() {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Global Status</p>
-              <div className="relative inline-block w-full">
-                <select
-                  value={order.status}
-                  onChange={(e) => handleStatusChange(e.target.value)}
-                  className={`appearance-none pl-2.5 pr-7 py-1 rounded-lg text-xs font-black uppercase tracking-wider focus:outline-none focus:ring-2 focus:ring-purple-500 shadow-sm cursor-pointer transition-all w-full max-w-max ${getStatusColor(order.status)}`}
-                  title="Override entire order status"
-                >
-                  <option value="PENDING" className="bg-white text-slate-800">PENDING</option>
-                  <option value="PROCESSING" className="bg-white text-slate-800">PROCESSING</option>
-                  <option value="PARTIALLY_SHIPPED" className="bg-white text-slate-800">PARTIALLY SHIPPED</option>
-                  <option value="SHIPPED" className="bg-white text-slate-800">SHIPPED</option>
-                  <option value="DELIVERED" className="bg-white text-slate-800">DELIVERED</option>
-                  <option value="CANCELLED" className="bg-white text-slate-800">CANCELLED</option>
-                </select>
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2.5 text-current opacity-70">
-                  <ChevronDown className="w-3 h-3" />
-                </div>
-              </div>
+              <span className={`inline-flex px-2.5 py-1 rounded-lg text-xs font-black uppercase tracking-wider border shadow-sm ${getStatusColor(order.status)}`}>
+                {order.status}
+              </span>
             </div>
           </div>
 
@@ -347,25 +331,12 @@ export function AdminOrderDetails() {
                       </div>
 
 
-                      {/* Item Status drop down */}
+                      {/* Item Status */}
                       <div className="flex items-center gap-2 self-end sm:self-auto">
                         <span className="text-slate-400 font-medium">Item Status:</span>
-                        <div className="relative inline-block">
-                          <select
-                             value={item.itemStatus}
-                             onChange={(e) => handleItemStatusChange(item.id, e.target.value)}
-                             className={`appearance-none pl-2.5 pr-7 py-1 rounded-lg text-xs font-black uppercase tracking-wider focus:outline-none focus:ring-2 focus:ring-purple-500 shadow-sm cursor-pointer transition-all ${getStatusColor(item.itemStatus)}`}
-                          >
-                            <option value="PENDING" className="bg-white text-slate-800">PENDING</option>
-                            <option value="PROCESSING" className="bg-white text-slate-800">PROCESSING</option>
-                            <option value="PACKED" className="bg-white text-slate-800">PACKED</option>
-                            <option value="SHIPPED" className="bg-white text-slate-800">SHIPPED</option>
-                            <option value="DELIVERED" className="bg-white text-slate-800">DELIVERED</option>
-                          </select>
-                          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2 text-current opacity-70">
-                            <ChevronDown className="w-3.5 h-3.5" />
-                          </div>
-                        </div>
+                        <span className={`px-2.5 py-1 rounded-lg text-xs font-black uppercase tracking-wider border shadow-sm ${getStatusColor(item.itemStatus)}`}>
+                          {item.itemStatus}
+                        </span>
                       </div>
 
                     </div>

@@ -9,14 +9,14 @@ export interface OrderItemResponse {
   quantity: number;
   priceAtPurchase: number;
   sellerId: string;
-  itemStatus: string; // PENDING | PROCESSING | PACKED | SHIPPED | DELIVERED
+  itemStatus: string; // PENDING | PROCESSING | PACKED | SHIPPED
 }
 
 export interface OrderResponse {
   id: number;
   buyerId: number;
   items: OrderItemResponse[];
-  status: string; // Consolidated: PENDING | PROCESSING | PARTIALLY_SHIPPED | SHIPPED | DELIVERED | CANCELLED
+  status: string; // Consolidated: PENDING | PROCESSING | PARTIALLY_SHIPPED | SHIPPED | CANCELLED
   totalAmount: number;
   subtotal: number;
   tax: number;
@@ -121,7 +121,7 @@ export const orderService = {
   },
 
   /**
-   * Admin override to update a single item's fulfillment status (including DELIVERED).
+   * Admin override to update a single item's fulfillment status.
    */
   async updateItemStatusAdmin(orderId: number | string, itemId: number | string, status: string): Promise<Result<OrderResponse>> {
     return httpClient.put<OrderResponse>(
