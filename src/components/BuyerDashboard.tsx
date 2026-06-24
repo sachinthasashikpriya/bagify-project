@@ -1,4 +1,4 @@
-import { Heart, Package, ShoppingBag, Star, User, Loader2, Clock, Truck, CheckCircle2, X, Trash2, ShoppingCart, DollarSign, AlertTriangle, Image as ImageIcon } from "lucide-react";
+import { Heart, Package, ShoppingBag, Star, User, Loader2, Clock, Truck, X, Trash2, ShoppingCart, DollarSign, AlertTriangle, Image as ImageIcon } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";

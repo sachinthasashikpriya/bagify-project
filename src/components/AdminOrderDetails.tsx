@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { 
   ArrowLeft, Shield, ShoppingBag, User, MapPin, Mail, 
-  CreditCard, ChevronDown, Package, Clock, Store, Star
+  CreditCard, Package, Clock, Store, Star
 } from 'lucide-react';
 import { orderService, type OrderResponse } from '../services/orderService';
 import { userService } from '../services/userservice';
@@ -77,36 +77,6 @@ export function AdminOrderDetails() {
 
     fetchAllDetails();
   }, [orderId]);
-
-  const handleStatusChange = async (newStatus: string) => {
-    if (!order) return;
-    try {
-      const result = await orderService.updateOrderStatus(order.id, newStatus);
-      if (result.ok && result.data) {
-        toast.success(`Order status updated to ${newStatus}`);
-        setOrder(result.data);
-      } else {
-        toast.error(result.error || "Failed to update status");
-      }
-    } catch {
-      toast.error("An error occurred");
-    }
-  };
-
-  const handleItemStatusChange = async (itemId: number, newStatus: string) => {
-    if (!order) return;
-    try {
-      const result = await orderService.updateItemStatusAdmin(order.id, itemId, newStatus);
-      if (result.ok && result.data) {
-        toast.success(`Item status updated to ${newStatus}`);
-        setOrder(result.data);
-      } else {
-        toast.error(result.error || 'Failed to update item status');
-      }
-    } catch {
-      toast.error('An error occurred');
-    }
-  };
 
   const getStatusColor = (status: string) => {
     switch (status?.toUpperCase()) {

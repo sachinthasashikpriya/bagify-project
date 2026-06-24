@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Shield, Users, Package, TrendingUp, AlertTriangle, Search, X, FileText, CheckCircle2, ShoppingBag, ArrowUpRight, ChevronDown, Calendar, Menu, Coins } from 'lucide-react';
+import { Shield, Users, Package, TrendingUp, AlertTriangle, Search, X, FileText, CheckCircle2, ShoppingBag, ArrowUpRight, Calendar, Menu, Coins } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useAuth } from '../hooks/useAuth';
@@ -266,34 +266,6 @@ export function AdminDashboard() {
     } finally {
       setProcessingSellerId(null);
       setProcessingAction(null);
-    }
-  };
-
-  const handleStatusChange = async (orderId: number, newStatus: string) => {
-    try {
-      const result = await orderService.updateOrderStatus(orderId, newStatus);
-      if (result.ok && result.data) {
-        toast.success(`Order #${orderId} status updated to ${newStatus}`);
-        setOrders(orders.map(o => o.id === orderId ? result.data! : o));
-      } else {
-        toast.error(result.error || "Failed to update status");
-      }
-    } catch {
-      toast.error("An error occurred");
-    }
-  };
-
-  const handleItemStatusChange = async (orderId: number, itemId: number, newStatus: string) => {
-    try {
-      const result = await orderService.updateItemStatusAdmin(orderId, itemId, newStatus);
-      if (result.ok && result.data) {
-        toast.success(`Item status updated to ${newStatus}`);
-        setOrders(prev => prev.map(o => o.id === result.data!.id ? result.data! : o));
-      } else {
-        toast.error(result.error || 'Failed to update item status');
-      }
-    } catch {
-      toast.error('An error occurred');
     }
   };
 
