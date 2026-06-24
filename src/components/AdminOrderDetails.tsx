@@ -352,9 +352,9 @@ export function AdminOrderDetails() {
                         <span className="text-slate-400 font-medium">Item Status:</span>
                         <div className="relative inline-block">
                           <select
-                            value={item.itemStatus}
-                            onChange={(e) => handleItemStatusChange(item.id, e.target.value)}
-                            className={`appearance-none pl-2.5 pr-7 py-1 rounded-lg text-xs font-black uppercase tracking-wider focus:outline-none focus:ring-2 focus:ring-purple-500 shadow-sm cursor-pointer transition-all ${getStatusColor(item.itemStatus)}`}
+                             value={item.itemStatus}
+                             onChange={(e) => handleItemStatusChange(item.id, e.target.value)}
+                             className={`appearance-none pl-2.5 pr-7 py-1 rounded-lg text-xs font-black uppercase tracking-wider focus:outline-none focus:ring-2 focus:ring-purple-500 shadow-sm cursor-pointer transition-all ${getStatusColor(item.itemStatus)}`}
                           >
                             <option value="PENDING" className="bg-white text-slate-800">PENDING</option>
                             <option value="PROCESSING" className="bg-white text-slate-800">PROCESSING</option>
@@ -371,6 +371,28 @@ export function AdminOrderDetails() {
                     </div>
                   </div>
                 ))}
+              </div>
+
+              {/* Summary Block */}
+              <div className="bg-slate-50/50 border-t border-slate-100 p-6 flex flex-col items-end text-xs font-bold text-slate-600">
+                <div className="w-full max-w-xs space-y-2.5">
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Subtotal</span>
+                    <span className="text-slate-800">Rs. {(order.subtotal ?? order.items.reduce((sum, item) => sum + (item.priceAtPurchase * item.quantity), 0)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Shipping</span>
+                    <span className="text-slate-800">{order.shipping === 0 ? 'Free' : `Rs. ${order.shipping.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Tax (5%)</span>
+                    <span className="text-slate-800">Rs. {order.tax.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                  </div>
+                  <div className="flex justify-between border-t border-slate-200 pt-2.5 text-sm font-black text-slate-800">
+                    <span>Total Amount</span>
+                    <span className="text-purple-600 text-base">Rs. {order.totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

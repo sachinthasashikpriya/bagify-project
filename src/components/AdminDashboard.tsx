@@ -421,10 +421,8 @@ export function AdminDashboard() {
       const isPaid = order.paymentStatus === 'PAID' || 
                     ['PROCESSING', 'PARTIALLY_SHIPPED', 'SHIPPED', 'DELIVERED'].includes(order.status);
       if (isPaid && order.status !== 'CANCELLED') {
-        const orderSubtotal = order.items.reduce((itemSum, item) => {
-          return itemSum + (item.priceAtPurchase * item.quantity);
-        }, 0);
-        return sum + orderSubtotal;
+        const subtotal = order.subtotal ?? (order.totalAmount - (order.tax || 0) - (order.shipping || 0));
+        return sum + subtotal;
       }
       return sum;
     }, 0);
@@ -436,10 +434,7 @@ export function AdminDashboard() {
       const isPaid = order.paymentStatus === 'PAID' || 
                     ['PROCESSING', 'PARTIALLY_SHIPPED', 'SHIPPED', 'DELIVERED'].includes(order.status);
       if (isPaid && order.status !== 'CANCELLED') {
-        const orderSubtotal = order.items.reduce((itemSum, item) => {
-          return itemSum + (item.priceAtPurchase * item.quantity);
-        }, 0);
-        return sum + (orderSubtotal * 0.05);
+        return sum + (order.tax || 0);
       }
       return sum;
     }, 0);

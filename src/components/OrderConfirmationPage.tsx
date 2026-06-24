@@ -252,9 +252,9 @@ export function OrderConfirmationPage() {
             </div>
 
             {(() => {
-              const subtotal = order.items.reduce((sum, item) => sum + (item.priceAtPurchase * item.quantity), 0);
-              const tax = subtotal * 0.05;
-              const shipping = subtotal > 5000 ? 0 : subtotal * 0.04;
+              const subtotal = order.subtotal ?? order.items.reduce((sum, item) => sum + (item.priceAtPurchase * item.quantity), 0);
+              const tax = order.tax;
+              const shipping = order.shipping;
               return (
                 <div className="border-t border-gray-100 pt-4 space-y-2 text-sm text-gray-650">
                   <div className="flex justify-between">

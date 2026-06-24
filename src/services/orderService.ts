@@ -18,6 +18,9 @@ export interface OrderResponse {
   items: OrderItemResponse[];
   status: string; // Consolidated: PENDING | PROCESSING | PARTIALLY_SHIPPED | SHIPPED | DELIVERED | CANCELLED
   totalAmount: number;
+  subtotal: number;
+  tax: number;
+  shipping: number;
   shippingAddress: string;
   paymentStatus: string; // UNPAID | PAID | FAILED
   paymentId?: string;
