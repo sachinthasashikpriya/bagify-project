@@ -214,8 +214,8 @@ export function CartPage() {
           {/* Cart Items */}
           <div className="lg:col-span-2">
             <div className="bg-white rounded-xl shadow-sm">
-              <div className="flex items-center justify-between p-6 border-b border-gray-200">
-                <h1 className="text-2xl font-bold text-gray-900">
+              <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200">
+                <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
                   Shopping Cart ({cartItems.length} items)
                 </h1>
                 <button
@@ -226,58 +226,76 @@ export function CartPage() {
                 </button>
               </div>
 
-              <div className="p-6 space-y-4">
+              <div className="p-4 sm:p-6 space-y-4">
                 {cartItems.map((item) => (
-                  <div key={item.product.id} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
-                    <img
-                      src={item.product.image}
-                      alt={item.product.name}
-                      className="w-20 h-20 rounded-lg object-cover"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.src = 'https://via.placeholder.com/80x80?text=No+Image';
-                      }}
-                    />
-                    
-                    <div className="flex-1">
-                      <h3 className="font-medium text-gray-900 mb-1">{item.product.name}</h3>
-                      <p className="text-gray-600 text-sm mb-2 line-clamp-2">{item.product.description}</p>
-                      <p className="text-purple-600 font-semibold">Rs. {item.product.price.toFixed(2)}</p>
+                  <div 
+                    key={item.product.id} 
+                    className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-gray-50 rounded-lg"
+                  >
+                    {/* Product Details Section */}
+                    <div className="flex gap-4 w-full sm:w-auto">
+                      <img
+                        src={item.product.image}
+                        alt={item.product.name}
+                        className="w-20 h-20 rounded-lg object-cover flex-shrink-0"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = 'https://via.placeholder.com/80x80?text=No+Image';
+                        }}
+                      />
+                      
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-medium text-gray-900 mb-1 text-sm sm:text-base line-clamp-1">
+                          {item.product.name}
+                        </h3>
+                        <p className="text-gray-500 text-xs sm:text-sm mb-2 line-clamp-2 hidden sm:block">
+                          {item.product.description}
+                        </p>
+                        <p className="text-purple-600 font-semibold text-sm">
+                          Rs. {item.product.price.toFixed(2)}
+                        </p>
+                      </div>
                     </div>
 
-                    <div className="flex items-center gap-3">
+                    {/* Quantity and Price Control Section */}
+                    <div className="flex items-center justify-between w-full sm:w-auto gap-4 pt-3 sm:pt-0 border-t sm:border-t-0 border-gray-200">
+                      {/* Quantity Controls */}
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleUpdateQuantity(item.product.id, item.quantity - 1)}
+                          className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center hover:bg-gray-300 transition-colors disabled:opacity-50"
+                          disabled={isCheckingOut || updatingItems.has(item.product.id)}
+                        >
+                          <Minus className="w-4 h-4" />
+                        </button>
+                        
+                        <span className="w-8 text-center font-medium text-sm">{item.quantity}</span>
+                        
+                        <button
+                          onClick={() => handleUpdateQuantity(item.product.id, item.quantity + 1)}
+                          className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center hover:bg-gray-300 transition-colors disabled:opacity-50"
+                          disabled={isCheckingOut || updatingItems.has(item.product.id) || item.quantity >= item.product.stock}
+                        >
+                          <Plus className="w-4 h-4" />
+                        </button>
+                      </div>
+
+                      {/* Item Total Price */}
+                      <div className="text-right sm:min-w-[100px] flex-1 sm:flex-none">
+                        <p className="font-semibold text-gray-900 text-sm sm:text-base">
+                          Rs. {(item.product.price * item.quantity).toFixed(2)}
+                        </p>
+                      </div>
+
+                      {/* Remove Button */}
                       <button
-                        onClick={() => handleUpdateQuantity(item.product.id, item.quantity - 1)}
-                        className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center hover:bg-gray-300 transition-colors disabled:opacity-50"
+                        onClick={() => handleRemoveItem(item.product.id)}
+                        className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
                         disabled={isCheckingOut || updatingItems.has(item.product.id)}
                       >
-                        <Minus className="w-4 h-4" />
-                      </button>
-                      
-                      <span className="w-12 text-center font-medium">{item.quantity}</span>
-                      
-                      <button
-                        onClick={() => handleUpdateQuantity(item.product.id, item.quantity + 1)}
-                        className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center hover:bg-gray-300 transition-colors disabled:opacity-50"
-                        disabled={isCheckingOut || updatingItems.has(item.product.id) || item.quantity >= item.product.stock}
-                      >
-                        <Plus className="w-4 h-4" />
+                        <Trash2 className="w-5 h-5" />
                       </button>
                     </div>
-
-                    <div className="text-right min-w-[80px]">
-                      <p className="font-semibold text-gray-900">
-                        Rs. {(item.product.price * item.quantity).toFixed(2)}
-                      </p>
-                    </div>
-
-                    <button
-                      onClick={() => handleRemoveItem(item.product.id)}
-                      className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
-                      disabled={isCheckingOut || updatingItems.has(item.product.id)}
-                    >
-                      <Trash2 className="w-5 h-5" />
-                    </button>
                   </div>
                 ))}
               </div>
