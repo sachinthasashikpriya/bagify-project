@@ -164,8 +164,8 @@ export function CartPage() {
   };
 
   const subtotal = cartItems.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
-  const shipping = subtotal >= 100 ? 0 : 10;
-  const tax = subtotal * 0.08; // 8% tax
+  const shipping = subtotal > 5000 ? 0 : subtotal * 0.04;
+  const tax = subtotal * 0.05; // 5% tax
   const total = subtotal + shipping + tax;
 
   if (cartItems.length === 0) {
@@ -307,7 +307,7 @@ export function CartPage() {
                 
                 {shipping === 0 && (
                   <p className="text-sm text-green-600 font-medium">
-                    🎉 Free shipping on orders over Rs. 100!
+                    🎉 Free shipping on orders over Rs. 5000!
                   </p>
                 )}
                 

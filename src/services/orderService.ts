@@ -139,6 +139,16 @@ export const orderService = {
   },
 
   /**
+   * Get admin total revenue and earnings (tax) statistics
+   */
+  async getAdminStats(): Promise<Result<{ totalRevenue: number; adminEarnings: number }>> {
+    return httpClient.get<{ totalRevenue: number; adminEarnings: number }>('/api/v1/orders/admin/stats', {
+      service: 'order-service',
+      auth: true,
+    });
+  },
+
+  /**
    * Cancel an order (Buyer only)
    */
   async cancelOrder(orderId: number | string): Promise<Result<OrderResponse>> {

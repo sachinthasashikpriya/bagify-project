@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Shield, Users, Package, TrendingUp, AlertTriangle, Search, X, FileText, CheckCircle2, ShoppingBag, ArrowUpRight, ChevronDown, Calendar, Menu } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { Shield, Users, Package, TrendingUp, AlertTriangle, Search, X, FileText, CheckCircle2, ShoppingBag, ArrowUpRight, ChevronDown, Calendar, Menu, Coins } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useAuth } from '../hooks/useAuth';
@@ -22,6 +22,7 @@ export function AdminDashboard() {
   );
   const [orders, setOrders] = useState<OrderResponse[]>([]);
   const [isLoadingOrders, setIsLoadingOrders] = useState(false);
+  const [adminStats, setAdminStats] = useState<{ totalRevenue: number; adminEarnings: number } | null>(null);
 
   // Order filter states
   const [orderFilterType, setOrderFilterType] = useState<'all' | 'today' | '7days' | '30days' | 'custom'>('all');
@@ -155,9 +156,9 @@ export function AdminDashboard() {
     }
   }, [activeTab]);
 
-  // Fetch orders when tab changes to orders
+  // Fetch orders when tab changes to orders or overview
   useEffect(() => {
-    if (activeTab === 'orders') {
+    if (activeTab === 'orders' || activeTab === 'overview') {
       const fetchOrders = async () => {
         setIsLoadingOrders(true);
         const result = await orderService.getAllOrders();
@@ -171,6 +172,19 @@ export function AdminDashboard() {
       fetchOrders();
     }
   }, [activeTab]);
+
+  // Fetch admin stats when tab changes to overview
+  useEffect(() => {
+    if (activeTab === 'overview') {
+      const fetchAdminStats = async () => {
+        const result = await orderService.getAdminStats();
+        if (result.ok && result.data) {
+          setAdminStats(result.data);
+        }
+      };
+      fetchAdminStats();
+    }
+  }, [activeTab, orders]);
 
   // Fetch verifications when tab changes to verifications
   const fetchVerifications = async () => {
@@ -401,10 +415,35 @@ export function AdminDashboard() {
   // Calculate stats
   const totalProducts = products.length;
   const totalUsers = users.length;
-  const totalRevenue = products.reduce((sum, p) => {
-    const soldQuantity = Math.max(0, 30 - p.stock);
-    return sum + (p.price * soldQuantity);
-  }, 0);
+  const totalRevenue = useMemo(() => {
+    if (adminStats) return adminStats.totalRevenue;
+    return orders.reduce((sum, order) => {
+      const isPaid = order.paymentStatus === 'PAID' || 
+                    ['PROCESSING', 'PARTIALLY_SHIPPED', 'SHIPPED', 'DELIVERED'].includes(order.status);
+      if (isPaid && order.status !== 'CANCELLED') {
+        const orderSubtotal = order.items.reduce((itemSum, item) => {
+          return itemSum + (item.priceAtPurchase * item.quantity);
+        }, 0);
+        return sum + orderSubtotal;
+      }
+      return sum;
+    }, 0);
+  }, [orders, adminStats]);
+
+  const adminEarnings = useMemo(() => {
+    if (adminStats) return adminStats.adminEarnings;
+    return orders.reduce((sum, order) => {
+      const isPaid = order.paymentStatus === 'PAID' || 
+                    ['PROCESSING', 'PARTIALLY_SHIPPED', 'SHIPPED', 'DELIVERED'].includes(order.status);
+      if (isPaid && order.status !== 'CANCELLED') {
+        const orderSubtotal = order.items.reduce((itemSum, item) => {
+          return itemSum + (item.priceAtPurchase * item.quantity);
+        }, 0);
+        return sum + (orderSubtotal * 0.05);
+      }
+      return sum;
+    }, 0);
+  }, [orders, adminStats]);
   const lowStockProducts = products.filter(p => p.stock < 5);
 
   const tabs: { id: 'overview' | 'products' | 'users' | 'orders' | 'verifications'; label: string; icon: typeof TrendingUp }[] = [
@@ -535,7 +574,7 @@ export function AdminDashboard() {
         {/* Content Body */}
         <div className="p-8 flex-1">
           {/* Dashboard Metrics */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-8">
             {/* Card 1 */}
             <div className="group bg-white rounded-2xl p-6 border border-slate-100 hover:border-purple-200 hover:shadow-xl hover:shadow-purple-500/5 transition-all duration-300 relative overflow-hidden">
               <div className="absolute top-0 left-0 w-full h-[3px] bg-purple-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
@@ -579,6 +618,20 @@ export function AdminDashboard() {
             </div>
 
             {/* Card 4 */}
+            <div className="group bg-white rounded-2xl p-6 border border-slate-100 hover:border-amber-200 hover:shadow-xl hover:shadow-amber-500/5 transition-all duration-300 relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-full h-[3px] bg-amber-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Admin Earnings</p>
+                  <p className="text-3xl font-black text-amber-600 tracking-tight">Rs. {adminEarnings.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                </div>
+                <div className="p-3 bg-amber-50 rounded-2xl text-amber-600 group-hover:scale-110 transition-transform">
+                  <Coins className="w-6 h-6" />
+                </div>
+              </div>
+            </div>
+
+            {/* Card 5 */}
             <div className="group bg-white rounded-2xl p-6 border border-slate-100 hover:border-rose-200 hover:shadow-xl hover:shadow-rose-500/5 transition-all duration-300 relative overflow-hidden">
               <div className="absolute top-0 left-0 w-full h-[3px] bg-rose-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
               <div className="flex items-center justify-between">

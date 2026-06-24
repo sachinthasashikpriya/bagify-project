@@ -251,12 +251,31 @@ export function OrderConfirmationPage() {
               ))}
             </div>
 
-            <div className="border-t border-gray-100 pt-4 space-y-2">
-              <div className="flex justify-between text-lg font-bold text-gray-900">
-                <span>Total Amount</span>
-                <span>Rs. {order.totalAmount.toFixed(2)}</span>
-              </div>
-            </div>
+            {(() => {
+              const subtotal = order.items.reduce((sum, item) => sum + (item.priceAtPurchase * item.quantity), 0);
+              const tax = subtotal * 0.05;
+              const shipping = subtotal > 5000 ? 0 : subtotal * 0.04;
+              return (
+                <div className="border-t border-gray-100 pt-4 space-y-2 text-sm text-gray-650">
+                  <div className="flex justify-between">
+                    <span>Subtotal</span>
+                    <span>Rs. {subtotal.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Shipping</span>
+                    <span>{shipping === 0 ? 'Free' : `Rs. ${shipping.toFixed(2)}`}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Tax</span>
+                    <span>Rs. {tax.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-lg font-bold text-gray-900 border-t pt-2">
+                    <span>Total Amount</span>
+                    <span>Rs. {order.totalAmount.toFixed(2)}</span>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
 
           {/* Shipping & Delivery Info */}
