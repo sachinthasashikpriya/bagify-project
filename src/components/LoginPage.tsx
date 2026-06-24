@@ -34,7 +34,7 @@ export function LoginPage() {
     password: "",
   });
   const [isLoading, setIsLoading] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [errors, setErrors] = useState<Record<string, React.ReactNode>>({});
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -93,7 +93,25 @@ export function LoginPage() {
       console.log("📡 Login response:", loginResponse);
 
       if (!loginResponse.ok || !loginResponse.data) {
-        if (loginResponse.error?.toLowerCase().includes("disabled")) {
+        const errorMsg = loginResponse.error || "";
+        if (errorMsg.toLowerCase().includes("unverified")) {
+          setErrors((prev) => ({
+            ...prev,
+            form: (
+              <span>
+                Your account is unverified. Please{" "}
+                <button
+                  type="button"
+                  onClick={() => navigate(`/signup?verifyEmail=${encodeURIComponent(formData.email.trim().toLowerCase())}`)}
+                  className="text-purple-600 hover:text-purple-700 underline font-bold"
+                >
+                  verify your email address
+                </button>{" "}
+                first.
+              </span>
+            )
+          }));
+        } else if (errorMsg.toLowerCase().includes("disabled")) {
           setErrors((prev) => ({
             ...prev,
             form: "Your account has been disabled by an administrator. Please contact support."
@@ -101,7 +119,7 @@ export function LoginPage() {
         } else {
           setErrors((prev) => ({
             ...prev,
-            form: loginResponse.error || "Login failed. Please try again."
+            form: errorMsg || "Login failed. Please try again."
           }));
         }
         return;

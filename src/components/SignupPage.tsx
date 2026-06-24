@@ -13,7 +13,7 @@ import {
   AlertCircle
 } from "lucide-react";
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { authService } from "../services/authservice";
 import { useAuth } from "../hooks/useAuth";
@@ -36,11 +36,14 @@ type FormErrors = Partial<Record<keyof SignupFormData, string>>;
 
 export function SignupPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { login } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [step, setStep] = useState<"SIGNUP" | "OTP">("SIGNUP");
+  const [step, setStep] = useState<"SIGNUP" | "OTP">(
+    searchParams.get("verifyEmail") ? "OTP" : "SIGNUP"
+  );
   const [otpCode, setOtpCode] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
   const [resendTimer, setResendTimer] = useState(0);
@@ -54,7 +57,7 @@ export function SignupPage() {
 
   const [formData, setFormData] = useState<SignupFormData>({
     name: "",
-    email: "",
+    email: searchParams.get("verifyEmail") || "",
     phone: "",
     address: "",
     password: "",
