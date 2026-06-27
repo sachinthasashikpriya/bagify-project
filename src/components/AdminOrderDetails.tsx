@@ -149,10 +149,7 @@ export function AdminOrderDetails() {
               <h1 className="text-2xl font-black text-slate-800 tracking-tight">Transaction Details</h1>
             </div>
           </div>
-          <div className="px-4 py-2 bg-purple-500/5 border border-purple-500/10 rounded-2xl text-xs font-extrabold text-purple-700 shadow-sm flex items-center gap-2 max-w-max self-start md:self-auto">
-            <span className="w-2 h-2 bg-purple-500 rounded-full animate-ping"></span>
-            Super Admin Override Mode
-          </div>
+
         </div>
 
         {/* Stats Grid */}
