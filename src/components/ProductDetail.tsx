@@ -1,10 +1,11 @@
 import { Loader2, ArrowLeft, Package, ShoppingCart, Star, Store, BadgeCheck } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { useAuth } from "../hooks/useAuth";
 import { useCart } from "../hooks/useCart";
 import { useProducts } from "../hooks/useProduct";
+import { orderService } from "../services/orderService";
 
 export function ProductDetail() {
   const { id } = useParams<{ id: string }>();
@@ -15,6 +16,33 @@ export function ProductDetail() {
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
   const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const [hasPurchasedProduct, setHasPurchasedProduct] = useState<boolean>(false);
+  const [isCheckingPurchase, setIsCheckingPurchase] = useState<boolean>(false);
+
+  useEffect(() => {
+    const checkPurchaseStatus = async () => {
+      if (currentUser && currentUser.role === "BUYER" && id) {
+        setIsCheckingPurchase(true);
+        try {
+          const res = await orderService.hasPurchased(id);
+          if (res.ok && res.data !== undefined) {
+            setHasPurchasedProduct(res.data);
+          } else {
+            setHasPurchasedProduct(false);
+          }
+        } catch (error) {
+          console.error("Error checking purchase status:", error);
+          setHasPurchasedProduct(false);
+        } finally {
+          setIsCheckingPurchase(false);
+        }
+      } else {
+        setHasPurchasedProduct(false);
+      }
+    };
+
+    checkPurchaseStatus();
+  }, [currentUser, id]);
 
   const product = products.find((p) => p.id === id);
 
@@ -316,6 +344,11 @@ export function ProductDetail() {
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
               Write a Review
             </h3>
+            {!hasPurchasedProduct && !isCheckingPurchase && (
+              <div className="mb-4 bg-amber-50 border border-amber-200 rounded-lg p-4 text-amber-800 text-sm">
+                ⚠️ You can only review products you have purchased and had shipped.
+              </div>
+            )}
             <form onSubmit={handleSubmitReview} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -326,8 +359,9 @@ export function ProductDetail() {
                     <button
                       key={star}
                       type="button"
+                      disabled={!hasPurchasedProduct || isCheckingPurchase}
                       onClick={() => setRating(star)}
-                      className="hover:scale-110 transition-transform focus:outline-none"
+                      className="hover:scale-110 transition-transform focus:outline-none disabled:hover:scale-100 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <Star
                         className={`w-6 h-6 ${
@@ -356,21 +390,27 @@ export function ProductDetail() {
                   onChange={(e) => setComment(e.target.value)}
                   maxLength={500}
                   rows={4}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent resize-none"
-                  placeholder="Share your experience with this product..."
+                  disabled={!hasPurchasedProduct || isCheckingPurchase}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent resize-none disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed"
+                  placeholder={!hasPurchasedProduct && !isCheckingPurchase ? "You can only review products you have purchased and had shipped." : "Share your experience with this product..."}
                   required
                 />
                 <p className="text-xs text-gray-500 mt-1">
                   {comment.length}/500 characters
                 </p>
               </div>
-              <button
-                type="submit"
-                disabled={!comment.trim()}
-                className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              <div 
+                title={!hasPurchasedProduct ? "You can only review products you have purchased and had shipped." : undefined}
+                className="inline-block"
               >
-                Submit Review
-              </button>
+                <button
+                  type="submit"
+                  disabled={!hasPurchasedProduct || !comment.trim() || isCheckingPurchase}
+                  className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isCheckingPurchase ? "Checking..." : "Submit Review"}
+                </button>
+              </div>
             </form>
           </div>
         )}

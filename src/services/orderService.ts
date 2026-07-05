@@ -174,5 +174,16 @@ export const orderService = {
       auth: true,
       query: { returnUrl, cancelUrl },
     });
+  },
+
+  /**
+   * Check if a buyer has purchased and received a specific product
+   */
+  async hasPurchased(productId: number | string): Promise<Result<boolean>> {
+    return httpClient.get<boolean>('/api/v1/orders/has-purchased', {
+      service: 'order-service',
+      auth: true,
+      query: { productId },
+    });
   }
 };
