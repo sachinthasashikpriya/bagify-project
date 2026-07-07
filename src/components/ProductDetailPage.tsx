@@ -8,6 +8,7 @@ import { useProducts } from "../hooks/useProduct";
 import { useWishlist } from "../hooks/useWishlist";
 import { productService } from "../services/productService";
 import { reviewService } from "../services/reviewService";
+import { orderService } from "../services/orderService";
 import type { Product, Review } from "../types";
 
 export function ProductDetailPage() {
@@ -27,6 +28,8 @@ export function ProductDetailPage() {
   const [isLoadingReviews, setIsLoadingReviews] = useState(false);
   const [fetchError, setFetchError] = useState(false);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const [hasPurchasedProduct, setHasPurchasedProduct] = useState<boolean>(false);
+  const [isCheckingPurchase, setIsCheckingPurchase] = useState<boolean>(false);
 
   const product = fetchedProduct || products.find((p) => String(p.id) === String(productId));
 
@@ -69,6 +72,31 @@ export function ProductDetailPage() {
         .finally(() => setIsLoadingReviews(false));
     }
   }, [productId]);
+
+  useEffect(() => {
+    const checkPurchaseStatus = async () => {
+      if (currentUser && currentUser.role === "BUYER" && productId) {
+        setIsCheckingPurchase(true);
+        try {
+          const res = await orderService.hasPurchased(productId);
+          if (res.ok && res.data !== undefined) {
+            setHasPurchasedProduct(res.data);
+          } else {
+            setHasPurchasedProduct(false);
+          }
+        } catch (error) {
+          console.error("Error checking purchase status:", error);
+          setHasPurchasedProduct(false);
+        } finally {
+          setIsCheckingPurchase(false);
+        }
+      } else {
+        setHasPurchasedProduct(false);
+      }
+    };
+
+    checkPurchaseStatus();
+  }, [currentUser, productId]);
 
   if (isLoading) {
     return (
@@ -382,12 +410,18 @@ export function ProductDetailPage() {
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold text-gray-900">Customer Reviews</h2>
             {currentUser?.role === "BUYER" && !showReviewForm && !hasAlreadyReviewed && (
-              <button
-                onClick={() => setShowReviewForm(true)}
-                className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
+              <div 
+                title={!hasPurchasedProduct && !isCheckingPurchase ? "You can only review products you have purchased and had shipped." : undefined}
+                className="inline-block"
               >
-                Write a Review
-              </button>
+                <button
+                  onClick={() => setShowReviewForm(true)}
+                  disabled={!hasPurchasedProduct || isCheckingPurchase}
+                  className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isCheckingPurchase ? "Checking..." : "Write a Review"}
+                </button>
+              </div>
             )}
             {currentUser?.role === "BUYER" && hasAlreadyReviewed && (
               <span className="text-sm font-medium text-purple-600 bg-purple-50 px-3 py-1 rounded-full border border-purple-100">
