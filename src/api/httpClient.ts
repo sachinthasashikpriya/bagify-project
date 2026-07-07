@@ -2,7 +2,7 @@ import { env } from '../config/env';
 import { serviceRegistry } from './serviceRegistry';
 import type { ServiceName } from './serviceRegistry';
 import type { Result } from '../types/index';
-import { getAuthToken, onUnauthorized } from '../state/authToken';
+import { getAuthToken } from '../state/authToken';
 import { attemptTokenRefresh } from './tokenRefresher';
 
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
@@ -277,9 +277,6 @@ async function executeRequest<T>(
           status: response.status,
           details: payload,
         };
-      } else if (response.status === 401 && !options.auth) {
-        // Non-auth request got a 401 — unexpected, log out
-        onUnauthorized();
       }
 
       return {
